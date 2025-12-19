@@ -69,4 +69,6 @@ export interface HomeConfig {
   heroSubtitle: string;
   heroImageUrl: string;
   motto: string;
+  aboutTitle: string;
+  aboutText: string;
 }

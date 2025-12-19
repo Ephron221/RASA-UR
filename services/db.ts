@@ -21,7 +21,7 @@ const INITIAL_DATA: DatabaseSchema = {
     { id: 'u1', fullName: 'Kevin Bizimana', email: 'kevin@test.com', phone: '+250 788 000 001', role: 'member', program: 'Architecture', level: 'Level 2', diocese: 'Kigali', department: 'Evangelisation', createdAt: '2023-01-10' },
   ],
   news: [
-    { id: '1', title: 'Grand Fellowship Service 2024', content: 'Join us for a spirit-filled mass fellowship this Sunday at the Student Center.', category: 'event', mediaUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=2070&auto=format&fit=crop', mediaType: 'image', author: 'Admin', date: '2024-03-20' },
+    { id: '1', title: 'Grand Fellowship Service 2024', content: 'Join us for a spirit-filled mass fellowship this Sunday at the Student Center. We will have guest ministers from across Kigali.', category: 'event', mediaUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=2070&auto=format&fit=crop', mediaType: 'image', author: 'Admin', date: '2024-03-20' },
   ],
   leaders: [
     { id: 'l1', name: 'Alain Christian', position: 'President', academicYear: '2024-2025', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop', type: 'Executive' }
@@ -37,9 +37,11 @@ const INITIAL_DATA: DatabaseSchema = {
   ],
   homeConfig: {
     heroTitle: 'Showing Christ to Academicians',
-    heroSubtitle: '"Agakiza, Urukundo, Umurimo" — A journey of faith, service, and excellence.',
+    heroSubtitle: '"Agakiza, Urukundo, Umurimo" — A journey of faith, service, and excellence at UR Nyarugenge.',
     heroImageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=2070&auto=format&fit=crop',
-    motto: 'Est. 1997 • Rwanda Anglican Students'
+    motto: 'Est. 1997 • Rwanda Anglican Students',
+    aboutTitle: 'Our Sacred Vision',
+    aboutText: 'RASA UR-Nyarugenge is more than an association; it is a family of students united by the Great Commission. Founded in the fires of revival in 1997, we exist to empower students to live out their faith in the university ecosystem.'
   },
   logs: [],
   otps: []

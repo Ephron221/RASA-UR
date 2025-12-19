@@ -55,7 +55,9 @@ const HomeConfigSchema = new Schema({
   heroTitle: { type: String, required: true },
   heroSubtitle: { type: String, required: true },
   heroImageUrl: { type: String, required: true },
-  motto: { type: String, required: true }
+  motto: { type: String, required: true },
+  aboutTitle: { type: String, default: 'Who We Are' },
+  aboutText: { type: String, default: 'RASA is a vibrant community of students...' }
 });
 
 // MEMBER MODEL
