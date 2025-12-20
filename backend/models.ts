@@ -42,6 +42,30 @@ const DepartmentSchema = new Schema({
   activities: [{ type: String }]
 });
 
+// DONATION MODEL
+const DonationSchema = new Schema({
+  donorName: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  amount: { type: Number, required: true },
+  currency: { type: String, default: 'RWF' },
+  category: { type: String, enum: ['One-time', 'Monthly', 'Project-based'], required: true },
+  project: { type: String },
+  date: { type: Date, default: Date.now },
+  status: { type: String, enum: ['Completed', 'Pending', 'Failed'], default: 'Pending' },
+  transactionId: { type: String, unique: true }
+});
+
+// DONATION PROJECT MODEL
+const DonationProjectSchema = new Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  goal: { type: Number, required: true },
+  raised: { type: Number, default: 0 },
+  image: { type: String, required: true },
+  isActive: { type: Boolean, default: true }
+});
+
 // CONTACT MESSAGE MODEL
 const ContactMessageSchema = new Schema({
   fullName: { type: String, required: true },
@@ -59,7 +83,14 @@ const HomeConfigSchema = new Schema({
   heroImageUrl: { type: String, required: true },
   motto: { type: String, required: true },
   aboutTitle: { type: String, default: 'Who We Are' },
-  aboutText: { type: String, default: 'RASA is a vibrant community of students...' }
+  aboutText: { type: String, default: 'RASA is a vibrant community of students...' },
+  aboutImageUrl: { type: String },
+  aboutScripture: { type: String },
+  aboutScriptureRef: { type: String },
+  stat1Value: { type: String },
+  stat1Label: { type: String },
+  stat2Value: { type: String },
+  stat2Label: { type: String }
 });
 
 // MEMBER MODEL
@@ -80,6 +111,8 @@ export const News = mongoose.model('News', NewsSchema);
 export const Leader = mongoose.model('Leader', LeaderSchema);
 export const Announcement = mongoose.model('Announcement', AnnouncementSchema);
 export const Department = mongoose.model('Department', DepartmentSchema);
+export const Donation = mongoose.model('Donation', DonationSchema);
+export const DonationProject = mongoose.model('DonationProject', DonationProjectSchema);
 export const ContactMessage = mongoose.model('ContactMessage', ContactMessageSchema);
 export const HomeConfig = mongoose.model('HomeConfig', HomeConfigSchema);
 export const Member = mongoose.model('Member', MemberSchema);

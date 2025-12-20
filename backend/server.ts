@@ -2,7 +2,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import { News, Leader, Announcement, Member, Department, ContactMessage, HomeConfig } from './models';
+import { News, Leader, Announcement, Member, Department, ContactMessage, HomeConfig, Donation, DonationProject } from './models';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +20,45 @@ mongoose.connect(MONGODB_URI)
 /**
  * PRODUCTION API ROUTES
  */
+
+// DONATIONS MANAGEMENT
+app.get('/api/donations', async (req, res) => {
+  try {
+    const donations = await Donation.find().sort({ date: -1 });
+    res.json(donations);
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch donations' }); }
+});
+
+app.post('/api/donations', async (req, res) => {
+  try {
+    const donation = new Donation(req.body);
+    await donation.save();
+    res.status(201).json(donation);
+  } catch (err) { res.status(400).json({ error: 'Invalid data' }); }
+});
+
+// DONATION PROJECTS
+app.get('/api/donation-projects', async (req, res) => {
+  try {
+    const projects = await DonationProject.find();
+    res.json(projects);
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch projects' }); }
+});
+
+app.post('/api/donation-projects', async (req, res) => {
+  try {
+    const project = new DonationProject(req.body);
+    await project.save();
+    res.status(201).json(project);
+  } catch (err) { res.status(400).json({ error: 'Invalid data' }); }
+});
+
+app.put('/api/donation-projects/:id', async (req, res) => {
+  try {
+    const updated = await DonationProject.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (err) { res.status(400).json({ error: 'Update failed' }); }
+});
 
 // NEWS MANAGEMENT
 app.get('/api/news', async (req, res) => {

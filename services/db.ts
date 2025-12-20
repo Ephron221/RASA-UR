@@ -1,5 +1,5 @@
 
-import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig } from '../types';
+import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig, Donation, DonationProject } from '../types';
 
 const DB_NAME = 'rasa_db';
 
@@ -10,6 +10,8 @@ interface DatabaseSchema {
   announcements: Announcement[];
   departments: Department[];
   contacts: ContactMessage[];
+  donations: Donation[];
+  donationProjects: DonationProject[];
   homeConfig: HomeConfig;
   logs: { id: string; action: string; timestamp: string }[];
   otps: { email: string; otp: string; expires: number }[];
@@ -48,13 +50,27 @@ const INITIAL_DATA: DatabaseSchema = {
   contacts: [
     { id: 'c1', fullName: 'Test User', email: 'test@student.ac.rw', phone: '+250 787 846 433', subject: 'Inquiry', message: 'Hello RASA, I would like to join the worship team.', date: new Date().toISOString(), isRead: false }
   ],
+  donations: [
+    { id: 'd1', donorName: 'Post RASA Alumni', email: 'alumni@test.com', phone: '+250 788 000 001', amount: 50000, currency: 'RWF', category: 'Project-based', project: 'New Sound System', date: '2024-03-10', status: 'Completed', transactionId: 'TX12345678' }
+  ],
+  donationProjects: [
+    { id: 'p1', title: 'New Sound System', description: 'Upgrading our chapel speakers and microphones for better worship quality.', goal: 2000000, raised: 750000, image: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?q=80&w=2070', isActive: true },
+    { id: 'p2', title: 'Mission to Eastern Province', description: 'Supporting our Evangelization department for a weekend-long campus outreach.', goal: 500000, raised: 120000, image: 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?q=80&w=2070', isActive: true }
+  ],
   homeConfig: {
     heroTitle: 'Showing Christ to Academicians',
     heroSubtitle: '"Agakiza, Urukundo, Umurimo" — A journey of faith, service, and excellence at UR Nyarugenge.',
     heroImageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=2070&auto=format&fit=crop',
     motto: 'Est. 1997 • RASA UR-Nyarugenge',
     aboutTitle: 'Our Sacred Vision',
-    aboutText: 'RASA UR-Nyarugenge is more than an association; it is a family of students united by the Great Commission. Founded in the fires of revival in 1997, we exist to empower students to live out their faith in the university ecosystem.'
+    aboutText: 'RASA UR-Nyarugenge is more than an association; it is a family of students united by the Great Commission. Founded in the fires of revival in 1997, we exist to empower students to live out their faith in the university ecosystem.',
+    aboutImageUrl: 'https://images.unsplash.com/photo-1544427928-c49cdfebf193?q=80&w=2000',
+    aboutScripture: 'Until we all reach unity in the faith...',
+    aboutScriptureRef: 'EPHESIANS 4:13',
+    stat1Value: '1.2k+',
+    stat1Label: 'ACTIVE MEMBERS',
+    stat2Value: '10+',
+    stat2Label: 'MINISTRIES'
   },
   logs: [],
   otps: []
@@ -66,7 +82,15 @@ class SimulatedDB {
   constructor() {
     const saved = localStorage.getItem(DB_NAME);
     this.data = saved ? JSON.parse(saved) : INITIAL_DATA;
-    if (!saved) this.save();
+    // Migration for donations if they don't exist in existing data
+    if (saved) {
+      let migrated = false;
+      if (!this.data.donations) { this.data.donations = INITIAL_DATA.donations; migrated = true; }
+      if (!this.data.donationProjects) { this.data.donationProjects = INITIAL_DATA.donationProjects; migrated = true; }
+      if (migrated) this.save();
+    } else {
+      this.save();
+    }
   }
 
   private save() {

@@ -24,15 +24,15 @@ const Overview: React.FC<OverviewProps> = ({ config }) => {
             <div className="absolute -inset-10 bg-cyan-100 rounded-[5rem] blur-3xl opacity-50 -z-10 animate-pulse"></div>
             <div className="relative aspect-[4/5] rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white">
               <img 
-                src="https://images.unsplash.com/photo-1544427928-c49cdfebf193?q=80&w=2000" 
-                alt="Community" 
+                src={config.aboutImageUrl || "https://images.unsplash.com/photo-1544427928-c49cdfebf193?q=80&w=2000"} 
+                alt="Community Vision" 
                 className="w-full h-full object-cover" 
               />
             </div>
             <div className="absolute -bottom-10 -right-10 bg-cyan-500 text-white p-10 rounded-[3rem] shadow-2xl max-w-xs space-y-4">
               <Quote size={40} className="opacity-30" />
-              <p className="font-serif italic text-xl">"Until we all reach unity in the faith..."</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">Ephesians 4:13</p>
+              <p className="font-serif italic text-xl">"{config.aboutScripture}"</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">{config.aboutScriptureRef}</p>
             </div>
           </motion.div>
 
@@ -58,12 +58,12 @@ const Overview: React.FC<OverviewProps> = ({ config }) => {
 
             <div className="grid grid-cols-2 gap-8 pt-6">
               <div className="space-y-2">
-                <p className="text-3xl font-black text-gray-900">1.2k+</p>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Members</p>
+                <p className="text-3xl font-black text-gray-900">{config.stat1Value}</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{config.stat1Label}</p>
               </div>
               <div className="space-y-2">
-                <p className="text-3xl font-black text-gray-900">10+</p>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ministries</p>
+                <p className="text-3xl font-black text-gray-900">{config.stat2Value}</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{config.stat2Label}</p>
               </div>
             </div>
           </motion.div>

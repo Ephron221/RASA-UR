@@ -1,6 +1,6 @@
 
 import { db } from './db';
-import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig } from '../types';
+import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig, Donation, DonationProject } from '../types';
 
 const LATENCY = 400;
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -41,6 +41,17 @@ export const API = {
     create: async (item: Department) => { await delay(LATENCY); return db.insert('departments', item); },
     update: async (id: string, updates: Partial<Department>) => { await delay(LATENCY); return db.update('departments', id, updates); },
     delete: async (id: string) => { await delay(LATENCY); return db.delete('departments', id); }
+  },
+  donations: {
+    getAll: async () => { await delay(LATENCY); return db.getCollection('donations'); },
+    create: async (item: Donation) => { await delay(LATENCY); return db.insert('donations', item); },
+    delete: async (id: string) => { await delay(LATENCY); return db.delete('donations', id); },
+    projects: {
+      getAll: async () => { await delay(LATENCY); return db.getCollection('donationProjects'); },
+      create: async (item: DonationProject) => { await delay(LATENCY); return db.insert('donationProjects', item); },
+      update: async (id: string, updates: Partial<DonationProject>) => { await delay(LATENCY); return db.update('donationProjects', id, updates); },
+      delete: async (id: string) => { await delay(LATENCY); return db.delete('donationProjects', id); }
+    }
   },
   contacts: {
     getAll: async () => { await delay(LATENCY); return db.getCollection('contacts'); },

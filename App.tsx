@@ -14,6 +14,7 @@ import NewsDetail from './pages/NewsDetail';
 import Announcements from './pages/Announcements';
 import Contact from './pages/Contact';
 import Departments from './pages/Departments';
+import Donations from './pages/Donations';
 import ProtectedRoute from './components/ProtectedRoute';
 import { User, NewsItem, Leader, Announcement, Department } from './types';
 import { API } from './services/api';
@@ -94,6 +95,7 @@ const App: React.FC = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/departments" element={<Departments departments={departments} user={user} />} />
             <Route path="/departments/:id" element={<Departments departments={departments} user={user} />} />
+            <Route path="/donations" element={<Donations />} />
             
             <Route 
               path="/dashboard" 
@@ -142,7 +144,6 @@ const AboutPage = () => (
     className="pt-32 pb-20 bg-white"
   >
     <div className="max-container px-4">
-      {/* About Page content remains same */}
       <section className="mb-24">
         <div className="max-container">
           <h1 className="text-6xl md:text-8xl font-bold font-serif italic mb-8 text-gray-900 leading-tight">Our Eternal <span className="text-cyan-500">Genesis</span></h1>

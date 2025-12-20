@@ -68,6 +68,30 @@ export interface ContactMessage {
   isRead: boolean;
 }
 
+export interface Donation {
+  id: string;
+  donorName: string;
+  email: string;
+  phone: string;
+  amount: number;
+  currency: string;
+  category: 'One-time' | 'Monthly' | 'Project-based';
+  project?: string;
+  date: string;
+  status: 'Completed' | 'Pending' | 'Failed';
+  transactionId: string;
+}
+
+export interface DonationProject {
+  id: string;
+  title: string;
+  description: string;
+  goal: number;
+  raised: number;
+  image: string;
+  isActive: boolean;
+}
+
 export interface HomeConfig {
   heroTitle: string;
   heroSubtitle: string;
@@ -75,4 +99,11 @@ export interface HomeConfig {
   motto: string;
   aboutTitle: string;
   aboutText: string;
+  aboutImageUrl: string;
+  aboutScripture: string;
+  aboutScriptureRef: string;
+  stat1Value: string;
+  stat1Label: string;
+  stat2Value: string;
+  stat2Label: string;
 }

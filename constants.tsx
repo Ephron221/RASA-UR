@@ -8,6 +8,7 @@ import {
 import { Department } from './types';
 
 export const DEPARTMENTS: (Department & { details: string; activities: string[] })[] = [
+  // ... existing departments ...
   { 
     id: '1', 
     name: 'Call on Jesus', 
@@ -95,6 +96,7 @@ export const NAV_LINKS = [
   { name: 'About Us', href: '/about' },
   { name: 'News', href: '/news' },
   { name: 'Announcements', href: '/announcements' },
+  { name: 'Support Us', href: '/donations' },
   { name: 'Contact Us', href: '/contact' },
 ];
 

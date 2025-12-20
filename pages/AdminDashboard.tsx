@@ -7,7 +7,7 @@ import {
   Camera, Upload, Database, Bell, Loader2, HardDrive, 
   MessageSquare, Briefcase, Home as HomeIcon, Star, Shield, UserPlus,
   AlertCircle, CheckCircle2, ArrowRight, RefreshCw, Sparkles, Activity,
-  Calendar, Eye, Phone
+  Calendar, Eye, Phone, Heart
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig } from '../types';
@@ -23,6 +23,7 @@ import HomeEditorTab from '../components/admin/HomeEditorTab';
 import DirectoryTab from '../components/admin/DirectoryTab';
 import InboxTab from '../components/admin/InboxTab';
 import SystemTab from '../components/admin/SystemTab';
+import DonationTab from '../components/admin/DonationTab';
 
 interface AdminDashboardProps {
   members: User[];
@@ -41,7 +42,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   members, news, leaders, announcements, depts,
   onUpdateNews, onUpdateLeaders, onUpdateMembers, onUpdateAnnouncements, onUpdateDepartments
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'home' | 'members' | 'content' | 'bulletin' | 'depts' | 'contacts' | 'leaders' | 'system'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'home' | 'members' | 'content' | 'bulletin' | 'depts' | 'contacts' | 'leaders' | 'donations' | 'system'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
@@ -116,10 +117,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const updates = {
       heroTitle: formData.get('heroTitle') as string,
       heroSubtitle: formData.get('heroSubtitle') as string,
-      heroImageUrl: filePreview || urlInput || homeSetup?.heroImageUrl || '',
+      heroImageUrl: filePreview || formData.get('heroImageUrl_manual') as string || homeSetup?.heroImageUrl || '',
       motto: formData.get('motto') as string,
       aboutTitle: formData.get('aboutTitle') as string,
       aboutText: formData.get('aboutText') as string,
+      aboutImageUrl: (formData.get('aboutImageUrl_hidden') as string) || homeSetup?.aboutImageUrl || '',
+      aboutScripture: formData.get('aboutScripture') as string,
+      aboutScriptureRef: formData.get('aboutScriptureRef') as string,
+      stat1Value: formData.get('stat1Value') as string,
+      stat1Label: formData.get('stat1Label') as string,
+      stat2Value: formData.get('stat2Value') as string,
+      stat2Label: formData.get('stat2Label') as string,
     };
     await API.home.updateConfig(updates);
     setHomeSetup(await API.home.getConfig());
@@ -232,6 +240,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   { id: 'bulletin', label: 'Bulletin', icon: Bell },
                   { id: 'depts', label: 'Ministries', icon: Briefcase },
                   { id: 'leaders', label: 'Leadership', icon: UserCheck },
+                  { id: 'donations', label: 'Offering', icon: Heart },
                   { id: 'contacts', label: 'Inbox', icon: MessageSquare },
                   { id: 'system', label: 'System', icon: HardDrive },
                 ].map(tab => (
@@ -391,6 +400,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 </motion.div>
               )}
+
+              {activeTab === 'donations' && <DonationTab />}
 
               {activeTab === 'contacts' && <InboxTab contactMsgs={contactMsgs} onMarkRead={async (id) => { await API.contacts.markRead(id); fetchData(); }} onMarkAllRead={async () => { await API.contacts.markAllRead(); fetchData(); }} onDelete={(id) => performDelete('contacts', id)} />}
 
