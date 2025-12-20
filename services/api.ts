@@ -45,6 +45,7 @@ export const API = {
   donations: {
     getAll: async () => { await delay(LATENCY); return db.getCollection('donations'); },
     create: async (item: Donation) => { await delay(LATENCY); return db.insert('donations', item); },
+    updateStatus: async (id: string, status: 'Completed' | 'Pending' | 'Failed') => { await delay(LATENCY); return db.update('donations', id, { status }); },
     delete: async (id: string) => { await delay(LATENCY); return db.delete('donations', id); },
     projects: {
       getAll: async () => { await delay(LATENCY); return db.getCollection('donationProjects'); },
