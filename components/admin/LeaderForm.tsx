@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, Upload, UserCheck, GraduationCap, Shield, Save, X, Loader2, Star, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Camera, Upload, UserCheck, GraduationCap, Shield, Save, X, Loader2, Star, CheckCircle2, AlertCircle, Phone } from 'lucide-react';
 import { Leader } from '../../types';
 
 interface LeaderFormProps {
@@ -146,6 +146,19 @@ const LeaderForm: React.FC<LeaderFormProps> = ({
           />
         </div>
 
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 ml-4 tracking-[0.2em]">
+            <Phone size={14} className="text-cyan-500" /> Contact Number
+          </label>
+          <input 
+            name="phone" 
+            defaultValue={editingItem?.phone} 
+            required 
+            placeholder="e.g. +250 787 846 433"
+            className="w-full px-6 py-5 bg-gray-50 border border-gray-100 rounded-[1.8rem] font-bold text-sm focus:bg-white outline-none transition-all" 
+          />
+        </div>
+
         {/* Improved Selections */}
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 ml-4 tracking-[0.2em]">
@@ -167,7 +180,7 @@ const LeaderForm: React.FC<LeaderFormProps> = ({
           </div>
         </div>
 
-        <div className="md:col-span-2 space-y-3">
+        <div className="space-y-3">
           <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 ml-4 tracking-[0.2em]">
             <Star size={14} className="text-cyan-500" /> Organizational Category
           </label>

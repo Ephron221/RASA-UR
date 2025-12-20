@@ -40,6 +40,7 @@ export interface Leader {
   id: string;
   name: string;
   position: string;
+  phone: string;
   academicYear: string;
   image: string;
   type: 'Executive' | 'Arbitration';
@@ -60,6 +61,7 @@ export interface ContactMessage {
   id: string;
   fullName: string;
   email: string;
+  phone: string;
   subject: string;
   message: string;
   date: string;

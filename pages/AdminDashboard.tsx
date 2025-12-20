@@ -7,7 +7,7 @@ import {
   Camera, Upload, Database, Bell, Loader2, HardDrive, 
   MessageSquare, Briefcase, Home as HomeIcon, Star, Shield, UserPlus,
   AlertCircle, CheckCircle2, ArrowRight, RefreshCw, Sparkles, Activity,
-  Calendar, Eye
+  Calendar, Eye, Phone
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig } from '../types';
@@ -167,6 +167,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       } else if (showModal === 'leader') {
         const item = { 
           name: formData.get('name') as string, position: formData.get('position') as string, 
+          phone: formData.get('phone') as string,
           academicYear: formData.get('academicYear') as string, image: media, 
           type: formData.get('type') as any 
         };
@@ -369,7 +370,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {leaders.map(l => (
                       <div key={l.id} className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col items-center text-center space-y-4 group transition-all hover:shadow-xl relative">
                         <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-gray-50 relative"><img src={l.image} className="w-full h-full object-cover transition-all duration-500" alt={l.name} /></div>
-                        <div><p className="font-black text-gray-900">{l.name}</p><p className="text-xs text-cyan-600 font-bold uppercase tracking-widest">{l.position}</p></div>
+                        <div className="space-y-1">
+                          <p className="font-black text-gray-900">{l.name}</p>
+                          <p className="text-xs text-cyan-600 font-bold uppercase tracking-widest">{l.position}</p>
+                          <div className="flex items-center justify-center gap-1.5 mt-1">
+                            <Calendar size={12} className="text-gray-400" />
+                            <span className="text-[10px] font-bold text-gray-400 uppercase">{l.academicYear}</span>
+                          </div>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Phone size={10} className="text-gray-400" />
+                            <span className="text-[10px] font-bold text-gray-400">{l.phone}</span>
+                          </div>
+                        </div>
                         <div className="flex gap-2 pt-2">
                           <button onClick={() => handleEditInitiation(l, 'leader')} className="p-2.5 bg-gray-50 text-gray-400 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Edit size={16}/></button>
                           <button onClick={() => performDelete('leaders', l.id)} className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={16}/></button>

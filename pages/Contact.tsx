@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, Facebook, Twitter, Instagram, MessageSquare, CheckCircle2, Loader2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Facebook, Twitter, Instagram, MessageSquare, CheckCircle2, Loader2, User as UserIcon } from 'lucide-react';
 import { API } from '../services/api';
 
 const Contact: React.FC = () => {
@@ -16,6 +16,7 @@ const Contact: React.FC = () => {
     const msg = {
       fullName: formData.get('fullName') as string,
       email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
       subject: formData.get('subject') as string,
       message: formData.get('message') as string,
     };
@@ -62,12 +63,30 @@ const Contact: React.FC = () => {
                 {!isSuccess ? (
                   <motion.form key="form" exit={{ opacity: 0, y: -20 }} className="space-y-8" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 ml-4 block uppercase">Full Name</label><input required name="fullName" type="text" placeholder="John Doe" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" /></div>
-                      <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 ml-4 block uppercase">Email</label><input required name="email" type="email" placeholder="john@example.com" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" /></div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Full Name</label>
+                        <input required name="fullName" type="text" placeholder="John Doe" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Email</label>
+                        <input required name="email" type="email" placeholder="john@example.com" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" />
+                      </div>
                     </div>
-                    <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 ml-4 block uppercase">Subject</label><input required name="subject" type="text" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" placeholder="Purpose of contact" /></div>
-                    <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 ml-4 block uppercase">Message</label><textarea required name="message" rows={5} placeholder="Type your message..." className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-medium text-sm transition-all resize-none"></textarea></div>
-                    <button disabled={isSubmitting} className="w-full py-5 bg-cyan-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:bg-cyan-600 transition-all flex items-center justify-center gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Phone Number</label>
+                        <input required name="phone" type="tel" placeholder="+250..." className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Subject</label>
+                        <input required name="subject" type="text" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" placeholder="Purpose of contact" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Message</label>
+                      <textarea required name="message" rows={5} placeholder="Type your message..." className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-medium text-sm transition-all resize-none"></textarea>
+                    </div>
+                    <button disabled={isSubmitting} className="w-full py-5 bg-cyan-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:bg-cyan-600 transition-all flex items-center justify-center gap-3 active:scale-95">
                       {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />} Send Message
                     </button>
                   </motion.form>
@@ -75,7 +94,7 @@ const Contact: React.FC = () => {
                   <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-20 text-center space-y-6">
                     <div className="w-24 h-24 bg-cyan-50 text-cyan-500 rounded-full flex items-center justify-center mx-auto"><CheckCircle2 size={48} /></div>
                     <h3 className="text-3xl font-black font-serif italic text-gray-900">Message Sent!</h3>
-                    <p className="text-gray-500 font-medium">Thank you for connecting. We will reach out to you shortly.</p>
+                    <p className="text-gray-500 font-medium">Thank you for connecting. We will reach out to you shortly via email or phone.</p>
                   </motion.div>
                 )}
               </AnimatePresence>
