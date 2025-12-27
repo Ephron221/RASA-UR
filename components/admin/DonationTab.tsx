@@ -25,7 +25,9 @@ const DonationTab: React.FC<DonationTabProps> = ({ user }) => {
 
   // Permission Logic
   const isIT = user.role === 'it';
-  const canVerify = ['accountant', 'it', 'admin'].includes(user.role);
+  // Restricted: Only the Accountant role can now verify funds.
+  // Removal of 'it' and 'admin' from this specific verification logic to ensure accountability.
+  const canVerify = user.role === 'accountant';
   const canDelete = isIT;
 
   const fetchData = async () => {
@@ -153,6 +155,11 @@ const DonationTab: React.FC<DonationTabProps> = ({ user }) => {
                   </td>
                 </tr>
               ))}
+              {filteredDonations.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-20 text-center text-gray-300 italic">No offering sequences recorded in this category.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

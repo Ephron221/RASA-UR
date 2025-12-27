@@ -5,7 +5,7 @@ import {
   Users, Newspaper, UserCheck, Plus, 
   LayoutDashboard, Home as HomeIcon, Heart, 
   MessageSquare, Briefcase, Bell, HardDrive, 
-  History, Shield, Loader2, Database, Search
+  History, Shield, Loader2, Database, Search, Sparkles
 } from 'lucide-react';
 import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig, AboutConfig } from '../types';
 import { API } from '../services/api';
@@ -22,6 +22,7 @@ import LeadershipTab from '../components/admin/LeadershipTab';
 import DonationTab from '../components/admin/DonationTab';
 import InboxTab from '../components/admin/InboxTab';
 import SystemTab from '../components/admin/SystemTab';
+import SpiritualHubTab from '../components/admin/SpiritualHubTab';
 
 // Modal Forms
 import NewsForm from '../components/admin/NewsForm';
@@ -80,13 +81,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     canManageMembers: isIT,
     canUpdateContent: isIT || isSecretary || isAdmin || isExecutive,
     canDelete: isIT,
-    canVerifyDonations: isIT || isAccountant
+    // Strictly restrict donation verification to the Accountant role
+    canVerifyDonations: isAccountant
   }), [currentUser.role]);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'home', label: 'Home Editor', icon: HomeIcon },
     { id: 'about', label: 'About Editor', icon: History },
+    { id: 'spiritual', label: 'Spiritual Hub', icon: Sparkles },
     { id: 'members', label: 'Directory', icon: Users },
     { id: 'content', label: 'News Feed', icon: Newspaper },
     { id: 'bulletin', label: 'Bulletin', icon: Bell },
@@ -157,7 +160,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           mediaUrl: media, 
           mediaType: formData.get('mediaType') as any, 
           author: currentUser.fullName, 
-          date: editingItem?.date || new Date().toISOString().split('T')[0] 
+          date: editingItem?.date || new Date().toISOString().split('T')[0],
+          startDate: formData.get('startDate') as string || undefined,
+          endDate: formData.get('endDate') as string || undefined,
         };
         if (editingItem) await API.news.update(editingItem.id, item); 
         else await API.news.create({ ...item, id: Math.random().toString(36).substr(2, 9) } as any);
@@ -249,7 +254,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {activeTab === 'overview' && <OverviewTab members={members} news={news} leaders={leaders} announcements={announcements} contactMsgs={contactMsgs} depts={depts} logs={logs} />}
               {activeTab === 'home' && <HomeEditorTab homeSetup={homeSetup} filePreview={filePreview} urlInput={urlInput} onFileChange={handleFileChange} onUrlChange={setUrlInput} onSubmit={async (e) => { e.preventDefault(); setIsSyncing(true); await API.home.updateConfig(homeSetup!); setIsSyncing(false); }} />}
               {activeTab === 'about' && <AboutEditorTab config={aboutSetup} isSyncing={isSyncing} onSubmit={async (u) => { setIsSyncing(true); await API.about.updateConfig(u); fetchData(); setIsSyncing(false); }} />}
-              {activeTab === 'members' && <DirectoryTab members={members} searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewMember={() => setShowModal('member')} onEditMember={(m) => {setEditingItem(m); setShowModal('member');}} onDeleteMember={(id) => commitWipe('members', id)} onToggleAdmin={(m) => {setEditingItem(m); setShowModal('member');}} />}
+              {activeTab === 'spiritual' && <SpiritualHubTab />}
+              {activeTab === 'members' && <DirectoryTab members={members} searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewMember={() => setShowModal('member')} onEditMember={(m) => {setEditingItem(m); setShowModal('member');}} onDeleteMember={(id) => commitWipe('members', id)} onToggleAdmin={(m) => {setEditingItem(m); setShowModal('member');}} currentUser={currentUser} />}
               {activeTab === 'content' && <NewsFeedTab news={news} onNew={() => setShowModal('news')} onEdit={(item) => { setEditingItem(item); setShowModal('news'); }} onDelete={(id) => commitWipe('news', id)} />}
               {activeTab === 'bulletin' && <BulletinTab announcements={announcements} onNew={() => setShowModal('ann')} onEdit={(a) => {setEditingItem(a); setShowModal('ann');}} onDelete={(id) => commitWipe('announcements', id)} />}
               {activeTab === 'depts' && <MinistriesTab departments={depts} onNew={() => setShowModal('dept')} onEdit={(d) => {setEditingItem(d); setShowModal('dept');}} onDelete={(id) => commitWipe('departments', id)} />}

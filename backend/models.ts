@@ -9,7 +9,9 @@ const NewsSchema = new Schema({
   mediaUrl: { type: String, required: true },
   mediaType: { type: String, enum: ['image', 'video', 'audio'], default: 'image' },
   author: { type: String, default: 'Admin' },
-  date: { type: String, default: () => new Date().toISOString().split('T')[0] }
+  date: { type: String, default: () => new Date().toISOString().split('T')[0] },
+  startDate: { type: String },
+  endDate: { type: String }
 });
 
 // LEADER MODEL
@@ -41,6 +43,22 @@ const DepartmentSchema = new Schema({
   category: { type: String, default: 'Ministry' },
   details: { type: String, required: true },
   activities: [{ type: String }]
+});
+
+// DEPARTMENT INTEREST (RECRUITMENT) MODEL
+const DepartmentInterestSchema = new Schema({
+  fullName: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  diocese: { type: String, required: true },
+  level: { type: String, required: true },
+  program: { type: String, required: true },
+  motivation: { type: String, required: true },
+  experience: { type: String },
+  departmentId: { type: String, required: true },
+  departmentName: { type: String, required: true },
+  status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+  date: { type: Date, default: Date.now }
 });
 
 // DONATION MODEL
@@ -133,6 +151,7 @@ export const News = mongoose.model('News', NewsSchema);
 export const Leader = mongoose.model('Leader', LeaderSchema);
 export const Announcement = mongoose.model('Announcement', AnnouncementSchema);
 export const Department = mongoose.model('Department', DepartmentSchema);
+export const DepartmentInterest = mongoose.model('DepartmentInterest', DepartmentInterestSchema);
 export const Donation = mongoose.model('Donation', DonationSchema);
 export const DonationProject = mongoose.model('DonationProject', DonationProjectSchema);
 export const ContactMessage = mongoose.model('ContactMessage', ContactMessageSchema);

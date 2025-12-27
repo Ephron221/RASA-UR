@@ -9,8 +9,9 @@ import {
   X, Send, Phone, User as UserIcon, GraduationCap, MapPin, CheckCircle2, Loader2,
   ChevronRight, ChevronLeft, Award, BookOpen
 } from 'lucide-react';
-import { Department, User } from '../types';
+import { Department, User, DepartmentInterest } from '../types';
 import { DIOCESES, LEVELS } from '../constants';
+import { API } from '../services/api';
 
 interface DepartmentsProps {
   departments: Department[];
@@ -28,6 +29,19 @@ const IconMap: Record<string, any> = {
   Zap: Zap,
   Mic: Mic,
   Handshake: Handshake
+};
+
+const SmartIcon: React.FC<{ icon: string; size?: number; className?: string }> = ({ icon, size = 32, className = "" }) => {
+  if (!icon) return <Info size={size} className={className} />;
+  
+  // Check if it's a base64 image or URL
+  if (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/')) {
+    return <img src={icon} alt="Icon" className={`object-contain ${className}`} style={{ width: size, height: size }} />;
+  }
+
+  // Fallback to Lucide Component
+  const LucideIcon = IconMap[icon] || Info;
+  return <LucideIcon size={size} className={className} />;
 };
 
 const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
@@ -54,13 +68,37 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleInterestSubmit = (e: React.FormEvent) => {
+  const handleInterestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    
+    if (!activeDept) return;
+
+    const interest: DepartmentInterest = {
+      id: Math.random().toString(36).substr(2, 9),
+      fullName: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      diocese: formData.diocese,
+      level: formData.level,
+      program: formData.program,
+      motivation: formData.motivation,
+      experience: formData.experience,
+      departmentId: activeDept.id,
+      departmentName: activeDept.name,
+      status: 'Pending',
+      date: new Date().toISOString(),
+    };
+
+    try {
+      await API.departments.submitInterest(interest);
       setIsSuccess(true);
-    }, 2000);
+    } catch (err) {
+      console.error("Transmission failed", err);
+      alert("Failed to broadcast interest. Please check your connectivity.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
@@ -78,6 +116,7 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
   return (
     <div className="min-h-screen pt-32 pb-20 bg-white">
       <div className="max-container px-4">
+        {/* Navigation / Filter */}
         <div className="flex flex-wrap gap-2 mb-16 justify-center">
           <Link 
             to="/departments" 
@@ -106,46 +145,41 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
               key="listing"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
               <div className="lg:col-span-3 mb-8 text-center space-y-4">
                 <h1 className="text-5xl md:text-7xl font-bold font-serif italic text-gray-900">RASA <span className="text-cyan-500">Ministries</span></h1>
                 <p className="text-gray-500 max-w-2xl mx-auto text-lg font-medium">Discover your place of service within our diverse range of campus departments.</p>
               </div>
-              {departments.map((dept, i) => {
-                const Icon = IconMap[dept.icon] || Info;
-                return (
-                  <motion.div 
-                    key={dept.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="group bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-cyan-500/5 transition-all duration-500 flex flex-col items-center text-center space-y-6"
+              {departments.map((dept, i) => (
+                <motion.div 
+                  key={dept.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="group bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-cyan-500/5 transition-all duration-500 flex flex-col items-center text-center space-y-6"
+                >
+                  <div className="w-20 h-20 bg-cyan-50 text-cyan-500 rounded-3xl flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-500 overflow-hidden">
+                    <SmartIcon icon={dept.icon} size={32} className="transition-all" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-black text-gray-900">{dept.name}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-2">{dept.description}</p>
+                  </div>
+                  <Link 
+                    to={`/departments/${dept.id}`} 
+                    className="inline-flex items-center gap-2 text-cyan-600 font-black text-[10px] uppercase tracking-widest pt-4 group-hover:gap-4 transition-all"
                   >
-                    <div className="w-20 h-20 bg-cyan-50 text-cyan-500 rounded-3xl flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-500">
-                      <Icon size={32} />
-                    </div>
-                    <div className="space-y-3">
-                      <h3 className="text-2xl font-black text-gray-900">{dept.name}</h3>
-                      <p className="text-gray-500 text-sm leading-relaxed line-clamp-2">{dept.description}</p>
-                    </div>
-                    <Link 
-                      to={`/departments/${dept.id}`} 
-                      className="inline-flex items-center gap-2 text-cyan-600 font-black text-[10px] uppercase tracking-widest pt-4 group-hover:gap-4 transition-all"
-                    >
-                      View Details <ArrowRight size={14} />
-                    </Link>
-                  </motion.div>
-                );
-              })}
+                    View Details <ArrowRight size={14} />
+                  </Link>
+                </motion.div>
+              ))}
             </motion.div>
           ) : (
             <motion.div 
               key="detail"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
               className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start"
             >
               <div className="lg:col-span-7 space-y-12">
@@ -202,8 +236,8 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-40 group-hover:opacity-10"></div>
                   <div className="absolute bottom-10 left-10">
-                    <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/20 shadow-xl">
-                      {React.createElement(IconMap[activeDept.icon] || Info, { size: 40, className: "text-white shadow-sm" })}
+                    <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/20 shadow-xl overflow-hidden p-4">
+                      <SmartIcon icon={activeDept.icon} size={40} className="text-white shadow-sm" />
                     </div>
                   </div>
                 </div>
@@ -224,7 +258,7 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
         </AnimatePresence>
       </div>
 
-      {/* REFACTORED Express Interest Modal - Scrollable Multi-step Interactive Journey */}
+      {/* Interest Modal */}
       <AnimatePresence>
         {showInterestModal && (
           <motion.div 
@@ -239,7 +273,6 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
               exit={{ scale: 0.9, y: 30 }}
               className="bg-white w-full max-w-2xl rounded-[4rem] shadow-[0_50px_100px_rgba(0,0,0,0.4)] overflow-hidden border border-white relative flex flex-col max-h-[90vh]"
             >
-              {/* Header - Fixed at Top */}
               <div className="relative h-44 shrink-0 bg-gray-900 flex flex-col justify-center items-center text-center overflow-hidden">
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
                   <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500 rounded-full blur-[100px]"></div>
@@ -254,8 +287,8 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                 </button>
 
                 <div className="relative z-10 space-y-4">
-                  <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center mx-auto text-cyan-600 shadow-2xl">
-                    {React.createElement(IconMap[activeDept?.icon || 'Flame'], { size: 28 })}
+                  <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center mx-auto text-cyan-600 shadow-2xl overflow-hidden p-3">
+                    <SmartIcon icon={activeDept?.icon || 'Flame'} size={28} />
                   </div>
                   <div className="space-y-1">
                     <p className="text-[9px] font-black uppercase text-cyan-400 tracking-[0.4em]">Section {currentStep} of 3</p>
@@ -263,7 +296,6 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                   </div>
                 </div>
 
-                {/* Internal Progress Bar */}
                 <div className="absolute bottom-0 left-0 w-full h-1.5 bg-white/5">
                   <motion.div 
                     initial={{ width: '0%' }}
@@ -273,7 +305,6 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                 </div>
               </div>
 
-              {/* Scrollable Body Container */}
               <div className="flex-grow overflow-y-auto scroll-hide p-8 md:p-14 bg-[#FDFDFD]">
                 <AnimatePresence mode="wait">
                   {isSuccess ? (
@@ -290,9 +321,9 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                         </div>
                       </div>
                       <div className="space-y-4 px-6">
-                        <h4 className="text-4xl font-black text-gray-900 font-serif italic tracking-tight leading-tight">Divine Initiative Sent</h4>
+                        <h4 className="text-4xl font-black text-gray-900 font-serif italic tracking-tight leading-tight">Recruitment Initiated</h4>
                         <p className="text-gray-500 font-medium text-lg leading-relaxed max-w-sm mx-auto">
-                          Thank you, <span className="text-cyan-600 font-bold">{formData.fullName.split(' ')[0]}</span>. Your interest in <span className="font-bold">{activeDept?.name}</span> has been securely transmitted.
+                          Thank you, <span className="text-cyan-600 font-bold">{formData.fullName.split(' ')[0]}</span>. Your application for <span className="font-bold">{activeDept?.name}</span> has been securely stored for the HOD review.
                         </p>
                       </div>
                       <button 
@@ -314,61 +345,27 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                             className="space-y-8"
                           >
                             <div className="space-y-2 border-l-4 border-cyan-500 pl-6">
-                              <h4 className="text-2xl font-black text-gray-900 flex items-center gap-3 italic font-serif">
-                                Identity & Root
-                              </h4>
+                              <h4 className="text-2xl font-black text-gray-900 flex items-center gap-3 italic font-serif">Identity & Root</h4>
                               <p className="text-sm text-gray-400 font-medium uppercase tracking-widest">Confirm your fellowship credentials</p>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                              <div className="space-y-3 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest group-focus-within:text-cyan-500 transition-colors">Legal Full Name</label>
-                                <div className="relative">
-                                  <UserIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500 transition-colors" size={18} />
-                                  <input 
-                                    value={formData.fullName} 
-                                    onChange={e => updateFormData('fullName', e.target.value)}
-                                    className="w-full pl-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all shadow-inner" 
-                                    placeholder="e.g. John Doe"
-                                  />
-                                </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Full Name</label>
+                                <input value={formData.fullName} onChange={e => updateFormData('fullName', e.target.value)} className="w-full px-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all" />
                               </div>
-                              <div className="space-y-3 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest group-focus-within:text-cyan-500 transition-colors">Primary Email</label>
-                                <div className="relative">
-                                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500 transition-colors" size={18} />
-                                  <input 
-                                    type="email"
-                                    value={formData.email} 
-                                    onChange={e => updateFormData('email', e.target.value)}
-                                    className="w-full pl-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all shadow-inner" 
-                                    placeholder="student@ur.ac.rw"
-                                  />
-                                </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Email</label>
+                                <input value={formData.email} onChange={e => updateFormData('email', e.target.value)} className="w-full px-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all" />
                               </div>
-                              <div className="space-y-3 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest group-focus-within:text-cyan-500 transition-colors">Contact Phone</label>
-                                <div className="relative">
-                                  <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500 transition-colors" size={18} />
-                                  <input 
-                                    value={formData.phone} 
-                                    onChange={e => updateFormData('phone', e.target.value)}
-                                    className="w-full pl-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all shadow-inner" 
-                                    placeholder="+250..."
-                                  />
-                                </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Phone</label>
+                                <input value={formData.phone} onChange={e => updateFormData('phone', e.target.value)} className="w-full px-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all" />
                               </div>
-                              <div className="space-y-3 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest group-focus-within:text-cyan-500 transition-colors">Home Diocese</label>
-                                <div className="relative">
-                                  <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500 transition-colors" size={18} />
-                                  <select 
-                                    value={formData.diocese} 
-                                    onChange={e => updateFormData('diocese', e.target.value)}
-                                    className="w-full pl-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all appearance-none cursor-pointer shadow-inner"
-                                  >
-                                    {DIOCESES.map(d => <option key={d} value={d}>{d}</option>)}
-                                  </select>
-                                </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Home Diocese</label>
+                                <select value={formData.diocese} onChange={e => updateFormData('diocese', e.target.value)} className="w-full px-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all">
+                                  {DIOCESES.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
                               </div>
                             </div>
                           </motion.div>
@@ -383,38 +380,19 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                             className="space-y-8"
                           >
                             <div className="space-y-2 border-l-4 border-cyan-500 pl-6">
-                              <h4 className="text-2xl font-black text-gray-900 flex items-center gap-3 italic font-serif">
-                                Academic Synchronization
-                              </h4>
+                              <h4 className="text-2xl font-black text-gray-900 flex items-center gap-3 italic font-serif">Academic Synchronization</h4>
                               <p className="text-sm text-gray-400 font-medium uppercase tracking-widest">Excellence in both study and service</p>
                             </div>
                             <div className="space-y-8">
-                              <div className="space-y-3 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest group-focus-within:text-cyan-500 transition-colors">Academic Program</label>
-                                <div className="relative">
-                                  <GraduationCap className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500 transition-colors" size={18} />
-                                  <input 
-                                    value={formData.program} 
-                                    onChange={e => updateFormData('program', e.target.value)}
-                                    className="w-full pl-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all shadow-inner" 
-                                    placeholder="e.g. BEng. Software Engineering"
-                                  />
-                                </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Academic Program</label>
+                                <input value={formData.program} onChange={e => updateFormData('program', e.target.value)} className="w-full px-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all" />
                               </div>
-                              <div className="space-y-4 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest">Current Learning Level</label>
+                              <div className="space-y-4">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Current Level</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                                   {LEVELS.map(level => (
-                                    <button 
-                                      key={level}
-                                      type="button"
-                                      onClick={() => updateFormData('level', level)}
-                                      className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                        formData.level === level 
-                                          ? 'bg-cyan-500 text-white shadow-xl shadow-cyan-100 scale-105' 
-                                          : 'bg-gray-50 text-gray-400 hover:bg-cyan-50 hover:text-cyan-600 border border-transparent hover:border-cyan-100'
-                                      }`}
-                                    >
+                                    <button key={level} type="button" onClick={() => updateFormData('level', level)} className={`py-4 rounded-2xl text-[10px] font-black uppercase transition-all ${formData.level === level ? 'bg-cyan-500 text-white shadow-xl' : 'bg-gray-50 text-gray-400 hover:bg-cyan-50'}`}>
                                       {level.split(' ')[1]}
                                     </button>
                                   ))}
@@ -433,37 +411,17 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                             className="space-y-8"
                           >
                             <div className="space-y-2 border-l-4 border-cyan-500 pl-6">
-                              <h4 className="text-2xl font-black text-gray-900 flex items-center gap-3 italic font-serif">
-                                Spiritual Stewardship
-                              </h4>
+                              <h4 className="text-2xl font-black text-gray-900 flex items-center gap-3 italic font-serif">Spiritual Stewardship</h4>
                               <p className="text-sm text-gray-400 font-medium uppercase tracking-widest">Your divine contribution to RASA</p>
                             </div>
                             <div className="space-y-8">
-                              <div className="space-y-3 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest flex items-center gap-2">
-                                  <BookOpen size={14} className="text-cyan-500" /> Divine Motivation (Required)
-                                </label>
-                                <textarea 
-                                  rows={5}
-                                  value={formData.motivation} 
-                                  onChange={e => updateFormData('motivation', e.target.value)}
-                                  className="w-full px-8 py-6 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-[2rem] font-medium text-sm outline-none transition-all resize-none leading-relaxed shadow-inner" 
-                                  placeholder="Describe how the Spirit has led you to this ministry..."
-                                />
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Divine Motivation (Required)</label>
+                                <textarea rows={5} value={formData.motivation} onChange={e => updateFormData('motivation', e.target.value)} className="w-full px-8 py-6 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-[2rem] font-medium text-sm outline-none transition-all resize-none shadow-inner" placeholder="Describe how the Spirit has led you to this ministry..." />
                               </div>
-                              <div className="space-y-3 group">
-                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase tracking-widest flex items-center gap-2">
-                                  <Star size={14} className="text-cyan-500" /> Talents or Relevant History
-                                </label>
-                                <div className="relative">
-                                  <Award className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500 transition-colors" size={18} />
-                                  <input 
-                                    value={formData.experience} 
-                                    onChange={e => updateFormData('experience', e.target.value)}
-                                    className="w-full pl-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all shadow-inner" 
-                                    placeholder="e.g. Instrumental proficiency, past ushering..."
-                                  />
-                                </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 ml-4 uppercase">Experience (Optional)</label>
+                                <input value={formData.experience} onChange={e => updateFormData('experience', e.target.value)} className="w-full px-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all" placeholder="e.g. Past choir experience..." />
                               </div>
                             </div>
                           </motion.div>
@@ -474,43 +432,18 @@ const Departments: React.FC<DepartmentsProps> = ({ departments, user }) => {
                 </AnimatePresence>
               </div>
 
-              {/* Footer - Fixed at Bottom */}
               {!isSuccess && (
                 <div className="p-10 md:px-14 md:py-8 border-t border-gray-100 flex items-center justify-between gap-6 bg-white shrink-0">
-                  <button 
-                    onClick={prevStep}
-                    disabled={currentStep === 1 || isSubmitting}
-                    className={`flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] transition-all px-4 py-2 rounded-xl hover:bg-gray-50 ${
-                      currentStep === 1 ? 'opacity-0 pointer-events-none' : 'text-gray-400 hover:text-gray-900'
-                    }`}
-                  >
+                  <button onClick={prevStep} disabled={currentStep === 1 || isSubmitting} className={`flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] transition-all px-4 py-2 rounded-xl hover:bg-gray-50 ${currentStep === 1 ? 'opacity-0 pointer-events-none' : 'text-gray-400 hover:text-gray-900'}`}>
                     <ChevronLeft size={16} /> Back
                   </button>
-                  
                   {currentStep < 3 ? (
-                    <button 
-                      onClick={nextStep}
-                      className="px-12 py-5 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 group active:scale-95 transition-all hover:bg-cyan-600"
-                    >
+                    <button onClick={nextStep} className="px-12 py-5 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 group active:scale-95 transition-all hover:bg-cyan-600">
                       Continue <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                   ) : (
-                    <button 
-                      disabled={isSubmitting || !formData.motivation.trim()}
-                      onClick={handleInterestSubmit}
-                      className="px-12 py-5 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(6,182,212,0.3)] flex items-center gap-4 group active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none hover:bg-cyan-600"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="animate-spin" size={18} />
-                          Broadcasting...
-                        </>
-                      ) : (
-                        <>
-                          <Send size={18} />
-                          Broadcast Interest
-                        </>
-                      )}
+                    <button disabled={isSubmitting || !formData.motivation.trim()} onClick={handleInterestSubmit} className="px-12 py-5 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(6,182,212,0.3)] flex items-center gap-4 group active:scale-95 transition-all disabled:opacity-50 hover:bg-cyan-600">
+                      {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />} Broadcast Interest
                     </button>
                   )}
                 </div>

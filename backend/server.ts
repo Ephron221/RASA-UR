@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import { 
   News, Leader, Announcement, Member, 
-  Department, ContactMessage, HomeConfig, 
-  Donation, DonationProject, AboutConfig
+  Department, DepartmentInterest, ContactMessage, 
+  HomeConfig, Donation, DonationProject, AboutConfig
 } from './models';
 
 const app = express();
@@ -21,9 +21,36 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-/**
- * PRODUCTION API ROUTES
- */
+// RECRUITMENT (DEPARTMENT INTERESTS)
+app.get('/api/departments/interests', async (req, res) => {
+  try {
+    const interests = await DepartmentInterest.find().sort({ date: -1 });
+    res.json(interests);
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch recruitment data' }); }
+});
+
+app.post('/api/departments/interest', async (req, res) => {
+  try {
+    const interest = new DepartmentInterest(req.body);
+    await interest.save();
+    res.status(201).json(interest);
+  } catch (err) { res.status(400).json({ error: 'Recruitment submission failed' }); }
+});
+
+app.patch('/api/departments/interests/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const updated = await DepartmentInterest.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    res.json(updated);
+  } catch (err) { res.status(400).json({ error: 'Status transition failed' }); }
+});
+
+app.delete('/api/departments/interests/:id', async (req, res) => {
+  try {
+    await DepartmentInterest.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (err) { res.status(500).json({ error: 'Deletion failed' }); }
+});
 
 // MEMBERS
 app.get('/api/members', async (req, res) => {

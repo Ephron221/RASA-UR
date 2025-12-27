@@ -1,5 +1,9 @@
 
-import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig, Donation, DonationProject, AboutConfig } from '../types';
+import { 
+  User, NewsItem, Leader, Announcement, Department, DepartmentInterest, ContactMessage, 
+  HomeConfig, Donation, DonationProject, AboutConfig,
+  DailyVerse, VerseReflection, BibleQuiz, QuizResult
+} from '../types';
 import { db } from './db';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -51,6 +55,38 @@ export const API = {
     verifyOTP: (email: string, otp: string) => hybridFetch('auth/verify', 'POST', { email, otp }, () => db.verifyOTP(email, otp)),
     resetPassword: (email: string, pass: string) => hybridFetch('auth/reset', 'POST', { email, newPassword: pass }, () => db.update('members', null, { email, password: pass }))
   },
+  spiritual: {
+    verses: {
+      getDaily: () => hybridFetch('spiritual/verses/daily', 'GET', null, async () => {
+        const vs = await db.getCollection('verses');
+        return vs.find(v => v.isActive) || null;
+      }),
+      getAll: () => hybridFetch('spiritual/verses', 'GET', null, () => db.getCollection('verses')),
+      create: (v: DailyVerse) => hybridFetch('spiritual/verses', 'POST', v, () => db.insert('verses', v)),
+      update: (id: string, updates: any) => hybridFetch(`spiritual/verses/${id}`, 'PUT', updates, () => db.update('verses', id, updates)),
+      delete: (id: string) => hybridFetch(`spiritual/verses/${id}`, 'DELETE', null, () => db.delete('verses', id)),
+      addReflection: (r: VerseReflection) => hybridFetch('spiritual/reflections', 'POST', r, () => db.insert('reflections', r)),
+      getReflections: () => hybridFetch('spiritual/reflections', 'GET', null, () => db.getCollection('reflections'))
+    },
+    quizzes: {
+      getAll: () => hybridFetch('spiritual/quizzes', 'GET', null, () => db.getCollection('quizzes')),
+      getActive: () => hybridFetch('spiritual/quizzes/active', 'GET', null, async () => {
+        const qz = await db.getCollection('quizzes');
+        return qz.filter(q => q.isActive);
+      }),
+      create: (q: BibleQuiz) => hybridFetch('spiritual/quizzes', 'POST', q, () => db.insert('quizzes', q)),
+      update: (id: string, updates: any) => hybridFetch(`spiritual/quizzes/${id}`, 'PUT', updates, () => db.update('quizzes', id, updates)),
+      delete: (id: string) => hybridFetch(`spiritual/quizzes/${id}`, 'DELETE', null, () => db.delete('quizzes', id)),
+      submitResult: (r: QuizResult) => hybridFetch('spiritual/quiz-results', 'POST', r, async () => {
+        const res = await db.insert('quizResults', r);
+        // Add Spirit Points to user
+        const points = Math.floor((r.score / r.total) * 100);
+        await db.update('members', r.userId, { spiritPoints: (points || 0) });
+        return res;
+      }),
+      getResults: () => hybridFetch('spiritual/quiz-results', 'GET', null, () => db.getCollection('quizResults'))
+    }
+  },
   news: {
     getAll: () => hybridFetch('news', 'GET', null, () => db.getCollection('news')),
     create: (item: NewsItem) => hybridFetch('news', 'POST', item, () => db.insert('news', item)),
@@ -73,7 +109,12 @@ export const API = {
     getAll: () => hybridFetch('departments', 'GET', null, () => db.getCollection('departments')),
     create: (item: Department) => hybridFetch('departments', 'POST', item, () => db.insert('departments', item)),
     update: (id: string, updates: Partial<Department>) => hybridFetch(`departments/${id}`, 'PUT', updates, () => db.update('departments', id, updates)),
-    delete: (id: string) => hybridFetch(`departments/${id}`, 'DELETE', null, () => db.delete('departments', id))
+    delete: (id: string) => hybridFetch(`departments/${id}`, 'DELETE', null, () => db.delete('departments', id)),
+    // RECRUITMENT METHODS
+    submitInterest: (item: DepartmentInterest) => hybridFetch('departments/interest', 'POST', item, () => db.insert('interests', item)),
+    getInterests: () => hybridFetch('departments/interests', 'GET', null, () => db.getCollection('interests')),
+    updateInterestStatus: (id: string, status: string) => hybridFetch(`departments/interests/${id}/status`, 'PATCH', { status }, () => db.update('interests', id, { status })),
+    deleteInterest: (id: string) => hybridFetch(`departments/interests/${id}`, 'DELETE', null, () => db.delete('interests', id))
   },
   donations: {
     getAll: () => hybridFetch('donations', 'GET', null, () => db.getCollection('donations')),

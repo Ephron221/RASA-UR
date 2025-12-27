@@ -1,6 +1,6 @@
 
-import React, { useRef } from 'react';
-import { Camera, Upload, Newspaper, Type, Layers, Info } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Camera, Upload, Newspaper, Type, Layers, Info, Calendar as CalendarIcon } from 'lucide-react';
 import { NewsItem } from '../../types';
 
 interface NewsFormProps {
@@ -22,6 +22,11 @@ const NewsForm: React.FC<NewsFormProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentImage = filePreview || urlInput || editingItem?.mediaUrl || '';
+  const [category, setCategory] = useState<string>(editingItem?.category || 'news');
+
+  useEffect(() => {
+    if (editingItem) setCategory(editingItem.category);
+  }, [editingItem]);
 
   return (
     <form id="main-editor-form" onSubmit={onSubmit} className="space-y-8">
@@ -79,7 +84,8 @@ const NewsForm: React.FC<NewsFormProps> = ({
             </label>
             <select 
               name="category" 
-              defaultValue={editingItem?.category || 'news'} 
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
               className="w-full px-6 py-5 bg-gray-50 border border-gray-100 rounded-[1.8rem] font-bold text-sm focus:bg-white outline-none cursor-pointer"
             >
               <option value="news">Spirit News (Standard)</option>
@@ -102,6 +108,33 @@ const NewsForm: React.FC<NewsFormProps> = ({
             </select>
           </div>
         </div>
+
+        {category === 'event' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 ml-4 tracking-widest">
+                <CalendarIcon size={14} className="text-cyan-500" /> Start Date
+              </label>
+              <input 
+                type="date"
+                name="startDate" 
+                defaultValue={editingItem?.startDate} 
+                className="w-full px-6 py-5 bg-gray-50 border border-gray-100 rounded-[1.8rem] font-bold text-sm focus:bg-white outline-none" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 ml-4 tracking-widest">
+                <CalendarIcon size={14} className="text-cyan-500" /> End Date
+              </label>
+              <input 
+                type="date"
+                name="endDate" 
+                defaultValue={editingItem?.endDate} 
+                className="w-full px-6 py-5 bg-gray-50 border border-gray-100 rounded-[1.8rem] font-bold text-sm focus:bg-white outline-none" 
+              />
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 ml-4 tracking-widest">

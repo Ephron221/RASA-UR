@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { HomeConfig } from '../../types';
 
@@ -24,20 +24,34 @@ const Hero: React.FC<HeroProps> = ({ config }) => {
           alt="RASA Community" 
           className="w-full h-full object-cover" 
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black"></div>
       </motion.div>
 
       {/* Hero Content */}
       <div className="relative z-10 text-center px-4 max-w-5xl">
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
-          whileInView={{ opacity: 1, y: 0 }} 
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex items-center gap-3 px-6 py-2 bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/30 rounded-full text-cyan-400 font-black text-xs uppercase tracking-[0.4em] mb-10"
-        >
-          <Sparkles size={14} className="animate-pulse" /> {config.motto}
-        </motion.div>
+        <div className="flex flex-col items-center gap-8 mb-10">
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             className="px-6 py-2 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full flex items-center gap-3"
+           >
+              <div className="relative w-2 h-2">
+                 <div className="absolute inset-0 bg-green-500 rounded-full animate-ping"></div>
+                 <div className="relative w-2 h-2 bg-green-500 rounded-full"></div>
+              </div>
+              <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.3em]">Sanctuary Live: 142 Members Online</span>
+           </motion.div>
+
+           <motion.div 
+            initial={{ opacity: 0, y: -20 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-3 px-6 py-2 bg-cyan-500/20 backdrop-blur-xl border border-cyan-500/30 rounded-full text-cyan-400 font-black text-xs uppercase tracking-[0.4em]"
+          >
+            <Sparkles size={14} className="animate-pulse" /> {config.motto}
+          </motion.div>
+        </div>
 
         <motion.h1 
           initial={{ y: 40, opacity: 0, scale: 0.92 }} 

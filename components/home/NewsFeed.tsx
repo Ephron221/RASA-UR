@@ -12,6 +12,19 @@ interface NewsFeedProps {
 const NewsFeed: React.FC<NewsFeedProps> = ({ news }) => {
   const latestNews = news.slice(0, 3);
 
+  const formatDateRange = (item: NewsItem) => {
+    if (item.category === 'event' && (item.startDate || item.endDate)) {
+      const start = item.startDate ? new Date(item.startDate).toLocaleDateString() : '';
+      const end = item.endDate ? new Date(item.endDate).toLocaleDateString() : '';
+      
+      if (start && end) {
+        return start === end ? start : `${start} — ${end}`;
+      }
+      return start || end;
+    }
+    return new Date(item.date).toLocaleDateString();
+  };
+
   return (
     <section className="py-32 bg-[#F9FBFC]">
       <div className="max-container px-4">
@@ -55,7 +68,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news }) => {
               
               <div className="p-10 space-y-6 flex flex-grow flex-col">
                 <div className="flex items-center gap-3 text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                  <Calendar size={14} className="text-cyan-500" /> {new Date(item.date).toLocaleDateString()}
+                  <Calendar size={14} className="text-cyan-500" /> {formatDateRange(item)}
                 </div>
                 
                 <h4 className="text-2xl font-black text-gray-900 leading-tight group-hover:text-cyan-600 transition-colors">

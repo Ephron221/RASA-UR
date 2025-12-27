@@ -13,6 +13,7 @@ export interface User {
   department: string;
   profileImage?: string;
   createdAt: string;
+  spiritPoints?: number;
 }
 
 export interface NewsItem {
@@ -24,6 +25,8 @@ export interface NewsItem {
   mediaType: 'image' | 'video' | 'audio';
   author: string;
   date: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface Announcement {
@@ -57,6 +60,22 @@ export interface Department {
   activities: string[];
 }
 
+export interface DepartmentInterest {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  diocese: string;
+  level: string;
+  program: string;
+  motivation: string;
+  experience: string;
+  departmentId: string;
+  departmentName: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  date: string;
+}
+
 export interface ContactMessage {
   id: string;
   fullName: string;
@@ -66,6 +85,52 @@ export interface ContactMessage {
   message: string;
   date: string;
   isRead: boolean;
+}
+
+export interface DailyVerse {
+  id: string;
+  theme: string;
+  verse: string;
+  reference: string;
+  description: string;
+  date: string;
+  isActive: boolean;
+}
+
+export interface VerseReflection {
+  id: string;
+  verseId: string;
+  userId: string;
+  userName: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  text: string;
+  type: 'mcq' | 'open';
+  options?: string[]; // For MCQ
+  correctAnswer: string;
+}
+
+export interface BibleQuiz {
+  id: string;
+  title: string;
+  description: string;
+  timeLimit: number; // in minutes
+  questions: QuizQuestion[];
+  isActive: boolean;
+  date: string;
+}
+
+export interface QuizResult {
+  id: string;
+  quizId: string;
+  userId: string;
+  score: number;
+  total: number;
+  timestamp: string;
 }
 
 export interface Donation {

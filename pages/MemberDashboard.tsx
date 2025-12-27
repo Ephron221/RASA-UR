@@ -1,14 +1,15 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Phone, Mail, GraduationCap, MapPin, 
   Briefcase, Calendar, Bell, ShieldCheck, 
   ArrowRight, BookOpen, Heart, Award, 
   Zap, Star, MessageCircle, FileText, ChevronRight,
-  Edit3, X, Save, Camera, Upload, Loader2, Database
+  Edit3, X, Save, Camera, Upload, Loader2, Database,
+  Sparkles, Send, Clock, Book, CheckCircle2
 } from 'lucide-react';
-import { User as UserType, Announcement } from '../types';
+import { User as UserType, Announcement, DailyVerse, BibleQuiz, QuizResult } from '../types';
 import { API } from '../services/api';
 import { DIOCESES, DEPARTMENTS, LEVELS } from '../constants';
 
@@ -24,8 +25,70 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ user, announcements }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentUser, setCurrentUser] = useState(user);
 
+  // Spiritual Hub States
+  const [dailyVerse, setDailyVerse] = useState<DailyVerse | null>(null);
+  const [reflection, setReflection] = useState('');
+  const [isReflecting, setIsReflecting] = useState(false);
+  const [quizzes, setQuizzes] = useState<BibleQuiz[]>([]);
+  const [activeQuiz, setActiveQuiz] = useState<BibleQuiz | null>(null);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
+  const [quizTimeLeft, setQuizTimeLeft] = useState(0);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizScore, setQuizScore] = useState<QuizResult | null>(null);
+
   const activeAnnouncements = announcements.filter(a => a.isActive).slice(0, 4);
 
+  useEffect(() => {
+    API.spiritual.verses.getDaily().then(setDailyVerse);
+    API.spiritual.quizzes.getActive().then(setQuizzes);
+  }, []);
+
+  // Timer Effect
+  useEffect(() => {
+    if (activeQuiz && quizTimeLeft > 0 && !quizSubmitted) {
+      const timer = setInterval(() => setQuizTimeLeft(prev => prev - 1), 1000);
+      return () => clearInterval(timer);
+    } else if (activeQuiz && quizTimeLeft === 0 && !quizSubmitted) {
+      handleQuizSubmit();
+    }
+  }, [activeQuiz, quizTimeLeft, quizSubmitted]);
+
+  const handleStartQuiz = (q: BibleQuiz) => {
+    setActiveQuiz(q);
+    setQuizAnswers({});
+    setQuizTimeLeft(q.timeLimit * 60);
+    setQuizSubmitted(false);
+    setQuizScore(null);
+  };
+
+  const handleQuizSubmit = async () => {
+    if (quizSubmitted) return;
+    setQuizSubmitted(true);
+    
+    let score = 0;
+    activeQuiz?.questions.forEach(q => {
+      if (quizAnswers[q.id] === q.correctAnswer) score++;
+    });
+
+    const result: QuizResult = {
+      id: Math.random().toString(36).substr(2, 9),
+      quizId: activeQuiz!.id,
+      userId: currentUser.id,
+      score,
+      total: activeQuiz!.questions.length,
+      timestamp: new Date().toISOString()
+    };
+
+    await API.spiritual.quizzes.submitResult(result);
+    setQuizScore(result);
+    
+    // Auto Refresh points
+    const updated = await API.members.getAll();
+    const self = updated.find(u => u.id === currentUser.id);
+    if (self) setCurrentUser(self);
+  };
+
+  // handleFileChange added to fix missing reference error
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -39,7 +102,6 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ user, announcements }
     e.preventDefault();
     setIsSaving(true);
     const formData = new FormData(e.target as HTMLFormElement);
-    
     const updates = {
       fullName: formData.get('fullName') as string,
       phone: formData.get('phone') as string,
@@ -48,7 +110,6 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ user, announcements }
       level: formData.get('level') as string,
       profileImage: filePreview || currentUser.profileImage
     };
-
     try {
       await API.members.update(currentUser.id, updates);
       const updatedUser = { ...currentUser, ...updates };
@@ -60,6 +121,22 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ user, announcements }
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const submitReflection = async () => {
+    if (!reflection.trim()) return;
+    setIsReflecting(true);
+    await API.spiritual.verses.addReflection({
+      id: Math.random().toString(36).substr(2, 9),
+      verseId: dailyVerse!.id,
+      userId: currentUser.id,
+      userName: currentUser.fullName,
+      content: reflection,
+      timestamp: new Date().toISOString()
+    });
+    setReflection('');
+    setIsReflecting(false);
+    alert("Reflection transmitted to the Council.");
   };
 
   const infoCards = [
@@ -127,18 +204,80 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ user, announcements }
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 space-y-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {infoCards.map((item, i) => (
-                <div key={i} className="bg-white p-7 rounded-[2rem] border border-gray-100 shadow-sm flex items-start gap-5">
-                  <div className={`p-4 ${item.bg} ${item.color} rounded-2xl`}><item.icon size={24} /></div>
-                  <div className="overflow-hidden">
-                    <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-1">{item.label}</p>
-                    <p className="font-bold text-lg text-gray-900 truncate">{item.value}</p>
-                  </div>
+            
+            {/* Daily Verse Hub */}
+            {dailyVerse && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100 space-y-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Book size={120}/></div>
+                <div className="space-y-4">
+                   <div className="inline-flex items-center gap-2 px-4 py-1 bg-cyan-50 text-cyan-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-cyan-100">
+                     <Sparkles size={12}/> Morning Dew
+                   </div>
+                   <h3 className="text-3xl font-black font-serif italic text-gray-900">{dailyVerse.theme}</h3>
+                   <div className="p-6 bg-gray-50 rounded-3xl border-l-4 border-cyan-500">
+                      <p className="text-xl font-serif italic text-gray-700">"{dailyVerse.verse}"</p>
+                      <p className="text-xs font-black text-cyan-600 uppercase mt-4">— {dailyVerse.reference}</p>
+                   </div>
                 </div>
-              ))}
+                
+                <div className="space-y-4">
+                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">How do you understand this word?</label>
+                   <div className="flex gap-4">
+                      <textarea 
+                        value={reflection}
+                        onChange={e => setReflection(e.target.value)}
+                        placeholder="Share your reflection or suggestion..."
+                        className="flex-grow px-6 py-4 bg-gray-50 rounded-2xl border border-transparent focus:bg-white focus:border-cyan-100 outline-none font-medium text-sm transition-all resize-none"
+                        rows={2}
+                      />
+                      <button 
+                        onClick={submitReflection}
+                        disabled={isReflecting || !reflection.trim()}
+                        className="px-6 bg-cyan-500 text-white rounded-2xl hover:bg-cyan-600 transition-all active:scale-95 disabled:opacity-50"
+                      >
+                        <Send size={20}/>
+                      </button>
+                   </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Quizzes Section */}
+            <div className="space-y-6">
+               <div className="flex items-center justify-between px-4">
+                  <h3 className="text-xl font-black font-serif italic text-gray-900">Bible Sanctuary Quizzes</h3>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Challenges</span>
+               </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {quizzes.map(q => (
+                   <div key={q.id} className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col gap-6 group hover:shadow-xl transition-all">
+                      <div className="flex justify-between items-start">
+                         <div className="p-4 bg-cyan-50 text-cyan-500 rounded-2xl group-hover:bg-cyan-500 group-hover:text-white transition-all"><BookOpen size={24}/></div>
+                         <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg text-[9px] font-black text-gray-400 uppercase">
+                            <Clock size={12}/> {q.timeLimit} Min
+                         </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-black text-gray-900 mb-2">{q.title}</h4>
+                        <p className="text-xs text-gray-500 line-clamp-2">{q.description}</p>
+                      </div>
+                      <button 
+                        onClick={() => handleStartQuiz(q)}
+                        className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-cyan-500 transition-all flex items-center justify-center gap-2"
+                      >
+                         Enter Challenge <ArrowRight size={14}/>
+                      </button>
+                   </div>
+                 ))}
+                 {quizzes.length === 0 && (
+                    <div className="col-span-full py-12 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100">
+                       <p className="text-gray-300 italic font-serif">No active sanctuary quizzes today.</p>
+                    </div>
+                 )}
+               </div>
             </div>
 
+            {/* Spiritual Roadmap Card */}
             <div className="bg-white p-8 md:p-10 rounded-[3rem] border border-gray-100 shadow-sm relative overflow-hidden group">
               <div className="relative z-10 space-y-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -157,12 +296,12 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ user, announcements }
                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-cyan-500 rounded-full w-[85%]" /></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-end"><span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Spirit Points</span><span className="text-lg font-black text-gray-900">1,240</span></div>
+                    <div className="flex justify-between items-end"><span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Spirit Points</span><span className="text-lg font-black text-gray-900">{(currentUser.spiritPoints || 0).toLocaleString()}</span></div>
                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-yellow-500 rounded-full w-[60%]" /></div>
                   </div>
                   <div className="flex items-center gap-4 p-5 bg-gray-50 rounded-[1.5rem] border border-gray-100">
                     <div className="p-3 bg-white rounded-xl shadow-sm"><Award size={20} className="text-cyan-500" /></div>
-                    <div><p className="text-xs text-gray-400 font-bold">Latest Badge</p><p className="font-bold text-sm">Prayer Warrior</p></div>
+                    <div><p className="text-xs text-gray-400 font-bold">Latest Badge</p><p className="font-bold text-sm">Sanctuary Scholar</p></div>
                   </div>
                 </div>
               </div>
@@ -197,7 +336,88 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ user, announcements }
         </div>
       </div>
 
-      {/* Profile Editor Modal */}
+      {/* Quiz Modal */}
+      <AnimatePresence>
+        {activeQuiz && (
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+              <motion.div initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-4xl rounded-[4rem] overflow-hidden flex flex-col max-h-[95vh] shadow-3xl">
+                 <div className="bg-gray-900 p-10 text-white flex justify-between items-center shrink-0">
+                    <div>
+                       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-cyan-400">Sanctuary Challenge</p>
+                       <h3 className="text-3xl font-black font-serif italic">{activeQuiz.title}</h3>
+                    </div>
+                    {!quizSubmitted && (
+                       <div className="bg-white/10 px-6 py-3 rounded-2xl flex items-center gap-3 border border-white/10">
+                          <Clock size={20} className="text-cyan-400"/>
+                          <span className={`text-2xl font-black font-mono ${quizTimeLeft < 30 ? 'text-red-500 animate-pulse' : ''}`}>
+                             {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
+                          </span>
+                       </div>
+                    )}
+                    {quizSubmitted && <button onClick={() => setActiveQuiz(null)} className="p-3 bg-white/10 rounded-2xl hover:bg-red-500 transition-all"><X size={24}/></button>}
+                 </div>
+
+                 <div className="flex-grow overflow-y-auto p-12 scroll-hide">
+                    {quizScore ? (
+                       <div className="py-20 text-center space-y-8">
+                          <div className="relative w-40 h-40 mx-auto">
+                             <svg className="w-full h-full transform -rotate-90">
+                                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-100" />
+                                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray={440} strokeDashoffset={440 - (440 * quizScore.score) / quizScore.total} className="text-cyan-500 transition-all duration-1000" />
+                             </svg>
+                             <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-5xl font-black text-gray-900">{Math.floor((quizScore.score / quizScore.total) * 100)}%</span>
+                             </div>
+                          </div>
+                          <div className="space-y-2">
+                             <h4 className="text-4xl font-black font-serif italic text-gray-900">Well Done, Disciple!</h4>
+                             <p className="text-xl text-gray-500 font-medium">You scored <span className="text-cyan-600 font-black">{quizScore.score}</span> out of <span className="font-black">{quizScore.total}</span> points.</p>
+                             <p className="text-xs text-gray-400 uppercase tracking-widest font-black">+{Math.floor((quizScore.score / quizScore.total) * 100)} Spirit Points Acquired</p>
+                          </div>
+                          <button onClick={() => setActiveQuiz(null)} className="px-12 py-5 bg-cyan-500 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl shadow-cyan-100">Close Sanctuary</button>
+                       </div>
+                    ) : (
+                       <div className="space-y-12">
+                          {activeQuiz.questions.map((q, idx) => (
+                             <div key={q.id} className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                   <div className="w-10 h-10 bg-cyan-500 text-white rounded-xl flex items-center justify-center font-black">{idx + 1}</div>
+                                   <h5 className="text-2xl font-black text-gray-900 tracking-tight">{q.text}</h5>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-14">
+                                   {q.options?.map(opt => (
+                                      <button 
+                                        key={opt}
+                                        onClick={() => setQuizAnswers(prev => ({...prev, [q.id]: opt}))}
+                                        className={`px-8 py-5 rounded-2xl border-2 text-left font-bold text-sm transition-all ${quizAnswers[q.id] === opt ? 'bg-cyan-50 border-cyan-500 text-cyan-600 shadow-lg shadow-cyan-50' : 'bg-white border-gray-100 text-gray-500 hover:border-cyan-100'}`}
+                                      >
+                                         {opt}
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+                          ))}
+                       </div>
+                    )}
+                 </div>
+
+                 {!quizScore && (
+                    <div className="p-10 bg-gray-50 border-t border-gray-100 flex justify-end shrink-0">
+                       <button 
+                        onClick={handleQuizSubmit}
+                        disabled={Object.keys(quizAnswers).length < activeQuiz.questions.length}
+                        className="px-16 py-6 bg-cyan-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] shadow-2xl hover:bg-cyan-600 transition-all active:scale-95 disabled:opacity-50"
+                       >
+                          Submit Responses
+                       </button>
+                    </div>
+                 )}
+              </motion.div>
+           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Profile Editor Modal (existing logic) */}
       <AnimatePresence>
         {isEditing && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
