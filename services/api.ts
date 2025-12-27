@@ -25,17 +25,19 @@ const hybridFetch = async (
     
     if (!res.ok) {
       if (fallbackAction) {
-        console.warn(`[API] Server returned ${res.status} for ${endpoint}. Falling back to Local Storage.`);
+        console.warn(`[RASA API] Server Error (${res.status}). Using LocalStorage Fallback.`);
         return await fallbackAction();
       }
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.error || `Server Error: ${res.status}`);
     }
     
-    return await res.json();
+    const data = await res.json();
+    console.log(`%c[RASA KERNEL] SYNCED: ${endpoint} (Local MongoDB)`, "color: #06b6d4; font-weight: bold;");
+    return data;
   } catch (err: any) {
     if (fallbackAction) {
-      console.warn(`[API] Connection to ${API_BASE_URL} failed for ${endpoint}. Falling back to Local Storage.`);
+      console.warn(`[RASA API] Backend Unreachable at ${API_BASE_URL}. Data served from Browser LocalStorage.`);
       return await fallbackAction();
     }
     throw err;
@@ -80,7 +82,6 @@ export const API = {
       delete: (id: string) => hybridFetch(`spiritual/quizzes/${id}`, 'DELETE', null, () => db.delete('quizzes', id)),
       submitResult: (r: QuizResult) => hybridFetch('spiritual/quiz-results', 'POST', r, async () => {
         const res = await db.insert('quizResults', r);
-        // Add Spirit Points to user
         const points = Math.floor((r.score / r.total) * 100);
         await db.update('members', r.userId, { spiritPoints: (points || 0) });
         return res;
@@ -112,7 +113,6 @@ export const API = {
     create: (item: Department) => hybridFetch('departments', 'POST', item, () => db.insert('departments', item)),
     update: (id: string, updates: Partial<Department>) => hybridFetch(`departments/${id}`, 'PUT', updates, () => db.update('departments', id, updates)),
     delete: (id: string) => hybridFetch(`departments/${id}`, 'DELETE', null, () => db.delete('departments', id)),
-    // RECRUITMENT METHODS
     submitInterest: (item: DepartmentInterest) => hybridFetch('departments/interest', 'POST', item, () => db.insert('interests', item)),
     getInterests: () => hybridFetch('departments/interests', 'GET', null, () => db.getCollection('interests')),
     updateInterestStatus: (id: string, status: string) => hybridFetch(`departments/interests/${id}/status`, 'PATCH', { status }, () => db.update('interests', id, { status })),

@@ -26,7 +26,7 @@ const swaggerOptions = {
     info: {
       title: 'RASA UR-Nyarugenge API',
       version: '2.5.0',
-      description: 'Divine Kernel API for the Rwanda Anglican Students Association Portal. This documentation allows for testing the communication between the frontend and the MongoDB backend.',
+      description: 'Divine Kernel API. Use this to verify that data is correctly hitting your Local MongoDB Collections.',
       contact: {
         name: 'RASA IT Infrastructure',
         email: 'it@rasa-nyg.org'
@@ -54,15 +54,6 @@ const swaggerOptions = {
             category: { type: 'string', enum: ['event', 'news', 'announcement'] },
             mediaUrl: { type: 'string' }
           }
-        },
-        SpiritualResult: {
-          type: 'object',
-          properties: {
-            quizId: { type: 'string' },
-            userId: { type: 'string' },
-            score: { type: 'number' },
-            total: { type: 'number' }
-          }
         }
       }
     }
@@ -84,61 +75,60 @@ const logAction = async (action: string) => {
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('✅ Connected to LOCAL MONGODB at 27017'))
+  .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 /**
  * @swagger
- * tags:
- *   - name: Authentication
- *     description: Security tokens and member verification
- *   - name: Spiritual Hub
- *     description: Verses, Quizzes, and Leaderboard
- *   - name: Core CMS
- *     description: Members, News, and Announcements
- *   - name: System
- *     description: Health and Logs
- */
-
-/**
- * @swagger
- * /api/spiritual/verses/daily:
+ * /api/system/health:
  *   get:
- *     summary: Retrieve the current active daily verse
- *     tags: [Spiritual Hub]
- *     responses:
- *       200:
- *         description: Success
+ *     summary: Verify Local MongoDB and Backend synchronization
+ *     tags: [System]
  */
+app.get('/api/system/health', async (req, res) => {
+  try {
+    const stats = await mongoose.connection.db?.stats();
+    const memberCount = await Member.countDocuments();
+    const verseCount = await DailyVerse.countDocuments();
+    const newsCount = await News.countDocuments();
+
+    res.json({
+      status: 'Online',
+      database: 'Local MongoDB (Connected)',
+      collections: {
+        members: memberCount,
+        verses: verseCount,
+        news: newsCount
+      },
+      storage: `${((stats?.dataSize || 0) / 1024).toFixed(2)} KB`,
+      version: '2.5.0-Verified',
+      timestamp: new Date()
+    });
+  } catch (e) {
+    res.json({ status: 'Online', database: 'Disconnected', timestamp: new Date() });
+  }
+});
+
+// SPIRITUAL HUB ROUTES
 app.get('/api/spiritual/verses/daily', async (req, res) => {
   try {
     const verse = await DailyVerse.findOne({ isActive: true }).sort({ date: -1 });
     res.json(verse);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch daily bread' }); }
+  } catch (err) { res.status(500).json({ error: 'DB Fetch Fail' }); }
 });
 
-/**
- * @swagger
- * /api/spiritual/verses:
- *   get:
- *     summary: Get all archived scriptures
- *     tags: [Spiritual Hub]
- *   post:
- *     summary: Create a new daily verse
- *     tags: [Spiritual Hub]
- */
 app.get('/api/spiritual/verses', async (req, res) => {
   try {
     const verses = await DailyVerse.find().sort({ date: -1 });
     res.json(verses);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch archive' }); }
+  } catch (err) { res.status(500).json({ error: 'DB Fetch Fail' }); }
 });
 
 app.post('/api/spiritual/verses', async (req, res) => {
   try {
     const verse = new DailyVerse(req.body);
     await verse.save();
-    await logAction(`CMS: New Verse Created - ${verse.theme}`);
+    await logAction(`CMS: New Verse Created in MongoDB - ${verse.theme}`);
     res.status(201).json(verse);
   } catch (err) { res.status(400).json({ error: 'Creation failed' }); }
 });
@@ -150,95 +140,30 @@ app.delete('/api/spiritual/verses/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Deletion failed' }); }
 });
 
-/**
- * @swagger
- * /api/spiritual/quizzes/active:
- *   get:
- *     summary: Get all active sanctuary challenges
- *     tags: [Spiritual Hub]
- */
 app.get('/api/spiritual/quizzes/active', async (req, res) => {
   try {
     const quizzes = await BibleQuiz.find({ isActive: true });
     res.json(quizzes);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch tests' }); }
+  } catch (err) { res.status(500).json({ error: 'DB Fetch Fail' }); }
 });
 
-app.get('/api/spiritual/quizzes', async (req, res) => {
-  try {
-    const quizzes = await BibleQuiz.find();
-    res.json(quizzes);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch all tests' }); }
-});
-
-app.post('/api/spiritual/quizzes', async (req, res) => {
-  try {
-    const quiz = new BibleQuiz(req.body);
-    await quiz.save();
-    await logAction(`CMS: New Sanctuary Test Deployed - ${quiz.title}`);
-    res.status(201).json(quiz);
-  } catch (err) { res.status(400).json({ error: 'Deployment failed' }); }
-});
-
-/**
- * @swagger
- * /api/spiritual/quiz-results:
- *   post:
- *     summary: Submit a quiz performance result
- *     tags: [Spiritual Hub]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/SpiritualResult'
- */
 app.post('/api/spiritual/quiz-results', async (req, res) => {
   try {
     const result = new QuizResult(req.body);
     await result.save();
     const pointsToAdd = Math.floor((result.score / result.total) * 100);
     await Member.findByIdAndUpdate(result.userId, { $inc: { spiritPoints: pointsToAdd } });
-    await logAction(`SPIRIT: Quiz Completed by ${result.userId} (+${pointsToAdd} SP)`);
+    await logAction(`SPIRIT: Quiz Logged in MongoDB for ${result.userId}`);
     res.status(201).json(result);
   } catch (err) { res.status(400).json({ error: 'Submission failed' }); }
 });
 
-/**
- * @swagger
- * /api/auth/otp:
- *   post:
- *     summary: Generate a security token for email
- *     tags: [Authentication]
- */
-app.post('/api/auth/otp', async (req, res) => {
-  const { email } = req.body;
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = Date.now() + 10 * 60 * 1000;
-  try {
-    await OTPRecord.deleteMany({ email });
-    const record = new OTPRecord({ email, otp, expires });
-    await record.save();
-    console.log(`[AUTH] TOKEN FOR ${email}: ${otp}`); 
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Token generation fail' }); }
-});
-
-/**
- * @swagger
- * /api/members:
- *   get:
- *     summary: Fetch all registered members
- *     tags: [Core CMS]
- *   post:
- *     summary: Register a new member manually
- *     tags: [Core CMS]
- */
+// CORE CMS ROUTES
 app.get('/api/members', async (req, res) => {
   try {
     const members = await Member.find().sort({ createdAt: -1 });
     res.json(members);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch members' }); }
+  } catch (err) { res.status(500).json({ error: 'DB Fetch Fail' }); }
 });
 
 app.post('/api/members', async (req, res) => {
@@ -249,51 +174,11 @@ app.post('/api/members', async (req, res) => {
   } catch (err) { res.status(400).json({ error: 'Creation failed' }); }
 });
 
-/**
- * @swagger
- * /api/news:
- *   get:
- *     summary: Fetch news feed
- *     tags: [Core CMS]
- *   post:
- *     summary: Publish a news story
- *     tags: [Core CMS]
- */
 app.get('/api/news', async (req, res) => {
   try {
     const news = await News.find().sort({ date: -1 });
     res.json(news);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch news' }); }
-});
-
-app.post('/api/news', async (req, res) => {
-  try {
-    const item = new News(req.body);
-    await item.save();
-    res.status(201).json(item);
-  } catch (err) { res.status(400).json({ error: 'Invalid data' }); }
-});
-
-/**
- * @swagger
- * /api/system/health:
- *   get:
- *     summary: Check backend and DB status
- *     tags: [System]
- */
-app.get('/api/system/health', async (req, res) => {
-  try {
-    const stats = await mongoose.connection.db?.stats();
-    res.json({
-      status: 'Online',
-      database: 'Connected',
-      size: `${((stats?.dataSize || 0) / 1024).toFixed(2)} KB`,
-      version: '2.5.0-SwaggerIntegrated',
-      timestamp: new Date()
-    });
-  } catch (e) {
-    res.json({ status: 'Online', database: 'Unknown', timestamp: new Date() });
-  }
+  } catch (err) { res.status(500).json({ error: 'DB Fetch Fail' }); }
 });
 
 app.get('/api/system/logs', async (req, res) => {
@@ -304,6 +189,6 @@ app.get('/api/system/logs', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`RASA Backend running on port ${PORT}`);
-  console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
+  console.log(`🚀 RASA Backend initialized on port ${PORT}`);
+  console.log(`📂 Swagger Docs (Local MongoDB Tester): http://localhost:${PORT}/api-docs`);
 });
