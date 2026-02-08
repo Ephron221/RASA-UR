@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import bcrypt from 'bcrypt';
 import { 
   News, Leader, Announcement, Member, 
   Department, ContactMessage, DepartmentInterest,
@@ -22,6 +23,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- AUTH ENDPOINTS ---
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await Member.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    res.json(user);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Login failed', details: err.message });
+  }
+});
+
+
 // --- HELPERS ---
 const getQueryById = (id: string) => {
   if (!id || id === 'undefined') return null;
@@ -32,10 +52,12 @@ const getQueryById = (id: string) => {
 // --- BOOTSTRAP SYSTEM ADMIN ---
 const bootstrapAdmin = async () => {
   const itEmail = 'ephrontuyishime21@gmail.com';
-  const existing = await Member.findOne({ email: itEmail });
-  if (!existing) {
-    await new Member({
-      id: 'it-super-master',
+  const plainPassword = 'admin';
+
+  let user = await Member.findOne({ email: itEmail });
+
+  if (!user) {
+    user = new Member({
       fullName: 'Esron Tuyishime (IT)',
       email: itEmail,
       phone: '+250 787 846 433',
@@ -44,9 +66,14 @@ const bootstrapAdmin = async () => {
       level: 'Expert',
       diocese: 'Kigali',
       department: 'IT & Infrastructure'
-    }).save();
+    });
     console.log('🛡️ SYSTEM BOOTSTRAP: IT Architect Account Created');
   }
+
+  // Always reset and re-hash the password on startup to ensure it's correct
+  user.password = plainPassword;
+  await user.save();
+  console.log('🛡️ SYSTEM BOOTSTRAP: IT Architect Account Password Synchronized');
 };
 
 // --- MEMBERS ---

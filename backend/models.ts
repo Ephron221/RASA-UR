@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const schemaOptions = {
   timestamps: true,
@@ -8,6 +9,7 @@ const schemaOptions = {
       ret.id = ret._id.toString();
       delete ret._id;
       delete ret.__v;
+      delete ret.password; // Do not return password hash
       return ret;
     },
   },
@@ -15,6 +17,38 @@ const schemaOptions = {
 };
 
 // --- Schema Definitions ---
+
+const MemberSchema = new Schema({ 
+  fullName: { type: String, required: true },
+  email: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+  phone: String, 
+  role: { type: String, default: 'member' }, 
+  program: String, 
+  level: String, 
+  diocese: String, 
+  department: String, 
+  profileImage: String, 
+  spiritPoints: { type: Number, default: 0 } 
+}, schemaOptions);
+
+// Hash password before saving using modern async middleware
+MemberSchema.pre('save', async function() {
+  if (!this.isModified('password')) {
+    return;
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Method to compare passwords for login
+MemberSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  if (!candidatePassword || !this.password) {
+    return false;
+  }
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
 
 const DailyVerseSchema = new Schema({ 
   theme: String, 
@@ -133,20 +167,6 @@ const ContactMessageSchema = new Schema({
   subject: String, 
   message: String, 
   isRead: { type: Boolean, default: false } 
-}, schemaOptions);
-
-const MemberSchema = new Schema({ 
-  fullName: String, 
-  email: { type: String, unique: true }, 
-  password: String, 
-  phone: String, 
-  role: { type: String, default: 'member' }, 
-  program: String, 
-  level: String, 
-  diocese: String, 
-  department: String, 
-  profileImage: String, 
-  spiritPoints: { type: Number, default: 0 } 
 }, schemaOptions);
 
 const HomeConfigSchema = new Schema({ heroTitle: String, heroSubtitle: String, heroImageUrl: String, motto: String, aboutTitle: String, aboutText: String, aboutImageUrl: String, aboutScripture: String, aboutScriptureRef: String }, { ...schemaOptions, collection: 'config_home' });

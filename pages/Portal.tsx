@@ -55,12 +55,10 @@ const Portal: React.FC = () => {
 
     try {
       if (mode === 'login') {
-        const user = await API.members.getAll().then(users => users.find(u => u.email === email && u.password === password));
-        if (user) {
-          login(user);
-          const adminRoles = ['it', 'admin', 'executive', 'accountant', 'secretary'];
-          navigate(adminRoles.includes(user.role) ? '/admin' : '/dashboard');
-        } else setError('Invalid email or password. Access denied.');
+        const user = await API.auth.login(email, password);
+        login(user);
+        const adminRoles = ['it', 'admin', 'executive', 'accountant', 'secretary'];
+        navigate(adminRoles.includes(user.role) ? '/admin' : '/dashboard');
       } else if (mode === 'register') {
         if (password !== confirmPass) throw new Error("Passwords do not match.");
         const newUser: Partial<User> = {
@@ -122,6 +120,7 @@ const Portal: React.FC = () => {
             <motion.form key="authForm" onSubmit={handleAuth} className="space-y-6"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
+              <AnimatePresence>
                 {mode === 'register' && (
                   <motion.div key="reg" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 overflow-hidden">
                     <div onClick={() => fileInputRef.current?.click()} className="relative flex flex-col items-center justify-center border-2 border-dashed rounded-[2.5rem] p-6 cursor-pointer bg-gray-50 hover:bg-white border-gray-200 hover:border-cyan-400">
@@ -140,6 +139,7 @@ const Portal: React.FC = () => {
                     <input name="program" required placeholder="Program" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" />
                   </motion.div>
                 )}
+              </AnimatePresence>
                 <div className="space-y-4">
                   <div className="relative"><Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20}/><input name="email" type="email" required placeholder="Email" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" /></div>
                   <div className="space-y-2">

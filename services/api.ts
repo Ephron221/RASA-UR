@@ -1,4 +1,3 @@
-
 import { 
   User, NewsItem, Leader, Announcement, Department, DepartmentInterest, ContactMessage, 
   HomeConfig, Donation, DonationProject, AboutConfig, FooterConfig,
@@ -45,8 +44,11 @@ const hybridFetch = async (
 };
 
 export const API = {
+  auth: {
+    login: (email: string, password: string): Promise<User> => hybridFetch('auth/login', 'POST', { email, password }),
+  },
   members: {
-    getAll: () => hybridFetch('members', 'GET', null, () => db.getCollection('members')),
+    getAll: (): Promise<User[]> => hybridFetch('members', 'GET', null, () => db.getCollection('members')),
     create: (item: User) => hybridFetch('members', 'POST', item),
     update: (id: string, updates: Partial<User>) => hybridFetch(`members/${id}`, 'PUT', updates),
     delete: (id: string) => hybridFetch(`members/${id}`, 'DELETE'),
