@@ -84,18 +84,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         API.departments.getAll(), API.leaders.getAll(), API.news.getAll(), API.members.getAll(),
         API.roles.getAll()
       ]);
-      setContactMsgs(c); setHomeSetup(h); setAboutSetup(a); setDbHealth(health); setLogs(l); setFooterSetup(f);
-      setRoleDefinitions(roles);
-      onUpdateAnnouncements(an); onUpdateDepartments(de); onUpdateLeaders(lea); onUpdateNews(ne); onUpdateMembers(me);
+      setContactMsgs(c || []);
+      setHomeSetup(h);
+      setAboutSetup(a);
+      setDbHealth(health || { status: 'Offline', size: '0KB' });
+      setLogs(l || []);
+      setFooterSetup(f);
+      setRoleDefinitions(roles || []);
+      onUpdateAnnouncements(an || []);
+      onUpdateDepartments(de || []);
+      onUpdateLeaders(lea || []);
+      onUpdateNews(ne || []);
+      onUpdateMembers(me || []);
       if (f) onUpdateFooter(f);
     } catch (e) { console.error("Admin Fetch Error:", e); }
   };
 
-  useEffect(() => { fetchData(); }, [activeTab]);
+  useEffect(() => { fetchData(); }, []);
 
   // Calculated Permissions based on the specific Role Definition
   const currentRoleDef = useMemo(() => 
-    roleDefinitions.find(r => r.id === currentUser?.role), 
+    roleDefinitions?.find(r => r.id === currentUser?.role), 
   [roleDefinitions, currentUser?.role]);
 
   const rolePermissions = useMemo(() => ({
@@ -186,7 +195,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         notifyTitle = "Story Published"; notifyMsg = "The digital archive is richer with your contribution. Thank you for documenting the vision.";
       } else if (showModal === 'member') {
         const item = { fullName: formData.get('fullName') as string, email: formData.get('email') as string, phone: formData.get('phone') as string, program: formData.get('program') as string, level: formData.get('level') as string, diocese: formData.get('diocese') as string, department: formData.get('department') as string, profileImage: media };
-        if (editingItem) await API.members.update(editingItem.id, item);
+        if (editingItem) {
+          await API.members.update(editingItem.id, item);
+        } else {
+          await API.members.create(item as User);
+        }
         notifyTitle = "Registry Synced"; notifyMsg = `Identity sequence for ${item.fullName} has been refined. Integrity confirmed.`;
       } else if (!showModal && activeTab === 'home') {
         const updates: Partial<HomeConfig> = {
