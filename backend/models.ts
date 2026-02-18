@@ -32,6 +32,9 @@ const MemberSchema = new Schema({
   spiritPoints: { type: Number, default: 0 },
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  isVerified: { type: Boolean, default: false },
+  verificationToken: String,
+  verificationExpires: Date,
 }, schemaOptions);
 
 // Hash password before saving using modern async middleware

@@ -10,7 +10,7 @@ import {
   HomeConfig, SystemLog, DailyVerse, BibleQuiz, QuizResult, AboutConfig, FooterConfig,
   VerseReflection, Donation, DonationProject
 } from './models';
-import { sendPasswordResetEmail } from './email';
+import { sendPasswordResetEmail, sendVerificationEmail } from './email';
 
 dotenv.config();
 const app = express();
@@ -35,6 +35,9 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+    if (!user.isVerified) {
+        return res.status(401).json({ error: 'Account not verified. Please check your email for a verification link.' });
+    }
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -43,6 +46,64 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (err: any) {
     res.status(500).json({ error: 'Login failed', details: err.message });
   }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email } = req.body;
+    let user = await Member.findOne({ email });
+    if (user && user.isVerified) {
+      return res.status(409).json({ error: 'A member with this email already exists.' });
+    }
+
+    const verificationToken = crypto.randomInt(100000, 999999).toString();
+
+    if (user && !user.isVerified) {
+        user.set(req.body);
+        user.verificationToken = verificationToken;
+        user.verificationExpires = Date.now() + 3600000; // 1 hour
+        await user.save();
+    } else {
+        user = new Member({
+            ...req.body,
+            isVerified: false,
+            verificationToken,
+            verificationExpires: Date.now() + 3600000, // 1 hour
+        });
+        await user.save();
+    }
+
+    await sendVerificationEmail(user.email, verificationToken);
+
+    res.status(201).json({ message: 'Registration successful. Please check your email for a verification code.' });
+  } catch (err: any) {
+    console.error("REGISTRATION FAILED:", err);
+    res.status(500).json({ error: 'Registration failed', details: err.message });
+  }
+});
+
+app.post('/api/auth/verify', async (req, res) => {
+    try {
+        const { email, token } = req.body;
+        const user = await Member.findOne({
+            email,
+            verificationToken: token,
+            verificationExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({ error: 'Verification token is invalid or has expired.' });
+        }
+
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        user.verificationExpires = undefined;
+        await user.save();
+
+        res.json(user);
+    } catch (err: any) {
+        res.status(500).json({ error: 'Verification failed', details: err.message });
+    }
 });
 
 app.post('/api/auth/forgot-password', async (req, res) => {
@@ -131,21 +192,8 @@ const bootstrapAdmin = async () => {
   }
 };
 
-// --- MEMBERS ---
+// --- MEMBERS (now mostly for admin) ---
 app.get('/api/members', async (req, res) => res.json(await Member.find().sort({ createdAt: -1 })));
-app.post('/api/members', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const existing = await Member.findOne({ email });
-    if (existing) {
-      return res.status(409).json({ error: 'A member with this email already exists.' });
-    }
-    const newMember = await new Member(req.body).save();
-    res.status(201).json(newMember);
-  } catch (err: any) {
-    res.status(500).json({ error: 'Creation failed', details: err.message });
-  }
-});
 app.put('/api/members/:id', async (req, res) => {
   try {
     const query = getQueryById(req.params.id);

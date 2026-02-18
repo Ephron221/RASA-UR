@@ -46,12 +46,13 @@ const hybridFetch = async (
 export const API = {
   auth: {
     login: (email: string, password: string): Promise<User> => hybridFetch('auth/login', 'POST', { email, password }),
+    register: (userData: Partial<User>): Promise<{ message: string }> => hybridFetch('auth/register', 'POST', userData),
+    verify: (email: string, token: string): Promise<User> => hybridFetch('auth/verify', 'POST', { email, token }),
     forgotPassword: (email: string): Promise<{ message: string }> => hybridFetch('auth/forgot-password', 'POST', { email }),
     resetPassword: (email: string, token: string, newPassword: string): Promise<{ message: string }> => hybridFetch('auth/reset-password', 'POST', { email, token, newPassword }),
   },
   members: {
     getAll: (): Promise<User[]> => hybridFetch('members', 'GET', null, () => db.getCollection('members')),
-    create: (item: User) => hybridFetch('members', 'POST', item),
     update: (id: string, updates: Partial<User>) => hybridFetch(`members/${id}`, 'PUT', updates),
     delete: (id: string) => hybridFetch(`members/${id}`, 'DELETE'),
     updateRole: (id: string, role: string) => hybridFetch(`members/${id}/role`, 'PATCH', { role })

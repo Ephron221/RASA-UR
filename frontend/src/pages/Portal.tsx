@@ -8,10 +8,12 @@ import { API } from '../services/api';
 import { User } from '../types';
 
 type AuthMode = 'login' | 'register' | 'forgot';
+type RegStep = 'form' | 'verify';
 
 const Portal: React.FC = () => {
   const { login } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
+  const [regStep, setRegStep] = useState<RegStep>('form');
   const [recoveryStep, setRecoveryStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,17 +64,26 @@ const Portal: React.FC = () => {
         const adminRoles = ['it', 'admin', 'executive', 'accountant', 'secretary'];
         navigate(adminRoles.includes(user.role) ? '/admin' : '/dashboard');
       } else if (mode === 'register') {
-        if (password !== confirmPass) throw new Error("Passwords do not match.");
-        const newUser: Partial<User> = {
-          fullName: formData.get('fullName') as string, email, password,
-          phone: formData.get('phone') as string, role: 'member',
-          program: formData.get('program') as string, level: formData.get('level') as string,
-          diocese: formData.get('diocese') as string, department: formData.get('department') as string,
-          profileImage: imagePreview || '',
-        };
-        const createdUser = await API.members.create(newUser as User);
-        login(createdUser);
-        navigate('/dashboard');
+        if (regStep === 'form') {
+          if (password !== confirmPass) throw new Error("Passwords do not match.");
+          const newUser: Partial<User> = {
+            fullName: formData.get('fullName') as string, email, password,
+            phone: formData.get('phone') as string, role: 'member',
+            program: formData.get('program') as string, level: formData.get('level') as string,
+            diocese: formData.get('diocese') as string, department: formData.get('department') as string,
+            profileImage: imagePreview || '',
+          };
+          await API.auth.register(newUser);
+          setRecoveryEmail(email);
+          setRegStep('verify');
+          setSuccessMsg('Please check your email for a verification code.');
+        } else if (regStep === 'verify') {
+          const token = formData.get('otp') as string;
+          if (!token) throw new Error('Please enter your verification code.');
+          const verifiedUser = await API.auth.verify(recoveryEmail, token);
+          login(verifiedUser);
+          navigate('/dashboard');
+        }
       }
     } catch (err: any) { setError(err.response?.data?.error || err.message || 'Authentication error.'); } finally { setLoading(false); }
   };
@@ -126,7 +137,7 @@ const Portal: React.FC = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-cyan-600 font-bold mb-4 hover:underline"><ArrowLeft size={16} /> Home</Link>
           <h2 className="text-4xl font-bold font-serif italic mb-2">{mode === 'login' ? 'Divine Access' : mode === 'register' ? 'Register Member' : 'Recover Key'}</h2>
-          <p className="text-gray-500 text-sm font-medium">{mode === 'login' ? 'Portal authentication' : mode === 'register' ? 'Join RASA' : 'Security loop'}</p>
+          <p className="text-gray-500 text-sm font-medium">{mode === 'login' ? 'Portal authentication' : mode === 'register' ? (regStep === 'form' ? 'Join RASA' : 'Verify your Email') : 'Security loop'}</p>
         </div>
         {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-black border border-red-100 text-center"><ShieldAlert className="inline mr-2" size={16}/>{error}</div>}
         {successMsg && <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-2xl text-xs font-black border border-green-100 text-center"><CheckCircle2 className="inline mr-2" size={16}/>{successMsg}</div>}
@@ -136,7 +147,7 @@ const Portal: React.FC = () => {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <AnimatePresence>
-                {mode === 'register' && (
+                {mode === 'register' && regStep === 'form' && (
                   <motion.div key="reg" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 overflow-hidden">
                     <div onClick={() => fileInputRef.current?.click()} className="relative flex flex-col items-center justify-center border-2 border-dashed rounded-[2.5rem] p-6 cursor-pointer bg-gray-50 hover:bg-white border-gray-200 hover:border-cyan-400">
                       <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
@@ -155,6 +166,7 @@ const Portal: React.FC = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
+              { (mode === 'login' || (mode === 'register' && regStep === 'form')) && (
                 <div className="space-y-4">
                   <div className="relative"><Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20}/><input name="email" type="email" required placeholder="Email" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" /></div>
                   <div className="space-y-2">
@@ -163,7 +175,11 @@ const Portal: React.FC = () => {
                   </div>
                   {mode === 'register' && <div className="relative"><ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20}/><input type="password" required value={confirmPass} onChange={e => setConfirmPass(e.target.value)} placeholder="Confirm" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" /></div>}
                 </div>
-              <button type="submit" disabled={loading} className="w-full py-5 bg-cyan-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-cyan-600 flex items-center justify-center gap-3 active:scale-95">{loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Enter Sanctuary' : 'Initiate')}</button>
+              )}
+              { mode === 'register' && regStep === 'verify' && (
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em]" /></motion.div>
+              )}
+              <button type="submit" disabled={loading} className="w-full py-5 bg-cyan-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-cyan-600 flex items-center justify-center gap-3 active:scale-95">{loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Enter Sanctuary' : (regStep === 'form' ? 'Register' : 'Verify & Create Account'))}</button>
             </motion.form>
           ) : (
             <motion.form key="recoveryForm" onSubmit={handleRecovery} className="space-y-8"
