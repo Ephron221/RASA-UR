@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "npx tsx server.ts",
+    "server": "npm start",
     "build": "echo 'Build step not required, dependencies will be installed automatically.'"
   },
   "dependencies": {
