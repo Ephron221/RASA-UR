@@ -29,7 +29,9 @@ const MemberSchema = new Schema({
   diocese: String, 
   department: String, 
   profileImage: String, 
-  spiritPoints: { type: Number, default: 0 } 
+  spiritPoints: { type: Number, default: 0 },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
 }, schemaOptions);
 
 // Hash password before saving using modern async middleware

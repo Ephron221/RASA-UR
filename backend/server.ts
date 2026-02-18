@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { 
   News, Leader, Announcement, Member, 
   Department, ContactMessage, DepartmentInterest,
@@ -41,6 +42,54 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await Member.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: 'No user found with that email address.' });
+    }
+    const token = crypto.randomInt(100000, 999999).toString();
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // In a real app, you would email this token to the user.
+    // For this dev environment, we just log it to the console.
+    console.log(`🔑 PASSWORD RESET TOKEN for ${email}: ${token}`);
+
+    res.json({ message: `A password reset token has been sent to ${email}.` });
+
+  } catch (err: any) {
+    res.status(500).json({ error: 'Password reset request failed', details: err.message });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, token, newPassword } = req.body;
+    const user = await Member.findOne({
+      email,
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Password reset token is invalid or has expired.' });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password has been successfully reset.' });
+
+  } catch (err: any) {
+    res.status(500).json({ error: 'Password reset failed', details: err.message });
+  }
+});
+
 
 // --- HELPERS ---
 const getQueryById = (id: string) => {
@@ -60,6 +109,7 @@ const bootstrapAdmin = async () => {
     user = new Member({
       fullName: 'Esron Tuyishime (IT)',
       email: itEmail,
+      password: plainPassword,
       phone: '+250 787 846 433',
       role: 'it',
       program: 'Software Engineering',
@@ -67,13 +117,16 @@ const bootstrapAdmin = async () => {
       diocese: 'Kigali',
       department: 'IT & Infrastructure'
     });
+    await user.save();
     console.log('🛡️ SYSTEM BOOTSTRAP: IT Architect Account Created');
+  } else {
+    const isMatch = await user.comparePassword(plainPassword);
+    if (!isMatch) {
+      user.password = plainPassword;
+      await user.save();
+      console.log('🛡️ SYSTEM BOOTSTRAP: IT Architect Account Password Reset');
+    }
   }
-
-  // Always reset and re-hash the password on startup to ensure it's correct
-  user.password = plainPassword;
-  await user.save();
-  console.log('🛡️ SYSTEM BOOTSTRAP: IT Architect Account Password Synchronized');
 };
 
 // --- MEMBERS ---
