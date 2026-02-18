@@ -425,6 +425,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_p
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
+    console.log(`✅ DB Host: ${mongoose.connection.host}`);
     bootstrapAdmin();
     app.listen(PORT, () => console.log(`🚀 Server listening on PORT ${PORT}`));
   })
