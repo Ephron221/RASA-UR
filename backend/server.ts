@@ -3,13 +3,16 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
 import { 
   News, Leader, Announcement, Member, 
   Department, ContactMessage, DepartmentInterest,
   HomeConfig, SystemLog, DailyVerse, BibleQuiz, QuizResult, AboutConfig, FooterConfig,
   VerseReflection, Donation, DonationProject
 } from './models';
+import { sendPasswordResetEmail } from './email';
 
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -54,13 +57,12 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // In a real app, you would email this token to the user.
-    // For this dev environment, we just log it to the console.
-    console.log(`🔑 PASSWORD RESET TOKEN for ${email}: ${token}`);
+    await sendPasswordResetEmail(user.email, token);
 
-    res.json({ message: `A password reset token has been sent to ${email}.` });
+    res.json({ message: `A password reset token has been sent to ${email}. Check your inbox.` });
 
   } catch (err: any) {
+    console.error("FORGOT PASSWORD ERROR:", err);
     res.status(500).json({ error: 'Password reset request failed', details: err.message });
   }
 });
