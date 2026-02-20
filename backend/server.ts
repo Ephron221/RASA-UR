@@ -24,10 +24,14 @@ mongoose.connect(MONGODB_URI).then(() => {
 });
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// THIS IS THE CRITICAL CHANGE - ALLOWING ALL ORIGINS FOR DEBUGGING
-app.use(cors({ origin: '*' }));
+// --- CORS CONFIGURATION (THE FINAL FIX) ---
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://rasaur-nyarugenge.vercel.app' // Your new live frontend
+  ]
+}));
 
 app.use(express.json({ limit: '50mb' }));
 
@@ -37,7 +41,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// All other code remains the same...
+// ... the rest of your server.ts code is correct and follows here ...
 
 // --- AUTH ENDPOINTS ---
 app.post('/api/auth/login', async (req, res) => {
@@ -366,7 +370,7 @@ app.patch('/api/departments/interests/:id/status', async (req, res) => {
 app.get('/api/contacts', async (req, res) => res.json(await ContactMessage.find().sort({ date: -1 })));
 app.post('/api/contacts', async (req, res) => res.status(201).json(await new ContactMessage(req.body).save()));
 app.patch('/api/contacts/:id/read', async (req, res) => {
-    const query = getQueryById(.params.id);
+    const query = getQueryById(req.params.id);
     if (!query) return res.status(400).json({ error: 'Invalid ID' });
     res.json(await ContactMessage.findOneAndUpdate(query, { isRead: true }, { new: true }));
 });
@@ -406,8 +410,8 @@ app.get('/api/system/health', async (req, res) => {
     try {
         const collections = await mongoose.connection.db.collections();
         const stats = await mongoose.connection.db.stats();
-        res.json({ 
-            status: 'Online', 
+        res.json({
+            status: 'Online',
             collections: collections.map(c => c.collectionName),
             size: (stats.storageSize / 1024 / 1024).toFixed(2) + ' MB'
         });
@@ -419,7 +423,7 @@ app.get('/api/system/logs', async (req, res) => res.json(await SystemLog.find().
 // Placeholder endpoints for backup and reset
 app.get('/api/system/backups', async (req, res) => {
     // This is a placeholder. A real implementation would be more complex.
-    res.json([]); 
+    res.json([]);
 });
 app.post('/api/system/backups', async (req, res) => {
     res.status(501).json({ error: "Backup creation not implemented" });
