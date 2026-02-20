@@ -421,6 +421,10 @@ app.post('/api/system/reset', async (req, res) => {
 
 
 // --- START SERVER ---
+
+// Vercel handles the server creation, so we don't need to listen here.
+// This block is kept for local development.
+/*
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
 mongoose.connect(MONGODB_URI)
   .then(() => {
@@ -433,3 +437,6 @@ mongoose.connect(MONGODB_URI)
     console.error('❌ KERNEL OFFLINE: MongoDB Connection Error', err);
     process.exit(1);
   });
+*/
+
+export default app;
