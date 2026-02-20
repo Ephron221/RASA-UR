@@ -38,7 +38,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Member = exports.FooterConfig = exports.AboutConfig = exports.HomeConfig = exports.ContactMessage = exports.DonationProject = exports.Donation = exports.DepartmentInterest = exports.Department = exports.Announcement = exports.Leader = exports.News = exports.SystemLog = exports.QuizResult = exports.BibleQuiz = exports.VerseReflection = exports.DailyVerse = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const bcrypt_1 = __importDefault(require("bcrypt"));
+const bcrypt_1 = __importDefault(require("bcryptjs"));
 const schemaOptions = {
     timestamps: true,
     toJSON: {

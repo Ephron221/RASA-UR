@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const bcrypt_1 = __importDefault(require("bcryptjs"));
 const cors_1 = __importDefault(require("cors"));
 const crypto_1 = __importDefault(require("crypto"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -14,7 +15,7 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 app.use((0, cors_1.default)({
-    origin: ['https://rasa-ur-nyarugenge-campus.onrender.com', 'http://localhost:3000']
+    origin: ['https://rasaur-nyarugenge.vercel.app/', 'http://localhost:3000']
 }));
 app.use(express_1.default.json({ limit: '50mb' }));
 // --- LOGGING MIDDLEWARE ---
