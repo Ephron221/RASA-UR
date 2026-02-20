@@ -7,7 +7,7 @@ import { db } from './db';
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 const API_BASE_URL = IS_PROD 
-  ? 'https://rasa-ur-nyarugenge-campus.onrender.com/api' 
+  ? 'https://rasa-ur-nyarugenge-ruby.vercel.app/api'
   : 'http://localhost:5000/api';
 
 const hybridFetch = async (

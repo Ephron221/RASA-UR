@@ -27,7 +27,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ['https://rasa-ur-nyarugenge-campus.onrender.com', 'http://localhost:3000']
+  origin: [
+    'http://localhost:3000', 
+    'https://rasaur-nyarugenge.vercel.app'
+  ]
 }));
 app.use(express.json({ limit: '50mb' }));
 
@@ -429,24 +432,5 @@ app.post('/api/system/reset', async (req, res) => {
     res.status(501).json({ error: "DB Reset not implemented" });
 });
 
-
-// --- START SERVER ---
-
-// Vercel handles the server creation, so we don't need to listen here.
-// This block is kept for local development.
-/*
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
-    console.log(`✅ DB Host: ${mongoose.connection.host}`);
-    bootstrapAdmin();
-    app.listen(PORT, () => console.log(`🚀 Server listening on PORT ${PORT}`));
-  })
-  .catch(err => {
-    console.error('❌ KERNEL OFFLINE: MongoDB Connection Error', err);
-    process.exit(1);
-  });
-*/
-
+// Vercel needs this to be exported
 export default app;
