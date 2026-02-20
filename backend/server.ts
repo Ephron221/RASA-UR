@@ -26,12 +26,9 @@ mongoose.connect(MONGODB_URI).then(() => {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'https://rasaur-nyarugenge.vercel.app'
-  ]
-}));
+// THIS IS THE CRITICAL CHANGE - ALLOWING ALL ORIGINS FOR DEBUGGING
+app.use(cors({ origin: '*' }));
+
 app.use(express.json({ limit: '50mb' }));
 
 // --- LOGGING MIDDLEWARE ---
@@ -39,6 +36,8 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
+
+// All other code remains the same...
 
 // --- AUTH ENDPOINTS ---
 app.post('/api/auth/login', async (req, res) => {
@@ -367,7 +366,7 @@ app.patch('/api/departments/interests/:id/status', async (req, res) => {
 app.get('/api/contacts', async (req, res) => res.json(await ContactMessage.find().sort({ date: -1 })));
 app.post('/api/contacts', async (req, res) => res.status(201).json(await new ContactMessage(req.body).save()));
 app.patch('/api/contacts/:id/read', async (req, res) => {
-    const query = getQueryById(req.params.id);
+    const query = getQueryById(.params.id);
     if (!query) return res.status(400).json({ error: 'Invalid ID' });
     res.json(await ContactMessage.findOneAndUpdate(query, { isRead: true }, { new: true }));
 });
