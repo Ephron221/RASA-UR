@@ -13,6 +13,16 @@ import {
 import { sendPasswordResetEmail, sendVerificationEmail } from './email';
 
 dotenv.config();
+
+// --- DATABASE CONNECTION FOR SERVERLESS ENVIRONMENT ---
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
+mongoose.connect(MONGODB_URI).then(() => {
+    console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
+    bootstrapAdmin(); // Initialize admin if needed
+}).catch(err => {
+    console.error('❌ KERNEL OFFLINE: MongoDB Connection Error', err);
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
