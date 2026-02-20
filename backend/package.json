@@ -2,11 +2,12 @@
   "name": "rasa-ur-nyarugenge-backend",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
-    "start": "npx tsx server.ts",
-    "server": "npm start",
-    "build": "echo 'Build step not required, dependencies will be installed automatically.'"
+    "dev": "npx tsx server.ts",
+    "start": "node dist/server.js",
+    "server": "npm run dev",
+    "build": "tsc"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",
