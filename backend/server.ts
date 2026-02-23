@@ -30,7 +30,10 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://rasaur-nyarugenge.vercel.app' // Your new live frontend
-  ]
+  ],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(express.json({ limit: '50mb' }));
