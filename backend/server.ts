@@ -25,11 +25,25 @@ mongoose.connect(MONGODB_URI).then(() => {
 
 const app = express();
 
-// --- CORS CONFIGURATION (Simplified) ---
-app.use(cors({
-  origin: "https://rasaur-nyarugenge.vercel.app",
-  credentials: true
-}));
+// --- CORS CONFIGURATION (Advanced with Logging) ---
+const whitelist = ['http://localhost:3000', 'https://rasaur-nyarugenge.vercel.app'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    console.log('CORS middleware triggered. Request origin:', origin); // Debug log
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+// Adding an explicit OPTIONS handler can sometimes resolve issues with preflight requests in certain environments.
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '50mb' }));
 
