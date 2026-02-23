@@ -25,15 +25,10 @@ mongoose.connect(MONGODB_URI).then(() => {
 
 const app = express();
 
-// --- CORS CONFIGURATION (THE FINAL FIX) ---
+// --- CORS CONFIGURATION (Simplified) ---
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://rasaur-nyarugenge.vercel.app' // Your new live frontend
-  ],
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  origin: "https://rasaur-nyarugenge.vercel.app",
+  credentials: true
 }));
 
 app.use(express.json({ limit: '50mb' }));
@@ -406,7 +401,7 @@ app.put('/api/config/home', async (req, res) => res.json(await HomeConfig.findOn
 app.get('/api/config/about', async (req, res) => res.json(await AboutConfig.findOne() || { values: [], timeline: [] }));
 app.put('/api/config/about', async (req, res) => res.json(await AboutConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
 app.get('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOne() || {}));
-app.put('/api/config/footer', async (req, res) => res.json(await HomeConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
+app.put('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
 
 // --- SYSTEM ---
 app.get('/api/system/health', async (req, res) => {
