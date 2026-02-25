@@ -35,6 +35,8 @@ const MemberSchema = new Schema({
   isVerified: { type: Boolean, default: false },
   verificationToken: String,
   verificationExpires: Date,
+  academicYear: String,
+  gender: String,
 }, schemaOptions);
 
 // Hash password before saving using modern async middleware
@@ -195,5 +197,5 @@ export const DonationProject = mongoose.models.DonationProject || mongoose.model
 export const ContactMessage = mongoose.models.ContactMessage || mongoose.model('ContactMessage', ContactMessageSchema);
 export const HomeConfig = mongoose.models.HomeConfig || mongoose.model('HomeConfig', HomeConfigSchema);
 export const AboutConfig = mongoose.models.AboutConfig || mongoose.model('AboutConfig', AboutConfigSchema);
-export const FooterConfig = mongoose.models.FooterConfig || mongoose.model('FooterConfig', FooterConfigSchema);
+export oconst FooterConfig = mongoose.models.FooterConfig || mongoose.model('FooterConfig', FooterConfigSchema);
 export const Member = mongoose.models.Member || mongoose.model('Member', MemberSchema);

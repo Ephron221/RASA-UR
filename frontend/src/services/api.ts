@@ -53,6 +53,10 @@ export const API = {
   },
   members: {
     getAll: (): Promise<User[]> => hybridFetch('members', 'GET', null, () => db.getCollection('members')),
+    getReport: (params: any): Promise<User[]> => {
+      const query = new URLSearchParams(params).toString();
+      return hybridFetch(`members/report?${query}`, 'GET');
+    },
     update: (id: string, updates: Partial<User>) => hybridFetch(`members/${id}`, 'PUT', updates),
     delete: (id: string) => hybridFetch(`members/${id}`, 'DELETE'),
     updateRole: (id: string, role: string) => hybridFetch(`members/${id}/role`, 'PATCH', { role })

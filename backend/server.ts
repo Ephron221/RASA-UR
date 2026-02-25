@@ -243,6 +243,38 @@ app.delete('/api/members/:id', async (req, res) => {
     res.status(204).send();
 });
 
+app.get('/api/members/report', async (req, res) => {
+  try {
+    const { year, name, gender, level, program, diocese } = req.query;
+
+    const filter: any = {};
+
+    if (year) {
+      filter.academicYear = year;
+    }
+    if (name) {
+      filter.fullName = { $regex: name, $options: 'i' }; // Case-insensitive search
+    }
+    if (gender) {
+      filter.gender = gender;
+    }
+    if (level) {
+      filter.level = level;
+    }
+    if (program) {
+      filter.program = program;
+    }
+    if (diocese) {
+        filter.diocese = diocese;
+    }
+
+    const members = await Member.find(filter).sort({ fullName: 1 });
+    res.json(members);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch member report', details: err.message });
+  }
+});
+
 
 // --- LEADERS ---
 app.get('/api/leaders', async (req, res) => res.json(await Leader.find().sort({ name: 1 })));
@@ -400,11 +432,11 @@ app.delete('/api/contacts/:id', async (req, res) => {
 
 // --- ROLES & PERMISSIONS ---
 app.get('/api/roles', (req, res) => {
-  const all = ['tab.overview', 'tab.profile', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.clearance', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system'];
+  const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.clearance', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system'];
   res.json([
     { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles', 'action.reset_db'] },
     { id: 'accountant', label: 'Accountant', icon: 'Landmark', permissions: ['tab.overview', 'tab.profile', 'tab.donations', 'action.verify_donations'] },
-    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: ['tab.overview', 'tab.profile', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'] },
+    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'] },
     { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'] }
   ]);
 });
