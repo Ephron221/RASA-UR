@@ -9,7 +9,6 @@ const schemaOptions = {
       ret.id = ret._id.toString();
       delete ret._id;
       delete ret.__v;
-      delete ret.password; // Do not return password hash
       return ret;
     },
   },
@@ -39,23 +38,23 @@ const MemberSchema = new Schema({
   gender: String,
 }, schemaOptions);
 
-// Hash password before saving using modern async middleware
-MemberSchema.pre('save', async function() {
-  if (!this.isModified('password')) {
-    return;
+// Hash password before saving
+MemberSchema.pre('save', async function(next) {
+  const user = this as any;
+  if (!user.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+    next();
+  } catch (err: any) {
+    next(err);
   }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Method to compare passwords for login
+// Method to compare passwords
 MemberSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  if (!candidatePassword || !this.password) {
-    return false;
-  }
   return bcrypt.compare(candidatePassword, this.password);
 };
-
 
 const DailyVerseSchema = new Schema({ 
   theme: String, 
@@ -197,5 +196,5 @@ export const DonationProject = mongoose.models.DonationProject || mongoose.model
 export const ContactMessage = mongoose.models.ContactMessage || mongoose.model('ContactMessage', ContactMessageSchema);
 export const HomeConfig = mongoose.models.HomeConfig || mongoose.model('HomeConfig', HomeConfigSchema);
 export const AboutConfig = mongoose.models.AboutConfig || mongoose.model('AboutConfig', AboutConfigSchema);
-export oconst FooterConfig = mongoose.models.FooterConfig || mongoose.model('FooterConfig', FooterConfigSchema);
+export const FooterConfig = mongoose.models.FooterConfig || mongoose.model('FooterConfig', FooterConfigSchema);
 export const Member = mongoose.models.Member || mongoose.model('Member', MemberSchema);
