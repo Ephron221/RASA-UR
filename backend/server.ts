@@ -49,10 +49,6 @@ mongoose.connect(MONGODB_URI)
 
 // --- AUTH ENDPOINTS ---
 
-/**
- * @route POST /api/auth/login
- * @desc Login user and check verification status
- */
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -63,8 +59,9 @@ app.post('/api/auth/login', async (req, res) => {
     
     if (!user.isVerified) {
       return res.status(403).json({ 
-        error: 'Account not verified. Please verify your email before logging in.',
-        notVerified: true 
+        error: 'Account not verified. Please check your email for the verification code.',
+        notVerified: true,
+        email: user.email
       });
     }
 
@@ -73,62 +70,93 @@ app.post('/api/auth/login', async (req, res) => {
 
     res.json(user);
   } catch (err: any) { 
-    res.status(500).json({ error: 'Login failed' }); 
+    res.status(500).json({ error: 'Login failed', details: err.message }); 
   }
 });
 
-/**
- * @route POST /api/auth/register
- * @desc Register a new user and send 6-digit OTP
- */
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, fullName, password } = req.body;
-    if (!email || !fullName || !password) return res.status(400).json({ error: 'Missing required fields' });
+    const { email, fullName, password, phone, program, level, diocese, department, profileImage } = req.body;
+    
+    if (!email || !fullName || !password) {
+      return res.status(400).json({ error: 'Full Name, Email, and Password are required.' });
+    }
 
-    let user = await Member.findOne({ email: email.toLowerCase().trim() });
+    const cleanEmail = email.toLowerCase().trim();
+    let user = await Member.findOne({ email: cleanEmail });
     
     if (user && user.isVerified) {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
-    // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 3600000); // 1 hour expiry
+    const expiry = new Date(Date.now() + 3600000); // 1 hour
+
+    const userData = {
+      fullName,
+      email: cleanEmail,
+      password,
+      phone,
+      program,
+      level,
+      diocese,
+      department,
+      profileImage,
+      isVerified: false,
+      verificationToken: otp,
+      verificationExpires: expiry
+    };
 
     if (user) {
-      // Update existing unverified user
-      user.set({ 
-        ...req.body, 
-        email: email.toLowerCase().trim(),
-        verificationToken: otp, 
-        verificationExpires: expiry 
-      });
+      user.set(userData);
     } else {
-      // Create new user
-      user = new Member({ 
-        ...req.body, 
-        email: email.toLowerCase().trim(),
-        isVerified: false, 
-        verificationToken: otp, 
-        verificationExpires: expiry 
-      });
+      user = new Member(userData);
     }
 
     await user.save();
-    await sendVerificationEmail(user.email, otp);
     
-    res.status(201).json({ message: 'A 6-digit verification code has been sent to your email.' });
+    try {
+      await sendVerificationEmail(cleanEmail, otp);
+    } catch (mailErr: any) {
+      console.error('Email Sending Failed:', mailErr);
+      return res.status(201).json({ 
+        message: 'Account created, but verification email failed to send. Please contact support.',
+        emailError: true 
+      });
+    }
+    
+    res.status(201).json({ message: 'Verification code sent to your email.' });
   } catch (err: any) { 
     console.error('Registration Error:', err);
-    res.status(500).json({ error: 'Registration failed', details: err.message }); 
+    res.status(500).json({ error: err.message || 'Registration failed' }); 
   }
 });
 
-/**
- * @route POST /api/auth/verify
- * @desc Verify email with 6-digit OTP
- */
+app.post('/api/auth/resend-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await Member.findOne({ email: cleanEmail });
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ error: 'Account already verified' });
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 3600000);
+
+    user.verificationToken = otp;
+    user.verificationExpires = expiry;
+    await user.save();
+
+    await sendVerificationEmail(cleanEmail, otp);
+    res.json({ message: 'New verification code sent to your email.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to resend OTP', details: err.message });
+  }
+});
+
 app.post('/api/auth/verify', async (req, res) => {
   try {
     const { email, token } = req.body;
@@ -149,41 +177,38 @@ app.post('/api/auth/verify', async (req, res) => {
     user.verificationExpires = undefined;
     await user.save();
 
-    res.json({ message: 'Email verified successfully! You can now log in.', user });
+    res.json(user);
   } catch (err: any) { 
-    res.status(500).json({ error: 'Verification failed' }); 
+    res.status(500).json({ error: 'Verification failed', details: err.message }); 
   }
 });
 
-/**
- * @route POST /api/auth/forgot-password
- * @desc Send password reset OTP
- */
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
     const user = await Member.findOne({ email: email.toLowerCase().trim() });
-    if (!user) return res.status(404).json({ error: 'No account found with this email address.' });
+    if (!user) return res.status(404).json({ error: 'No account found with this email.' });
 
     const otp = crypto.randomInt(100000, 999999).toString();
     user.resetPasswordToken = otp;
-    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
+    user.resetPasswordExpires = new Date(Date.now() + 3600000);
     
     await user.save();
-    await sendPasswordResetEmail(user.email, otp);
     
-    res.json({ message: 'A password reset code has been sent to your email.' });
+    try {
+      await sendPasswordResetEmail(user.email, otp);
+      res.json({ message: 'A password reset code has been sent to your email.' });
+    } catch (mailErr: any) {
+      console.error('Reset Email Failed:', mailErr);
+      res.status(500).json({ error: 'Failed to send reset email. Please try again later.' });
+    }
   } catch (err: any) { 
-    res.status(500).json({ error: 'Failed to process request' }); 
+    res.status(500).json({ error: 'Internal server error', details: err.message }); 
   }
 });
 
-/**
- * @route POST /api/auth/reset-password
- * @desc Reset password using OTP
- */
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
@@ -195,23 +220,20 @@ app.post('/api/auth/reset-password', async (req, res) => {
       resetPasswordExpires: { $gt: new Date() } 
     });
 
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired reset code.' });
-    }
+    if (!user) return res.status(400).json({ error: 'Invalid or expired reset code.' });
 
-    user.password = newPassword; // Pre-save hook will hash this
+    user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.json({ message: 'Password has been reset successfully. You can now log in with your new password.' });
+    res.json({ message: 'Password reset successfully. You can now log in.' });
   } catch (err: any) { 
-    res.status(500).json({ error: 'Failed to reset password' }); 
+    res.status(500).json({ error: 'Failed to reset password', details: err.message }); 
   }
 });
 
-// --- REST OF THE API ---
-// (Keeping existing endpoints for members, leaders, donations, spiritual, cms, configs, etc.)
+// --- REMAINING ENDPOINTS ---
 
 app.get('/api/members', async (req, res) => res.json(await Member.find().sort({ createdAt: -1 })));
 app.get('/api/members/report', async (req, res) => {
@@ -336,7 +358,8 @@ app.get('/api/roles', (req, res) => {
   ]);
 });
 
-app.get('/api/health-check', (req, res) => res.json({ status: 'API IS LIVE', timestamp: new Date() }));
+app.get('/api/system/logs', async (req, res) => res.json(await SystemLog.find().sort({ createdAt: -1 }).limit(100)));
+
 app.get('/api/system/health', async (req, res) => {
   try {
     const stats = await mongoose.connection.db?.stats();

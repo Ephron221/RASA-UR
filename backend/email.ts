@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Create transporter with explicit configuration
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -11,10 +12,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Verify connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ EMAIL SYSTEM OFFLINE:', error.message);
+  } else {
+    console.log('✅ EMAIL SYSTEM ONLINE: Ready to send messages');
+  }
+});
+
 export const sendPasswordResetEmail = async (to: string, token: string) => {
   const mailOptions = {
     from: `"RASA-UR Support" <${process.env.EMAIL_USER}>`,
-    to,
+    to: to.toLowerCase().trim(),
     subject: 'Your RASA-UR Password Reset Code',
     html: `
       <div style="font-family: sans-serif; text-align: center; padding: 40px; border: 1px solid #eee; border-radius: 10px; max-width: 500px; margin: auto;">
@@ -23,20 +33,26 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
         <p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2980b9; background: #f8f9fa; padding: 20px; border-radius: 8px; display: inline-block; margin: 20px 0;">
           ${token}
         </p>
-        <p style="color: #95a5a6; font-size: 12px;">If you did not request this, please ignore this email or contact support if you have concerns.</p>
+        <p style="color: #95a5a6; font-size: 12px;">If you did not request this, please ignore this email.</p>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
         <p style="color: #bdc3c7; font-size: 11px;">&copy; ${new Date().getFullYear()} RASA-UR Nyarugenge. All rights reserved.</p>
       </div>
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Reset email sent to ${to}`);
+  } catch (err) {
+    console.error(`❌ Failed to send reset email to ${to}:`, err);
+    throw err;
+  }
 };
 
 export const sendVerificationEmail = async (to: string, token: string) => {
     const mailOptions = {
         from: `"RASA-UR Account" <${process.env.EMAIL_USER}>`,
-        to,
+        to: to.toLowerCase().trim(),
         subject: 'Verify Your RASA-UR Account',
         html: `
             <div style="font-family: sans-serif; text-align: center; padding: 40px; border: 1px solid #eee; border-radius: 10px; max-width: 500px; margin: auto;">
@@ -52,5 +68,11 @@ export const sendVerificationEmail = async (to: string, token: string) => {
         `,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`📧 Verification email sent to ${to}`);
+    } catch (err) {
+        console.error(`❌ Failed to send verification email to ${to}:`, err);
+        throw err;
+    }
 };

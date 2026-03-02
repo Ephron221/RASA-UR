@@ -30,7 +30,7 @@ const hybridFetch = async (
         return await fallbackAction();
       }
       const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `Kernel Error: ${res.status}`);
+      throw errorData; // Throw the full error object
     }
     
     if (res.status === 204) return null;
@@ -48,6 +48,7 @@ export const API = {
     login: (email: string, password: string): Promise<User> => hybridFetch('auth/login', 'POST', { email, password }),
     register: (userData: Partial<User>): Promise<{ message: string }> => hybridFetch('auth/register', 'POST', userData),
     verify: (email: string, token: string): Promise<User> => hybridFetch('auth/verify', 'POST', { email, token }),
+    resendOtp: (email: string): Promise<{ message: string }> => hybridFetch('auth/resend-otp', 'POST', { email }),
     forgotPassword: (email: string): Promise<{ message: string }> => hybridFetch('auth/forgot-password', 'POST', { email }),
     resetPassword: (email: string, token: string, newPassword: string): Promise<{ message: string }> => hybridFetch('auth/reset-password', 'POST', { email, token, newPassword }),
   },

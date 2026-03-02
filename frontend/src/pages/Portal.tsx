@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Loader2, Camera, X, ShieldCheck, ShieldAlert, Key, Send, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Camera, X, ShieldCheck, ShieldAlert, Key, Send, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DIOCESES, LEVELS, DEPARTMENTS } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,8 +16,10 @@ const Portal: React.FC = () => {
   const [regStep, setRegStep] = useState<RegStep>('form');
   const [recoveryStep, setRecoveryStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [notVerifiedEmail, setNotVerifiedEmail] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -49,10 +51,32 @@ const Portal: React.FC = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+    const email = notVerifiedEmail || recoveryEmail;
+    if (!email) return;
+    
+    setResending(true);
+    setError(null);
+    try {
+      const res = await API.auth.resendOtp(email);
+      setSuccessMsg(res.message);
+      setMode('register');
+      setRegStep('verify');
+      setRecoveryEmail(email);
+    } catch (err: any) {
+      setError(err.error || 'Failed to resend code.');
+    } finally {
+      setResending(false);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMsg(null);
+    setNotVerifiedEmail(null);
+
     const formData = new FormData(e.target as HTMLFormElement);
     const email = (formData.get('email') as string)?.toLowerCase();
     const password = formData.get('password') as string;
@@ -85,7 +109,14 @@ const Portal: React.FC = () => {
           navigate('/dashboard');
         }
       }
-    } catch (err: any) { setError(err.response?.data?.error || err.message || 'Authentication error.'); } finally { setLoading(false); }
+    } catch (err: any) { 
+      setError(err.error || err.message || 'Authentication error.');
+      if (err.notVerified) {
+        setNotVerifiedEmail(err.email);
+      }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const handleRecovery = async (e: React.FormEvent) => {
@@ -121,7 +152,7 @@ const Portal: React.FC = () => {
         setRecoveryToken('');
       }
     } catch (err: any) { 
-      setError(err.message || "An unknown error occurred during password recovery."); 
+      setError(err.error || err.message || "An unknown error occurred during password recovery."); 
     } finally { 
       setLoading(false); 
     }
@@ -139,8 +170,29 @@ const Portal: React.FC = () => {
           <h2 className="text-4xl font-bold font-serif italic mb-2">{mode === 'login' ? 'Divine Access' : mode === 'register' ? 'Register Member' : 'Recover Key'}</h2>
           <p className="text-gray-500 text-sm font-medium">{mode === 'login' ? 'Portal authentication' : mode === 'register' ? (regStep === 'form' ? 'Join RASA' : 'Verify your Email') : 'Security loop'}</p>
         </div>
-        {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-black border border-red-100 text-center"><ShieldAlert className="inline mr-2" size={16}/>{error}</div>}
-        {successMsg && <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-2xl text-xs font-black border border-green-100 text-center"><CheckCircle2 className="inline mr-2" size={16}/>{successMsg}</div>}
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-black border border-red-100 text-center">
+            <ShieldAlert className="inline mr-2" size={16}/>{error}
+            {notVerifiedEmail && (
+              <button 
+                onClick={handleResendOtp}
+                className="block mt-2 mx-auto text-cyan-600 underline hover:text-cyan-700 flex items-center justify-center gap-1"
+                disabled={resending}
+              >
+                {resending ? <Loader2 size={12} className="animate-spin"/> : <RefreshCw size={12}/>}
+                Resend verification code
+              </button>
+            )}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-2xl text-xs font-black border border-green-100 text-center">
+            <CheckCircle2 className="inline mr-2" size={16}/>{successMsg}
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           {mode !== 'forgot' ? (
             <motion.form key="authForm" onSubmit={handleAuth} className="space-y-6"
@@ -177,7 +229,18 @@ const Portal: React.FC = () => {
                 </div>
               )}
               { mode === 'register' && regStep === 'verify' && (
-                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em]" /></motion.div>
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                    <input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em]" />
+                    <button 
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={resending}
+                      className="w-full text-xs font-black text-cyan-600 uppercase flex items-center justify-center gap-2 hover:underline"
+                    >
+                      {resending ? <Loader2 size={14} className="animate-spin"/> : <RefreshCw size={14}/>}
+                      Resend Code
+                    </button>
+                  </motion.div>
               )}
               <button type="submit" disabled={loading} className="w-full py-5 bg-cyan-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-cyan-600 flex items-center justify-center gap-3 active:scale-95">{loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Enter Sanctuary' : (regStep === 'form' ? 'Register' : 'Verify & Create Account'))}</button>
             </motion.form>
@@ -187,7 +250,9 @@ const Portal: React.FC = () => {
             >
                <AnimatePresence mode="wait">
                   {recoveryStep === 1 && <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="email" type="email" required placeholder="Email" className="w-full px-6 py-5 bg-gray-50 rounded-[1.8rem] font-bold text-sm" /></motion.div>}
-                  {recoveryStep === 2 && <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em]" /></motion.div>}
+                  {recoveryStep === 2 && <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                    <input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em]" />
+                  </motion.div>}
                   {recoveryStep === 3 && <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="newPassword" type="password" required placeholder="New Password" className="w-full px-6 py-5 bg-gray-50 rounded-[1.8rem] font-bold text-sm" /></motion.div>}
                </AnimatePresence>
                <button type="submit" disabled={loading} className="w-full py-5 bg-gray-900 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3">{loading ? <Loader2 className="animate-spin" /> : recoveryStep === 3 ? 'Reset' : 'Broadcast Token'} <Send size={18} /></button>
@@ -196,7 +261,12 @@ const Portal: React.FC = () => {
         </AnimatePresence>
         <div className="mt-10 flex flex-col gap-4 text-center">
           {mode === 'login' && <button onClick={() => setMode('forgot')} className="text-xs font-black text-gray-400 uppercase">Forgot Password?</button>}
-          <button onClick={() => setMode(mode === 'login' ? 'register' : 'login')} className="text-cyan-600 font-black text-sm">{mode === 'login' ? "New? Register" : "Member? Login"}</button>
+          <button onClick={() => {
+            setMode(mode === 'login' ? 'register' : 'login');
+            setRegStep('form');
+            setError(null);
+            setSuccessMsg(null);
+          }} className="text-cyan-600 font-black text-sm">{mode === 'login' ? "New? Register" : "Member? Login"}</button>
         </div>
       </motion.div>
     </div>

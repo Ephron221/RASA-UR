@@ -46,16 +46,15 @@ const MemberSchema = new Schema({
   gender: String,
 }, schemaOptions);
 
-// Hash password before saving
-MemberSchema.pre('save', async function(next) {
-  const user = this as any;
-  if (!user.isModified('password')) return next();
+// Hash password before saving - Fixed: Removed 'next' parameter for async/await
+MemberSchema.pre('save', async function() {
+  if (!this.isModified('password')) return;
+  
   try {
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
-    next();
+    this.password = await bcrypt.hash(this.password, salt);
   } catch (err: any) {
-    next(err);
+    throw err; // In async pre hooks, throwing an error is equivalent to calling next(err)
   }
 });
 
