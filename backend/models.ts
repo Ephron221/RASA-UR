@@ -64,7 +64,6 @@ MemberSchema.methods.comparePassword = async function(candidatePassword: string)
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// ... keep other schemas as they were
 const DailyVerseSchema = new Schema({ 
   theme: String, 
   verse: String, 
@@ -163,7 +162,8 @@ const DonationSchema = new Schema({
   category: String, 
   project: String, 
   status: { type: String, enum: ['Completed', 'Pending', 'Failed'], default: 'Pending' }, 
-  transactionId: { type: String, unique: true } 
+  transactionId: { type: String, unique: true },
+  paymentProof: String, // Base64 or URL of the bank slip/receipt
 }, schemaOptions);
 
 const DonationProjectSchema = new Schema({ 

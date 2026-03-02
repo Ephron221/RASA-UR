@@ -14,6 +14,7 @@ import { sendPasswordResetEmail, sendVerificationEmail } from './email';
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 // --- CORS CONFIGURATION ---
 const whitelist = [
@@ -38,14 +39,31 @@ app.use(cors({
 
 app.use(express.json({ limit: '50mb' }));
 
-// --- DATABASE CONNECTION ---
+// --- DATABASE CONNECTION & SERVER START ---
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ KERNEL ONLINE: MongoDB Connected');
-    bootstrapAdmin();
-  })
-  .catch(err => console.error('❌ KERNEL OFFLINE:', err));
+
+console.log('⏳ INITIALIZING DIVINE KERNEL...');
+
+mongoose.connect(MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000, // Fail fast if connection is impossible
+})
+.then(() => {
+  console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
+  
+  // Bootstrap admin after connection
+  bootstrapAdmin();
+
+  // ONLY START LISTENING AFTER DB IS CONNECTED
+  app.listen(PORT, () => {
+    console.log(`🚀 DIVINE KERNEL IS BROADCASTING ON PORT ${PORT}`);
+  });
+})
+.catch(err => {
+  console.error('❌ KERNEL CRITICAL FAILURE: Could not connect to MongoDB.');
+  console.error('Reason:', err.message);
+  console.log('TIP: Check your IP Whitelist in MongoDB Atlas or your .env file.');
+  process.exit(1); // Exit if DB is not available
+});
 
 // --- AUTH ENDPOINTS ---
 
@@ -90,7 +108,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 3600000); // 1 hour
+    const expiry = new Date(Date.now() + 3600000); 
 
     const userData = {
       fullName,
@@ -233,7 +251,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
-// --- REMAINING ENDPOINTS ---
+// --- REST OF THE API ---
 
 app.get('/api/members', async (req, res) => res.json(await Member.find().sort({ createdAt: -1 })));
 app.get('/api/members/report', async (req, res) => {
@@ -375,10 +393,5 @@ const bootstrapAdmin = async () => {
     console.log('🛡️ ADMIN BOOTSTRAPPED');
   }
 };
-
-const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => console.log(`🚀 DIVINE KERNEL IS ONLINE ON PORT ${PORT}`));
-}
 
 export default app;
