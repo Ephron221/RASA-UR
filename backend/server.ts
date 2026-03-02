@@ -38,95 +38,181 @@ app.use(cors({
 
 app.use(express.json({ limit: '50mb' }));
 
-// --- LOGGING ---
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-
 // --- DATABASE CONNECTION ---
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
-if (mongoose.connection.readyState === 0) {
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      console.log('✅ KERNEL ONLINE: MongoDB Connected');
-      bootstrapAdmin();
-    })
-    .catch(err => console.error('❌ KERNEL OFFLINE:', err));
-}
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('✅ KERNEL ONLINE: MongoDB Connected');
+    bootstrapAdmin();
+  })
+  .catch(err => console.error('❌ KERNEL OFFLINE:', err));
 
 // --- AUTH ENDPOINTS ---
+
+/**
+ * @route POST /api/auth/login
+ * @desc Login user and check verification status
+ */
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await Member.findOne({ email });
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+    const user = await Member.findOne({ email: email.toLowerCase().trim() });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-    if (!user.isVerified) return res.status(401).json({ error: 'Account not verified. Check your email.' });
+    
+    if (!user.isVerified) {
+      return res.status(403).json({ 
+        error: 'Account not verified. Please verify your email before logging in.',
+        notVerified: true 
+      });
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+
     res.json(user);
-  } catch (err: any) { res.status(500).json({ error: 'Login failed' }); }
+  } catch (err: any) { 
+    res.status(500).json({ error: 'Login failed' }); 
+  }
 });
 
+/**
+ * @route POST /api/auth/register
+ * @desc Register a new user and send 6-digit OTP
+ */
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email } = req.body;
-    let user = await Member.findOne({ email });
-    if (user && user.isVerified) return res.status(409).json({ error: 'Email already exists.' });
-    const token = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 3600000);
-    if (user) {
-      user.set({ ...req.body, verificationToken: token, verificationExpires: expiry });
-    } else {
-      user = new Member({ ...req.body, isVerified: false, verificationToken: token, verificationExpires: expiry });
+    const { email, fullName, password } = req.body;
+    if (!email || !fullName || !password) return res.status(400).json({ error: 'Missing required fields' });
+
+    let user = await Member.findOne({ email: email.toLowerCase().trim() });
+    
+    if (user && user.isVerified) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
     }
+
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 3600000); // 1 hour expiry
+
+    if (user) {
+      // Update existing unverified user
+      user.set({ 
+        ...req.body, 
+        email: email.toLowerCase().trim(),
+        verificationToken: otp, 
+        verificationExpires: expiry 
+      });
+    } else {
+      // Create new user
+      user = new Member({ 
+        ...req.body, 
+        email: email.toLowerCase().trim(),
+        isVerified: false, 
+        verificationToken: otp, 
+        verificationExpires: expiry 
+      });
+    }
+
     await user.save();
-    await sendVerificationEmail(user.email, token);
-    res.status(201).json({ message: 'Verification code sent to email.' });
-  } catch (err: any) { res.status(500).json({ error: 'Registration failed', details: err.message }); }
+    await sendVerificationEmail(user.email, otp);
+    
+    res.status(201).json({ message: 'A 6-digit verification code has been sent to your email.' });
+  } catch (err: any) { 
+    console.error('Registration Error:', err);
+    res.status(500).json({ error: 'Registration failed', details: err.message }); 
+  }
 });
 
+/**
+ * @route POST /api/auth/verify
+ * @desc Verify email with 6-digit OTP
+ */
 app.post('/api/auth/verify', async (req, res) => {
   try {
     const { email, token } = req.body;
-    const user = await Member.findOne({ email, verificationToken: token, verificationExpires: { $gt: new Date() } });
-    if (!user) return res.status(400).json({ error: 'Invalid or expired token.' });
+    if (!email || !token) return res.status(400).json({ error: 'Email and code are required' });
+
+    const user = await Member.findOne({ 
+      email: email.toLowerCase().trim(), 
+      verificationToken: token, 
+      verificationExpires: { $gt: new Date() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired verification code.' });
+    }
+
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationExpires = undefined;
     await user.save();
-    res.json(user);
-  } catch (err: any) { res.status(500).json({ error: 'Verification failed' }); }
+
+    res.json({ message: 'Email verified successfully! You can now log in.', user });
+  } catch (err: any) { 
+    res.status(500).json({ error: 'Verification failed' }); 
+  }
 });
 
+/**
+ * @route POST /api/auth/forgot-password
+ * @desc Send password reset OTP
+ */
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await Member.findOne({ email });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const token = crypto.randomInt(100000, 999999).toString();
-    user.resetPasswordToken = token;
-    user.resetPasswordExpires = new Date(Date.now() + 3600000);
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = await Member.findOne({ email: email.toLowerCase().trim() });
+    if (!user) return res.status(404).json({ error: 'No account found with this email address.' });
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    user.resetPasswordToken = otp;
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
+    
     await user.save();
-    await sendPasswordResetEmail(user.email, token);
-    res.json({ message: 'Reset code sent to email.' });
-  } catch (err: any) { res.status(500).json({ error: 'Request failed' }); }
+    await sendPasswordResetEmail(user.email, otp);
+    
+    res.json({ message: 'A password reset code has been sent to your email.' });
+  } catch (err: any) { 
+    res.status(500).json({ error: 'Failed to process request' }); 
+  }
 });
 
+/**
+ * @route POST /api/auth/reset-password
+ * @desc Reset password using OTP
+ */
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
-    const user = await Member.findOne({ email, resetPasswordToken: token, resetPasswordExpires: { $gt: new Date() } });
-    if (!user) return res.status(400).json({ error: 'Invalid or expired token.' });
-    user.password = newPassword;
+    if (!email || !token || !newPassword) return res.status(400).json({ error: 'Missing required fields' });
+
+    const user = await Member.findOne({ 
+      email: email.toLowerCase().trim(), 
+      resetPasswordToken: token, 
+      resetPasswordExpires: { $gt: new Date() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset code.' });
+    }
+
+    user.password = newPassword; // Pre-save hook will hash this
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
-    res.json({ message: 'Success' });
-  } catch (err: any) { res.status(500).json({ error: 'Failed' }); }
+
+    res.json({ message: 'Password has been reset successfully. You can now log in with your new password.' });
+  } catch (err: any) { 
+    res.status(500).json({ error: 'Failed to reset password' }); 
+  }
 });
 
-// --- MEMBERS & REPORTS ---
+// --- REST OF THE API ---
+// (Keeping existing endpoints for members, leaders, donations, spiritual, cms, configs, etc.)
+
 app.get('/api/members', async (req, res) => res.json(await Member.find().sort({ createdAt: -1 })));
 app.get('/api/members/report', async (req, res) => {
   try {
@@ -154,7 +240,6 @@ app.delete('/api/members/:id', async (req, res) => {
   res.status(204).send();
 });
 
-// --- LEADERS ---
 app.get('/api/leaders', async (req, res) => res.json(await Leader.find().sort({ name: 1 })));
 app.post('/api/leaders', async (req, res) => res.status(201).json(await new Leader(req.body).save()));
 app.put('/api/leaders/:id', async (req, res) => res.json(await Leader.findByIdAndUpdate(req.params.id, req.body, { new: true })));
@@ -163,7 +248,6 @@ app.delete('/api/leaders/:id', async (req, res) => {
   res.status(204).send();
 });
 
-// --- DONATIONS ---
 app.get('/api/donations', async (req, res) => res.json(await Donation.find().sort({ date: -1 })));
 app.post('/api/donations', async (req, res) => {
   const d = new Donation(req.body);
@@ -186,7 +270,6 @@ app.delete('/api/donation-projects/:id', async (req, res) => {
   res.status(204).send();
 });
 
-// --- SPIRITUAL ---
 app.get('/api/spiritual/verses', async (req, res) => res.json(await DailyVerse.find().sort({ date: -1 })));
 app.post('/api/spiritual/verses', async (req, res) => res.status(201).json(await new DailyVerse(req.body).save()));
 app.put('/api/spiritual/verses/:id', async (req, res) => res.json(await DailyVerse.findByIdAndUpdate(req.params.id, req.body, { new: true })));
@@ -208,7 +291,6 @@ app.post('/api/spiritual/reflections', async (req, res) => res.status(201).json(
 app.get('/api/spiritual/quiz-results', async (req, res) => res.json(await QuizResult.find().sort({ createdAt: -1 })));
 app.post('/api/spiritual/quiz-results', async (req, res) => res.status(201).json(await new QuizResult(req.body).save()));
 
-// --- CMS ---
 app.get('/api/news', async (req, res) => res.json(await News.find().sort({ date: -1 })));
 app.post('/api/news', async (req, res) => res.status(201).json(await new News(req.body).save()));
 app.put('/api/news/:id', async (req, res) => res.json(await News.findByIdAndUpdate(req.params.id, req.body, { new: true })));
@@ -238,7 +320,6 @@ app.delete('/api/contacts/:id', async (req, res) => {
   res.status(204).send();
 });
 
-// --- CONFIGS ---
 app.get('/api/config/home', async (req, res) => res.json(await HomeConfig.findOne() || {}));
 app.put('/api/config/home', async (req, res) => res.json(await HomeConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
 app.get('/api/config/about', async (req, res) => res.json(await AboutConfig.findOne() || {}));
@@ -246,7 +327,6 @@ app.put('/api/config/about', async (req, res) => res.json(await AboutConfig.find
 app.get('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOne() || {}));
 app.put('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
 
-// --- ROLES ---
 app.get('/api/roles', (req, res) => {
   const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system'];
   res.json([
@@ -256,16 +336,14 @@ app.get('/api/roles', (req, res) => {
   ]);
 });
 
-// --- SYSTEM ---
 app.get('/api/health-check', (req, res) => res.json({ status: 'API IS LIVE', timestamp: new Date() }));
 app.get('/api/system/health', async (req, res) => {
   try {
-    const stats = await mongoose.connection.db.stats();
-    res.json({ status: 'Online', dbSize: (stats.storageSize / 1024 / 1024).toFixed(2) + ' MB' });
+    const stats = await mongoose.connection.db?.stats();
+    res.json({ status: 'Online', dbSize: stats ? (stats.storageSize / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown' });
   } catch (e: any) { res.status(500).json({ status: 'Offline', error: e.message }); }
 });
 
-// --- BOOTSTRAP ---
 const bootstrapAdmin = async () => {
   const email = 'ephrontuyishime21@gmail.com';
   let user = await Member.findOne({ email });

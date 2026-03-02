@@ -9,6 +9,7 @@ const schemaOptions = {
       ret.id = ret._id.toString();
       delete ret._id;
       delete ret.__v;
+      delete ret.password; // Security: Never return password hash
       return ret;
     },
   },
@@ -19,7 +20,14 @@ const schemaOptions = {
 
 const MemberSchema = new Schema({ 
   fullName: { type: String, required: true },
-  email: { type: String, unique: true, required: true },
+  email: { 
+    type: String, 
+    unique: true, 
+    required: true, 
+    lowercase: true, 
+    trim: true,
+    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+  },
   password: { type: String, required: true },
   phone: String, 
   role: { type: String, default: 'member' }, 
@@ -53,9 +61,11 @@ MemberSchema.pre('save', async function(next) {
 
 // Method to compare passwords
 MemberSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  if (!candidatePassword || !this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+// ... keep other schemas as they were
 const DailyVerseSchema = new Schema({ 
   theme: String, 
   verse: String, 

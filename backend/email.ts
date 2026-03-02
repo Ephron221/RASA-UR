@@ -13,17 +13,19 @@ const transporter = nodemailer.createTransport({
 
 export const sendPasswordResetEmail = async (to: string, token: string) => {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"RASA-UR Support" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Your RASA-NYG Password Reset Token',
+    subject: 'Your RASA-UR Password Reset Code',
     html: `
-      <div style="font-family: sans-serif; text-align: center; padding: 40px;">
-        <h2 style="color: #333;">RASA-NYG Password Reset</h2>
-        <p>You requested a password reset. Use the token below to reset your password.</p>
-        <p style="font-size: 24px; font-weight: bold; letter-spacing: 5px; background: #f0f0f0; padding: 15px; border-radius: 10px; display: inline-block;">
+      <div style="font-family: sans-serif; text-align: center; padding: 40px; border: 1px solid #eee; border-radius: 10px; max-width: 500px; margin: auto;">
+        <h2 style="color: #2c3e50;">RASA-UR Password Reset</h2>
+        <p style="color: #7f8c8d;">You requested a password reset. Use the code below to reset your password. This code is valid for 1 hour.</p>
+        <p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2980b9; background: #f8f9fa; padding: 20px; border-radius: 8px; display: inline-block; margin: 20px 0;">
           ${token}
         </p>
-        <p style="color: #666; font-size: 12px;">If you did not request this, please ignore this email.</p>
+        <p style="color: #95a5a6; font-size: 12px;">If you did not request this, please ignore this email or contact support if you have concerns.</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #bdc3c7; font-size: 11px;">&copy; ${new Date().getFullYear()} RASA-UR Nyarugenge. All rights reserved.</p>
       </div>
     `,
   };
@@ -33,17 +35,19 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
 
 export const sendVerificationEmail = async (to: string, token: string) => {
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"RASA-UR Account" <${process.env.EMAIL_USER}>`,
         to,
-        subject: 'Verify Your RASA-NYG Account',
+        subject: 'Verify Your RASA-UR Account',
         html: `
-            <div style="font-family: sans-serif; text-align: center; padding: 40px;">
-                <h2 style="color: #333;">Welcome to RASA-NYG!</h2>
-                <p>Please use the following token to verify your email address and activate your account.</p>
-                <p style="font-size: 24px; font-weight: bold; letter-spacing: 5px; background: #f0f0f0; padding: 15px; border-radius: 10px; display: inline-block;">
+            <div style="font-family: sans-serif; text-align: center; padding: 40px; border: 1px solid #eee; border-radius: 10px; max-width: 500px; margin: auto;">
+                <h2 style="color: #2c3e50;">Welcome to RASA-UR!</h2>
+                <p style="color: #7f8c8d;">Thank you for joining us. Please use the following code to verify your email address and activate your account.</p>
+                <p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #27ae60; background: #f8f9fa; padding: 20px; border-radius: 8px; display: inline-block; margin: 20px 0;">
                     ${token}
                 </p>
-                <p style="color: #666; font-size: 12px;">If you did not create this account, you can safely ignore this email.</p>
+                <p style="color: #95a5a6; font-size: 12px;">If you did not create this account, you can safely ignore this email.</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #bdc3c7; font-size: 11px;">&copy; ${new Date().getFullYear()} RASA-UR Nyarugenge. All rights reserved.</p>
             </div>
         `,
     };
