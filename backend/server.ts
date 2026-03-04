@@ -45,15 +45,11 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_p
 console.log('⏳ INITIALIZING DIVINE KERNEL...');
 
 mongoose.connect(MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000, // Fail fast if connection is impossible
+  serverSelectionTimeoutMS: 5000,
 })
 .then(() => {
   console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
-  
-  // Bootstrap admin after connection
   bootstrapAdmin();
-
-  // ONLY START LISTENING AFTER DB IS CONNECTED
   app.listen(PORT, () => {
     console.log(`🚀 DIVINE KERNEL IS BROADCASTING ON PORT ${PORT}`);
   });
@@ -61,8 +57,7 @@ mongoose.connect(MONGODB_URI, {
 .catch(err => {
   console.error('❌ KERNEL CRITICAL FAILURE: Could not connect to MongoDB.');
   console.error('Reason:', err.message);
-  console.log('TIP: Check your IP Whitelist in MongoDB Atlas or your .env file.');
-  process.exit(1); // Exit if DB is not available
+  process.exit(1);
 });
 
 // --- AUTH ENDPOINTS ---
@@ -74,9 +69,9 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = await Member.findOne({ email: email.toLowerCase().trim() });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-    
+
     if (!user.isVerified) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: 'Account not verified. Please check your email for the verification code.',
         notVerified: true,
         email: user.email
@@ -87,28 +82,28 @@ app.post('/api/auth/login', async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
     res.json(user);
-  } catch (err: any) { 
-    res.status(500).json({ error: 'Login failed', details: err.message }); 
+  } catch (err: any) {
+    res.status(500).json({ error: 'Login failed', details: err.message });
   }
 });
 
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, fullName, password, phone, program, level, diocese, department, profileImage } = req.body;
-    
+
     if (!email || !fullName || !password) {
       return res.status(400).json({ error: 'Full Name, Email, and Password are required.' });
     }
 
     const cleanEmail = email.toLowerCase().trim();
     let user = await Member.findOne({ email: cleanEmail });
-    
+
     if (user && user.isVerified) {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 3600000); 
+    const expiry = new Date(Date.now() + 3600000);
 
     const userData = {
       fullName,
@@ -132,21 +127,21 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     await user.save();
-    
+
     try {
       await sendVerificationEmail(cleanEmail, otp);
     } catch (mailErr: any) {
       console.error('Email Sending Failed:', mailErr);
-      return res.status(201).json({ 
+      return res.status(201).json({
         message: 'Account created, but verification email failed to send. Please contact support.',
-        emailError: true 
+        emailError: true
       });
     }
-    
+
     res.status(201).json({ message: 'Verification code sent to your email.' });
-  } catch (err: any) { 
+  } catch (err: any) {
     console.error('Registration Error:', err);
-    res.status(500).json({ error: err.message || 'Registration failed' }); 
+    res.status(500).json({ error: err.message || 'Registration failed' });
   }
 });
 
@@ -180,10 +175,10 @@ app.post('/api/auth/verify', async (req, res) => {
     const { email, token } = req.body;
     if (!email || !token) return res.status(400).json({ error: 'Email and code are required' });
 
-    const user = await Member.findOne({ 
-      email: email.toLowerCase().trim(), 
-      verificationToken: token, 
-      verificationExpires: { $gt: new Date() } 
+    const user = await Member.findOne({
+      email: email.toLowerCase().trim(),
+      verificationToken: token,
+      verificationExpires: { $gt: new Date() }
     });
 
     if (!user) {
@@ -196,8 +191,8 @@ app.post('/api/auth/verify', async (req, res) => {
     await user.save();
 
     res.json(user);
-  } catch (err: any) { 
-    res.status(500).json({ error: 'Verification failed', details: err.message }); 
+  } catch (err: any) {
+    res.status(500).json({ error: 'Verification failed', details: err.message });
   }
 });
 
@@ -212,9 +207,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     user.resetPasswordToken = otp;
     user.resetPasswordExpires = new Date(Date.now() + 3600000);
-    
+
     await user.save();
-    
+
     try {
       await sendPasswordResetEmail(user.email, otp);
       res.json({ message: 'A password reset code has been sent to your email.' });
@@ -222,8 +217,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       console.error('Reset Email Failed:', mailErr);
       res.status(500).json({ error: 'Failed to send reset email. Please try again later.' });
     }
-  } catch (err: any) { 
-    res.status(500).json({ error: 'Internal server error', details: err.message }); 
+  } catch (err: any) {
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
@@ -232,10 +227,10 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const { email, token, newPassword } = req.body;
     if (!email || !token || !newPassword) return res.status(400).json({ error: 'Missing required fields' });
 
-    const user = await Member.findOne({ 
-      email: email.toLowerCase().trim(), 
-      resetPasswordToken: token, 
-      resetPasswordExpires: { $gt: new Date() } 
+    const user = await Member.findOne({
+      email: email.toLowerCase().trim(),
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() }
     });
 
     if (!user) return res.status(400).json({ error: 'Invalid or expired reset code.' });
@@ -246,13 +241,12 @@ app.post('/api/auth/reset-password', async (req, res) => {
     await user.save();
 
     res.json({ message: 'Password reset successfully. You can now log in.' });
-  } catch (err: any) { 
-    res.status(500).json({ error: 'Failed to reset password', details: err.message }); 
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to reset password', details: err.message });
   }
 });
 
-// --- REST OF THE API ---
-
+// --- MEMBERS ---
 app.get('/api/members', async (req, res) => res.json(await Member.find().sort({ createdAt: -1 })));
 app.get('/api/members/report', async (req, res) => {
   try {
@@ -280,6 +274,22 @@ app.delete('/api/members/:id', async (req, res) => {
   res.status(204).send();
 });
 
+// --- DEPARTMENTS & INTERESTS ---
+app.get('/api/departments', async (req, res) => res.json(await Department.find()));
+app.post('/api/departments', async (req, res) => res.status(201).json(await new Department(req.body).save()));
+app.put('/api/departments/:id', async (req, res) => res.json(await Department.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.delete('/api/departments/:id', async (req, res) => {
+  await Department.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
+
+app.get('/api/departments/interests', async (req, res) => res.json(await DepartmentInterest.find().sort({ createdAt: -1 })));
+app.post('/api/departments/interest', async (req, res) => res.status(201).json(await new DepartmentInterest(req.body).save()));
+app.patch('/api/departments/interests/:id/status', async (req, res) => {
+  res.json(await DepartmentInterest.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }));
+});
+
+// --- LEADERS ---
 app.get('/api/leaders', async (req, res) => res.json(await Leader.find().sort({ name: 1 })));
 app.post('/api/leaders', async (req, res) => res.status(201).json(await new Leader(req.body).save()));
 app.put('/api/leaders/:id', async (req, res) => res.json(await Leader.findByIdAndUpdate(req.params.id, req.body, { new: true })));
@@ -288,6 +298,7 @@ app.delete('/api/leaders/:id', async (req, res) => {
   res.status(204).send();
 });
 
+// --- DONATIONS ---
 app.get('/api/donations', async (req, res) => res.json(await Donation.find().sort({ date: -1 })));
 app.post('/api/donations', async (req, res) => {
   const d = new Donation(req.body);
@@ -310,13 +321,9 @@ app.delete('/api/donation-projects/:id', async (req, res) => {
   res.status(204).send();
 });
 
+// --- SPIRITUAL HUB ---
 app.get('/api/spiritual/verses', async (req, res) => res.json(await DailyVerse.find().sort({ date: -1 })));
 app.post('/api/spiritual/verses', async (req, res) => res.status(201).json(await new DailyVerse(req.body).save()));
-app.put('/api/spiritual/verses/:id', async (req, res) => res.json(await DailyVerse.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/spiritual/verses/:id', async (req, res) => {
-  await DailyVerse.findByIdAndDelete(req.params.id);
-  res.status(204).send();
-});
 app.get('/api/spiritual/verses/daily', async (req, res) => res.json(await DailyVerse.findOne({ isActive: true }).sort({ date: -1 }) || {}));
 app.get('/api/spiritual/quizzes', async (req, res) => res.json(await BibleQuiz.find()));
 app.get('/api/spiritual/quizzes/active', async (req, res) => res.json(await BibleQuiz.find({ isActive: true })));
@@ -331,6 +338,7 @@ app.post('/api/spiritual/reflections', async (req, res) => res.status(201).json(
 app.get('/api/spiritual/quiz-results', async (req, res) => res.json(await QuizResult.find().sort({ createdAt: -1 })));
 app.post('/api/spiritual/quiz-results', async (req, res) => res.status(201).json(await new QuizResult(req.body).save()));
 
+// --- CMS & CONFIG ---
 app.get('/api/news', async (req, res) => res.json(await News.find().sort({ date: -1 })));
 app.post('/api/news', async (req, res) => res.status(201).json(await new News(req.body).save()));
 app.put('/api/news/:id', async (req, res) => res.json(await News.findByIdAndUpdate(req.params.id, req.body, { new: true })));
@@ -343,13 +351,6 @@ app.post('/api/announcements', async (req, res) => res.status(201).json(await ne
 app.put('/api/announcements/:id', async (req, res) => res.json(await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 app.delete('/api/announcements/:id', async (req, res) => {
   await Announcement.findByIdAndDelete(req.params.id);
-  res.status(204).send();
-});
-app.get('/api/departments', async (req, res) => res.json(await Department.find()));
-app.post('/api/departments', async (req, res) => res.status(201).json(await new Department(req.body).save()));
-app.put('/api/departments/:id', async (req, res) => res.json(await Department.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/departments/:id', async (req, res) => {
-  await Department.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
 app.get('/api/contacts', async (req, res) => res.json(await ContactMessage.find().sort({ date: -1 })));
@@ -367,6 +368,7 @@ app.put('/api/config/about', async (req, res) => res.json(await AboutConfig.find
 app.get('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOne() || {}));
 app.put('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
 
+// --- SYSTEM ---
 app.get('/api/roles', (req, res) => {
   const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system'];
   res.json([
