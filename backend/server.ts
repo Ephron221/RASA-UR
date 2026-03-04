@@ -39,8 +39,10 @@ app.use(cors({
 
 app.use(express.json({ limit: '50mb' }));
 
-// --- DATABASE CONNECTION ---
+// --- DATABASE CONNECTION & SERVER START ---
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
+
+console.log('⏳ INITIALIZING DIVINE KERNEL...');
 
 mongoose.connect(MONGODB_URI, {
   serverSelectionTimeoutMS: 5000,
@@ -53,7 +55,8 @@ mongoose.connect(MONGODB_URI, {
   });
 })
 .catch(err => {
-  console.error('❌ KERNEL CRITICAL FAILURE:', err.message);
+  console.error('❌ KERNEL CRITICAL FAILURE: Could not connect to MongoDB.');
+  console.error('Reason:', err.message);
   process.exit(1);
 });
 
@@ -66,10 +69,10 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = await Member.findOne({ email: email.toLowerCase().trim() });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-    
+
     if (!user.isVerified) {
-      return res.status(403).json({ 
-        error: 'Account not verified.',
+      return res.status(403).json({
+        error: 'Account not verified. Please check your email for the verification code.',
         notVerified: true,
         email: user.email
       });
@@ -79,111 +82,168 @@ app.post('/api/auth/login', async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
     res.json(user);
-  } catch (err: any) { 
-    res.status(500).json({ error: 'Login failed', details: err.message }); 
+  } catch (err: any) {
+    res.status(500).json({ error: 'Login failed', details: err.message });
   }
 });
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, fullName, password } = req.body;
-    if (!email || !fullName || !password) return res.status(400).json({ error: 'Full Name, Email, and Password are required.' });
+    const { email, fullName, password, phone, program, level, diocese, department, profileImage } = req.body;
+
+    if (!email || !fullName || !password) {
+      return res.status(400).json({ error: 'Full Name, Email, and Password are required.' });
+    }
 
     const cleanEmail = email.toLowerCase().trim();
     let user = await Member.findOne({ email: cleanEmail });
-    
-    if (user && user.isVerified) return res.status(409).json({ error: 'An account with this email already exists.' });
+
+    if (user && user.isVerified) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
 
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 3600000); 
+    const expiry = new Date(Date.now() + 3600000);
+
+    const userData = {
+      fullName,
+      email: cleanEmail,
+      password,
+      phone,
+      program,
+      level,
+      diocese,
+      department,
+      profileImage,
+      isVerified: false,
+      verificationToken: otp,
+      verificationExpires: expiry
+    };
 
     if (user) {
-      user.set({ ...req.body, verificationToken: otp, verificationExpires: expiry });
+      user.set(userData);
     } else {
-      user = new Member({ ...req.body, verificationToken: otp, verificationExpires: expiry });
+      user = new Member(userData);
     }
 
     await user.save();
-    await sendVerificationEmail(cleanEmail, otp);
+
+    try {
+      await sendVerificationEmail(cleanEmail, otp);
+    } catch (mailErr: any) {
+      console.error('Email Sending Failed:', mailErr);
+      return res.status(201).json({
+        message: 'Account created, but verification email failed to send. Please contact support.',
+        emailError: true
+      });
+    }
+
     res.status(201).json({ message: 'Verification code sent to your email.' });
-  } catch (err: any) { 
-    res.status(500).json({ error: err.message || 'Registration failed' }); 
+  } catch (err: any) {
+    console.error('Registration Error:', err);
+    res.status(500).json({ error: err.message || 'Registration failed' });
   }
 });
 
 app.post('/api/auth/resend-otp', async (req, res) => {
   try {
     const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
     const cleanEmail = email.toLowerCase().trim();
     const user = await Member.findOne({ email: cleanEmail });
+
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.isVerified) return res.status(400).json({ error: 'Account already verified' });
 
     const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 3600000);
+
     user.verificationToken = otp;
-    user.verificationExpires = new Date(Date.now() + 3600000);
+    user.verificationExpires = expiry;
     await user.save();
 
     await sendVerificationEmail(cleanEmail, otp);
-    res.json({ message: 'New code sent.' });
-  } catch (err: any) { res.status(500).json({ error: 'Failed' }); }
+    res.json({ message: 'New verification code sent to your email.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to resend OTP', details: err.message });
+  }
 });
 
 app.post('/api/auth/verify', async (req, res) => {
   try {
     const { email, token } = req.body;
-    const user = await Member.findOne({ 
-      email: email.toLowerCase().trim(), 
-      verificationToken: token, 
-      verificationExpires: { $gt: new Date() } 
+    if (!email || !token) return res.status(400).json({ error: 'Email and code are required' });
+
+    const user = await Member.findOne({
+      email: email.toLowerCase().trim(),
+      verificationToken: token,
+      verificationExpires: { $gt: new Date() }
     });
-    if (!user) return res.status(400).json({ error: 'Invalid code.' });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired verification code.' });
+    }
+
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationExpires = undefined;
     await user.save();
+
     res.json(user);
-  } catch (err: any) { res.status(500).json({ error: 'Failed' }); }
+  } catch (err: any) {
+    res.status(500).json({ error: 'Verification failed', details: err.message });
+  }
 });
 
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
-    const user = await Member.findOne({ email: req.body.email.toLowerCase().trim() });
-    if (!user) return res.status(404).json({ error: 'Not found.' });
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = await Member.findOne({ email: email.toLowerCase().trim() });
+    if (!user) return res.status(404).json({ error: 'No account found with this email.' });
+
     const otp = crypto.randomInt(100000, 999999).toString();
     user.resetPasswordToken = otp;
     user.resetPasswordExpires = new Date(Date.now() + 3600000);
+
     await user.save();
-    await sendPasswordResetEmail(user.email, otp);
-    res.json({ message: 'Code sent.' });
-  } catch (err: any) { res.status(500).json({ error: 'Failed' }); }
+
+    try {
+      await sendPasswordResetEmail(user.email, otp);
+      res.json({ message: 'A password reset code has been sent to your email.' });
+    } catch (mailErr: any) {
+      console.error('Reset Email Failed:', mailErr);
+      res.status(500).json({ error: 'Failed to send reset email. Please try again later.' });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: 'Internal server error', details: err.message });
+  }
 });
 
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
-    const user = await Member.findOne({ 
-      email: email.toLowerCase().trim(), 
-      resetPasswordToken: token, 
-      resetPasswordExpires: { $gt: new Date() } 
+    if (!email || !token || !newPassword) return res.status(400).json({ error: 'Missing required fields' });
+
+    const user = await Member.findOne({
+      email: email.toLowerCase().trim(),
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() }
     });
-    if (!user) return res.status(400).json({ error: 'Invalid code.' });
+
+    if (!user) return res.status(400).json({ error: 'Invalid or expired reset code.' });
+
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
-    res.json({ message: 'Success.' });
-  } catch (err: any) { res.status(500).json({ error: 'Failed' }); }
-});
 
-// --- ACADEMIC YEARS ---
-app.get('/api/config/academic-years', (req, res) => {
-  const currentYear = new Date().getFullYear();
-  const years = [];
-  for (let i = 2003; i <= currentYear + 1; i++) {
-    years.push(`${i}-${i + 1}`);
+    res.json({ message: 'Password reset successfully. You can now log in.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to reset password', details: err.message });
   }
-  res.json(years.reverse());
 });
 
 // --- MEMBERS ---
@@ -192,23 +252,36 @@ app.get('/api/members/report', async (req, res) => {
   try {
     const { year, name, gender, level, program, diocese } = req.query;
     const filter: any = {};
-    if (year && year !== 'All Years') filter.academicYear = year;
+    if (year) filter.academicYear = year;
     if (name) filter.fullName = { $regex: name, $options: 'i' };
-    if (gender && gender !== 'All Gender') filter.gender = gender;
-    if (level && level !== 'All Levels') filter.level = level;
-    if (program && program !== 'All Programs') filter.program = program;
-    if (diocese && diocese !== 'All Diocese') filter.diocese = diocese;
+    if (gender) filter.gender = gender;
+    if (level) filter.level = level;
+    if (program) filter.program = program;
+    if (diocese) filter.diocese = diocese;
     res.json(await Member.find(filter).sort({ fullName: 1 }));
   } catch (err: any) { res.status(500).json({ error: 'Report failed' }); }
 });
-app.put('/api/members/:id', async (req, res) => res.json(await Member.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/members/:id', async (req, res) => { await Member.findByIdAndDelete(req.params.id); res.status(204).send(); });
+
+app.put('/api/members/:id', async (req, res) => {
+  const m = await Member.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(m);
+});
+app.patch('/api/members/:id/role', async (req, res) => {
+  res.json(await Member.findByIdAndUpdate(req.params.id, { role: req.body.role }, { new: true }));
+});
+app.delete('/api/members/:id', async (req, res) => {
+  await Member.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 
 // --- DEPARTMENTS & INTERESTS ---
 app.get('/api/departments', async (req, res) => res.json(await Department.find()));
 app.post('/api/departments', async (req, res) => res.status(201).json(await new Department(req.body).save()));
 app.put('/api/departments/:id', async (req, res) => res.json(await Department.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/departments/:id', async (req, res) => { await Department.findByIdAndDelete(req.params.id); res.status(204).send(); });
+app.delete('/api/departments/:id', async (req, res) => {
+  await Department.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 
 app.get('/api/departments/interests', async (req, res) => res.json(await DepartmentInterest.find().sort({ createdAt: -1 })));
 app.post('/api/departments/interest', async (req, res) => res.status(201).json(await new DepartmentInterest(req.body).save()));
@@ -220,7 +293,10 @@ app.patch('/api/departments/interests/:id/status', async (req, res) => {
 app.get('/api/leaders', async (req, res) => res.json(await Leader.find().sort({ name: 1 })));
 app.post('/api/leaders', async (req, res) => res.status(201).json(await new Leader(req.body).save()));
 app.put('/api/leaders/:id', async (req, res) => res.json(await Leader.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/leaders/:id', async (req, res) => { await Leader.findByIdAndDelete(req.params.id); res.status(204).send(); });
+app.delete('/api/leaders/:id', async (req, res) => {
+  await Leader.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 
 // --- DONATIONS ---
 app.get('/api/donations', async (req, res) => res.json(await Donation.find().sort({ date: -1 })));
@@ -240,7 +316,10 @@ app.patch('/api/donations/:id/status', async (req, res) => {
 app.get('/api/donation-projects', async (req, res) => res.json(await DonationProject.find()));
 app.post('/api/donation-projects', async (req, res) => res.status(201).json(await new DonationProject(req.body).save()));
 app.put('/api/donation-projects/:id', async (req, res) => res.json(await DonationProject.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/donation-projects/:id', async (req, res) => { await DonationProject.findByIdAndDelete(req.params.id); res.status(204).send(); });
+app.delete('/api/donation-projects/:id', async (req, res) => {
+  await DonationProject.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 
 // --- SPIRITUAL HUB ---
 app.get('/api/spiritual/verses', async (req, res) => res.json(await DailyVerse.find().sort({ date: -1 })));
@@ -250,7 +329,10 @@ app.get('/api/spiritual/quizzes', async (req, res) => res.json(await BibleQuiz.f
 app.get('/api/spiritual/quizzes/active', async (req, res) => res.json(await BibleQuiz.find({ isActive: true })));
 app.post('/api/spiritual/quizzes', async (req, res) => res.status(201).json(await new BibleQuiz(req.body).save()));
 app.put('/api/spiritual/quizzes/:id', async (req, res) => res.json(await BibleQuiz.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/spiritual/quizzes/:id', async (req, res) => { await BibleQuiz.findByIdAndDelete(req.params.id); res.status(204).send(); });
+app.delete('/api/spiritual/quizzes/:id', async (req, res) => {
+  await BibleQuiz.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 app.get('/api/spiritual/reflections', async (req, res) => res.json(await VerseReflection.find().sort({ createdAt: -1 })));
 app.post('/api/spiritual/reflections', async (req, res) => res.status(201).json(await new VerseReflection(req.body).save()));
 app.get('/api/spiritual/quiz-results', async (req, res) => res.json(await QuizResult.find().sort({ createdAt: -1 })));
@@ -260,14 +342,24 @@ app.post('/api/spiritual/quiz-results', async (req, res) => res.status(201).json
 app.get('/api/news', async (req, res) => res.json(await News.find().sort({ date: -1 })));
 app.post('/api/news', async (req, res) => res.status(201).json(await new News(req.body).save()));
 app.put('/api/news/:id', async (req, res) => res.json(await News.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/news/:id', async (req, res) => { await News.findByIdAndDelete(req.params.id); res.status(204).send(); });
+app.delete('/api/news/:id', async (req, res) => {
+  await News.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 app.get('/api/announcements', async (req, res) => res.json(await Announcement.find().sort({ date: -1 })));
 app.post('/api/announcements', async (req, res) => res.status(201).json(await new Announcement(req.body).save()));
 app.put('/api/announcements/:id', async (req, res) => res.json(await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.delete('/api/announcements/:id', async (req, res) => { await Announcement.findByIdAndDelete(req.params.id); res.status(204).send(); });
+app.delete('/api/announcements/:id', async (req, res) => {
+  await Announcement.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 app.get('/api/contacts', async (req, res) => res.json(await ContactMessage.find().sort({ date: -1 })));
 app.post('/api/contacts', async (req, res) => res.status(201).json(await new ContactMessage(req.body).save()));
 app.patch('/api/contacts/:id/read', async (req, res) => res.json(await ContactMessage.findByIdAndUpdate(req.params.id, { isRead: true }, { new: true })));
+app.delete('/api/contacts/:id', async (req, res) => {
+  await ContactMessage.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 
 app.get('/api/config/home', async (req, res) => res.json(await HomeConfig.findOne() || {}));
 app.put('/api/config/home', async (req, res) => res.json(await HomeConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
@@ -276,17 +368,7 @@ app.put('/api/config/about', async (req, res) => res.json(await AboutConfig.find
 app.get('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOne() || {}));
 app.put('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
 
-// --- SYSTEM & BACKUPS ---
-app.get('/api/system/backups', async (req, res) => res.json([]));
-app.post('/api/system/backups', async (req, res) => res.status(501).json({ error: "Cloud backup not configured." }));
-app.get('/api/system/logs', async (req, res) => res.json(await SystemLog.find().sort({ createdAt: -1 }).limit(100)));
-app.get('/api/system/health', async (req, res) => {
-  try {
-    const stats = await mongoose.connection.db?.stats();
-    res.json({ status: 'Online', dbSize: stats ? (stats.storageSize / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown' });
-  } catch (e: any) { res.status(500).json({ status: 'Offline' }); }
-});
-
+// --- SYSTEM ---
 app.get('/api/roles', (req, res) => {
   const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system'];
   res.json([
@@ -296,10 +378,21 @@ app.get('/api/roles', (req, res) => {
   ]);
 });
 
+app.get('/api/system/logs', async (req, res) => res.json(await SystemLog.find().sort({ createdAt: -1 }).limit(100)));
+
+app.get('/api/system/health', async (req, res) => {
+  try {
+    const stats = await mongoose.connection.db?.stats();
+    res.json({ status: 'Online', dbSize: stats ? (stats.storageSize / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown' });
+  } catch (e: any) { res.status(500).json({ status: 'Offline', error: e.message }); }
+});
+
 const bootstrapAdmin = async () => {
   const email = 'ephrontuyishime21@gmail.com';
-  if (!(await Member.findOne({ email }))) {
-    await new Member({ fullName: 'Esron Tuyishime (IT)', email, password: 'admin', role: 'it', diocese: 'Kigali', isVerified: true, academicYear: "2023-2024" }).save();
+  let user = await Member.findOne({ email });
+  if (!user) {
+    await new Member({ fullName: 'Esron Tuyishime (IT)', email, password: 'admin', role: 'it', diocese: 'Kigali', isVerified: true }).save();
+    console.log('🛡️ ADMIN BOOTSTRAPPED');
   }
 };
 
