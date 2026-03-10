@@ -548,12 +548,15 @@ const bootstrapAdmin = async () => {
     { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.', isSystem: true },
   ];
 
-  // Insert only roles that don't already exist
-  const missing = defaults.filter(d => !existingRoleIds.includes(d.id));
-  if (missing.length > 0) {
-    await Role.insertMany(missing);
-    console.log(`🔑 ROLES BOOTSTRAPPED: ${missing.map(r => r.label).join(', ')}`);
+  // Upsert all default roles to ensure existing roles get updated permissions
+  for (const defaultRole of defaults) {
+    await Role.findOneAndUpdate(
+      { id: defaultRole.id },
+      { $set: defaultRole },
+      { upsert: true }
+    );
   }
+  console.log(`🔑 DEFAULT ROLES SYNCED (${defaults.length} definitions)`);
 };
 
 export default app;
