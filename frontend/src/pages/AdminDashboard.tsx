@@ -117,15 +117,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const rolePermissions = useMemo(() => ({
     canViewTab: (tabId: string) => {
-      // FORCE VISIBILITY for Members Report for IT, EXCOM and Accountant roles
-      const privilegedRoles = ['it', 'executive', 'admin', 'accountant'];
+      // MASTER OVERRIDE: IT Architect sees everything
+      if (currentUser?.role === 'it') return true;
+
+      // FORCE VISIBILITY for Members Report for EXCOM and Accountant roles
+      const privilegedRoles = ['executive', 'admin', 'accountant'];
       if (tabId === 'reports' && privilegedRoles.includes(currentUser?.role || '')) {
         return true;
       }
+      
       if (!currentRoleDef) return false;
       return currentRoleDef.permissions.includes(`tab.${tabId}`);
     },
     canDo: (actionKey: string) => {
+      if (currentUser?.role === 'it') return true;
       if (!currentRoleDef) return false;
       return currentRoleDef.permissions.includes(`action.${actionKey}`);
     }

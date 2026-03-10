@@ -46,7 +46,7 @@ const MemberSchema = new Schema({
   gender: String,
 }, schemaOptions);
 
-// Hash password before saving - Fixed: Removed 'next' parameter for async/await
+// Hash password before saving
 MemberSchema.pre('save', async function() {
   if (!this.isModified('password')) return;
   
@@ -54,7 +54,7 @@ MemberSchema.pre('save', async function() {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   } catch (err: any) {
-    throw err; // In async pre hooks, throwing an error is equivalent to calling next(err)
+    throw err;
   }
 });
 
@@ -63,6 +63,15 @@ MemberSchema.methods.comparePassword = async function(candidatePassword: string)
   if (!candidatePassword || !this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
+
+const RoleSchema = new Schema({
+  id: { type: String, required: true, unique: true },
+  label: { type: String, required: true },
+  icon: { type: String, default: 'User' },
+  description: String,
+  permissions: [{ type: String }],
+  isSystem: { type: Boolean, default: false }
+}, schemaOptions);
 
 const DailyVerseSchema = new Schema({ 
   theme: String, 
@@ -207,3 +216,4 @@ export const HomeConfig = mongoose.models.HomeConfig || mongoose.model('HomeConf
 export const AboutConfig = mongoose.models.AboutConfig || mongoose.model('AboutConfig', AboutConfigSchema);
 export const FooterConfig = mongoose.models.FooterConfig || mongoose.model('FooterConfig', FooterConfigSchema);
 export const Member = mongoose.models.Member || mongoose.model('Member', MemberSchema);
+export const Role = mongoose.models.Role || mongoose.model('Role', RoleSchema);

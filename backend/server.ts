@@ -7,7 +7,7 @@ import {
   News, Leader, Announcement, Member,
   Department, ContactMessage, DepartmentInterest,
   HomeConfig, SystemLog, DailyVerse, BibleQuiz, QuizResult, AboutConfig, FooterConfig,
-  VerseReflection, Donation, DonationProject
+  VerseReflection, Donation, DonationProject, Role
 } from './models';
 import { sendPasswordResetEmail, sendVerificationEmail } from './email';
 
@@ -441,19 +441,28 @@ app.put('/api/config/about', async (req, res) => res.json(await AboutConfig.find
 app.get('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOne() || {}));
 app.put('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOneAndUpdate({}, req.body, { upsert: true, returnDocument: 'after' })));
 
-// --- SYSTEM ---
-app.get('/api/roles', (req, res) => {
-  const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system'];
-  const excomPerms = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'];
-  
-  res.json([
-    { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles'], description: 'Full system oversight and security architecture.' },
-    { id: 'accountant', label: 'Accountant', icon: 'Wallet', permissions: [...excomPerms, 'tab.donations'], description: 'Financial steward responsible for offerings, donations, and ledger verification.' },
-    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: excomPerms, description: 'Executive committee member with management access to ministries and content.' },
-    { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.' }
-  ]);
+// --- ROLES & CLEARANCE ---
+app.get('/api/roles', async (req, res) => {
+  const roles = await Role.find();
+  res.json(roles);
 });
 
+app.post('/api/roles', async (req, res) => {
+  const role = new Role(req.body);
+  await role.save();
+  res.status(201).json(role);
+});
+
+app.put('/api/roles/:id', async (req, res) => {
+  res.json(await Role.findOneAndUpdate({ id: req.params.id }, req.body, { returnDocument: 'after' }));
+});
+
+app.delete('/api/roles/:id', async (req, res) => {
+  await Role.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
+});
+
+// --- SYSTEM ---
 app.get('/api/system/logs', async (req, res) => res.json(await SystemLog.find().sort({ createdAt: -1 }).limit(100)));
 
 app.get('/api/system/health', async (req, res) => {
@@ -469,6 +478,22 @@ const bootstrapAdmin = async () => {
   if (!user) {
     await new Member({ fullName: 'Esron Tuyishime (IT)', email, password: 'admin', role: 'it', diocese: 'Kigali', isVerified: true }).save();
     console.log('🛡️ ADMIN BOOTSTRAPPED');
+  }
+
+  // Bootstrap Default Roles
+  const count = await Role.countDocuments();
+  if (count === 0) {
+    const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system', 'tab.clearance'];
+    const excomPerms = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'];
+    
+    const defaults = [
+      { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles'], description: 'Full system oversight and security architecture.', isSystem: true },
+      { id: 'accountant', label: 'Accountant', icon: 'Wallet', permissions: [...excomPerms, 'tab.donations'], description: 'Financial steward responsible for offerings, donations, and ledger verification.', isSystem: true },
+      { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: excomPerms, description: 'Executive committee member with management access to ministries and content.', isSystem: true },
+      { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.', isSystem: true }
+    ];
+    await Role.insertMany(defaults);
+    console.log('🔑 DEFAULT ROLES BOOTSTRAPPED');
   }
 };
 
