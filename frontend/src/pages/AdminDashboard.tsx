@@ -117,8 +117,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const rolePermissions = useMemo(() => ({
     canViewTab: (tabId: string) => {
-      // FORCE VISIBILITY for Members Report for IT and EXCOM roles
-      if (tabId === 'reports' && (currentUser?.role === 'it' || currentUser?.role === 'executive' || currentUser?.role === 'admin')) {
+      // FORCE VISIBILITY for Members Report for IT, EXCOM and Accountant roles
+      const privilegedRoles = ['it', 'executive', 'admin', 'accountant'];
+      if (tabId === 'reports' && privilegedRoles.includes(currentUser?.role || '')) {
         return true;
       }
       if (!currentRoleDef) return false;
@@ -167,6 +168,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setShowModal(null);
       setEditingItem(null);
       notify("Clearance Migration", `Tier protocols for ${editingItem.fullName} have been successfully updated.`, "divine");
+    } catch (err: any) {
+      // Corrected error access for fetch-based API
+      const errorMsg = err.error || (err.response?.data?.error) || "Failed to update role protocols.";
+      notify("Clearance Error", errorMsg, "error");
     } finally { setIsSyncing(false); }
   };
 
@@ -203,7 +208,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         const item = { title: formData.get('title') as string, content: formData.get('content') as string, category: formData.get('category') as any, mediaUrl: media, mediaType: formData.get('mediaType') as any, author: currentUser?.fullName || 'Admin', date: editingItem?.date || new Date().toISOString().split('T')[0] };
         if (editingItem) await API.news.update(editingItem.id, item); else await API.news.create({ ...item, id: Math.random().toString(36).substr(2, 9) } as any);
       } else if (showModal === 'member') {
-        const item = { fullName: formData.get('fullName') as string, email: formData.get('email') as string, phone: formData.get('phone') as string, program: formData.get('program') as string, level: formData.get('level') as string, diocese: formData.get('diocese') as string, department: formData.get('department') as string, profileImage: media };
+        const item = { 
+          fullName: formData.get('fullName') as string, 
+          email: formData.get('email') as string, 
+          phone: formData.get('phone') as string, 
+          program: formData.get('program') as string, 
+          level: formData.get('level') as string, 
+          diocese: formData.get('diocese') as string, 
+          department: formData.get('department') as string, 
+          academicYear: formData.get('academicYear') as string,
+          profileImage: media 
+        };
         if (editingItem) { await API.members.update(editingItem.id, item); } else { await API.members.create(item as User); }
       } else if (!showModal && activeTab === 'home') {
         const updates: Partial<HomeConfig> = {
@@ -215,6 +230,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       await fetchData();
       setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput('');
       notify(notifyTitle, notifyMsg, "divine");
+    } catch (err: any) {
+      console.error("Save Error:", err);
+      const msg = err.error || err.message || "The Kernel encountered a sequence error.";
+      notify("Protocol Failure", msg, "error");
     } finally { setIsSyncing(false); }
   };
 

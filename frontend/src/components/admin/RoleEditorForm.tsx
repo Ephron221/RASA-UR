@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield, User, Landmark, MessageSquare, Briefcase, CheckCircle2, Info, Star } from 'lucide-react';
+import { Shield, User, Landmark, MessageSquare, Briefcase, CheckCircle2, Info, Star, Wallet } from 'lucide-react';
 import { User as MemberType, RoleDefinition } from '../../types';
 
 interface RoleEditorFormProps {
@@ -10,7 +10,7 @@ interface RoleEditorFormProps {
   isSyncing: boolean;
 }
 
-const IconMap: any = { Shield, User, Landmark, MessageSquare, Briefcase, Star };
+const IconMap: any = { Shield, User, Landmark, MessageSquare, Briefcase, Star, Wallet };
 
 const RoleEditorForm: React.FC<RoleEditorFormProps> = ({ member, roles, onConfirm, isSyncing }) => {
   const [selectedRoleId, setSelectedRoleId] = React.useState<string>(member.role);

@@ -87,4 +87,4 @@ export const DIOCESES = [
   'Butare', 'Cyangugu', 'Gahini', 'Kigali', 'Kigeme', 'Kivu', 'Muhabura', 'Mityana', 'Byumba', 'Nyagatare'
 ];
 
-export const LEVELS = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'];
+export const LEVELS = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Post-RASA'];

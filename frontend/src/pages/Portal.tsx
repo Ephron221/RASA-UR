@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Loader2, Camera, X, ShieldCheck, ShieldAlert, Key, Send, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Camera, X, ShieldCheck, ShieldAlert, Key, Send, CheckCircle2, RefreshCw, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DIOCESES, LEVELS, DEPARTMENTS } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,6 +95,7 @@ const Portal: React.FC = () => {
             phone: formData.get('phone') as string, role: 'member',
             program: formData.get('program') as string, level: formData.get('level') as string,
             diocese: formData.get('diocese') as string, department: formData.get('department') as string,
+            academicYear: formData.get('academicYear') as string,
             profileImage: imagePreview || '',
           };
           await API.auth.register(newUser);
@@ -214,7 +215,13 @@ const Portal: React.FC = () => {
                       <select name="diocese" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm">{DIOCESES.map(d => <option key={d} value={d}>{d}</option>)}</select>
                       <select name="department" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm">{DEPARTMENTS.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select>
                     </div>
-                    <input name="program" required placeholder="Program" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <input name="program" required placeholder="Program" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" />
+                      <div className="relative">
+                        <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-cyan-500" size={16}/>
+                        <input name="academicYear" required placeholder="Year (e.g. 2024-2025)" className="w-full pl-12 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" />
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { User as UserIcon, Camera, Upload, Mail, Phone, MapPin, Briefcase, GraduationCap, Info, UserCheck, Shield } from 'lucide-react';
+import { User as UserIcon, Camera, Upload, Mail, Phone, MapPin, Briefcase, GraduationCap, Info, UserCheck, Shield, Calendar } from 'lucide-react';
 import { User, Role } from '../../types';
 import { DIOCESES, LEVELS, DEPARTMENTS } from '../../constants';
 
@@ -121,6 +121,19 @@ const MemberEditorForm: React.FC<MemberEditorFormProps> = ({
               >
                 {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-gray-400 uppercase ml-4 flex items-center gap-1">
+                <Calendar size={10}/> Academic Year <span className="text-red-500">*</span>
+              </label>
+              <input 
+                name="academicYear" 
+                defaultValue={editingItem?.academicYear} 
+                placeholder="e.g. 2024-2025"
+                required 
+                className="w-full px-6 py-4 bg-gray-50 rounded-2xl border-0 outline-none focus:ring-4 focus:ring-cyan-50 font-bold text-sm" 
+              />
+              <p className="text-[8px] font-black text-orange-500 uppercase tracking-tighter ml-4">Required for Accountant role</p>
             </div>
           </div>
         </div>

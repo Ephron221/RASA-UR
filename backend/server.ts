@@ -40,12 +40,13 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 
 // --- DATABASE CONNECTION & SERVER START ---
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa_portal';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/rasa_portal';
 
 console.log('⏳ INITIALIZING DIVINE KERNEL...');
 
 mongoose.connect(MONGODB_URI, {
   serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
 })
 .then(() => {
   console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
@@ -89,7 +90,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, fullName, password, phone, program, level, diocese, department, profileImage } = req.body;
+    const { email, fullName, password, phone, program, level, diocese, department, profileImage, academicYear } = req.body;
 
     if (!email || !fullName || !password) {
       return res.status(400).json({ error: 'Full Name, Email, and Password are required.' });
@@ -115,6 +116,7 @@ app.post('/api/auth/register', async (req, res) => {
       diocese,
       department,
       profileImage,
+      academicYear,
       isVerified: false,
       verificationToken: otp,
       verificationExpires: expiry
@@ -263,13 +265,54 @@ app.get('/api/members/report', async (req, res) => {
 });
 
 app.put('/api/members/:id', async (req, res) => {
-  const m = await Member.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid Identity Format' });
+  const m = await Member.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
   res.json(m);
 });
+
 app.patch('/api/members/:id/role', async (req, res) => {
-  res.json(await Member.findByIdAndUpdate(req.params.id, { role: req.body.role }, { new: true }));
+  try {
+    const { role } = req.body;
+    if (!role) return res.status(400).json({ error: 'Role sequence is required.' });
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid Identity Format' });
+
+    const member = await Member.findById(req.params.id);
+    if (!member) return res.status(404).json({ error: 'Member identity not found.' });
+
+    // Accountant Exclusive Logic
+    if (role === 'accountant') {
+      const year = member.academicYear;
+      if (!year) {
+        return res.status(400).json({ 
+          error: 'Clearance Blocked: Academic Year must be defined in the profile before granting Accountant status.' 
+        });
+      }
+      
+      const existingAccountant = await Member.findOne({ 
+        role: 'accountant', 
+        academicYear: year,
+        _id: { $ne: member._id }
+      });
+
+      if (existingAccountant) {
+        return res.status(400).json({ 
+          error: `Clearance Conflict: ${existingAccountant.fullName} is already assigned as Accountant for ${year}.` 
+        });
+      }
+    }
+
+    member.role = role;
+    await member.save();
+    res.json(member);
+  } catch (err: any) {
+    console.error('Role Update Error:', err);
+    res.status(500).json({ error: 'System Kernel Failure during role transition', details: err.message });
+  }
 });
+
 app.delete('/api/members/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid Identity Format' });
   await Member.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
@@ -277,8 +320,12 @@ app.delete('/api/members/:id', async (req, res) => {
 // --- DEPARTMENTS & INTERESTS ---
 app.get('/api/departments', async (req, res) => res.json(await Department.find()));
 app.post('/api/departments', async (req, res) => res.status(201).json(await new Department(req.body).save()));
-app.put('/api/departments/:id', async (req, res) => res.json(await Department.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/api/departments/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await Department.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+});
 app.delete('/api/departments/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   await Department.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
@@ -286,14 +333,19 @@ app.delete('/api/departments/:id', async (req, res) => {
 app.get('/api/departments/interests', async (req, res) => res.json(await DepartmentInterest.find().sort({ createdAt: -1 })));
 app.post('/api/departments/interest', async (req, res) => res.status(201).json(await new DepartmentInterest(req.body).save()));
 app.patch('/api/departments/interests/:id/status', async (req, res) => {
-  res.json(await DepartmentInterest.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }));
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await DepartmentInterest.findByIdAndUpdate(req.params.id, { status: req.body.status }, { returnDocument: 'after' }));
 });
 
 // --- LEADERS ---
 app.get('/api/leaders', async (req, res) => res.json(await Leader.find().sort({ name: 1 })));
 app.post('/api/leaders', async (req, res) => res.status(201).json(await new Leader(req.body).save()));
-app.put('/api/leaders/:id', async (req, res) => res.json(await Leader.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/api/leaders/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await Leader.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+});
 app.delete('/api/leaders/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   await Leader.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
@@ -307,7 +359,8 @@ app.post('/api/donations', async (req, res) => {
   res.status(201).json(d);
 });
 app.patch('/api/donations/:id/status', async (req, res) => {
-  const d = await Donation.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  const d = await Donation.findByIdAndUpdate(req.params.id, { status: req.body.status }, { returnDocument: 'after' });
   if (req.body.status === 'Completed' && d?.project) {
     await DonationProject.findOneAndUpdate({ title: d.project }, { $inc: { raised: d.amount } });
   }
@@ -315,8 +368,12 @@ app.patch('/api/donations/:id/status', async (req, res) => {
 });
 app.get('/api/donation-projects', async (req, res) => res.json(await DonationProject.find()));
 app.post('/api/donation-projects', async (req, res) => res.status(201).json(await new DonationProject(req.body).save()));
-app.put('/api/donation-projects/:id', async (req, res) => res.json(await DonationProject.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/api/donation-projects/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await DonationProject.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+});
 app.delete('/api/donation-projects/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   await DonationProject.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
@@ -328,8 +385,12 @@ app.get('/api/spiritual/verses/daily', async (req, res) => res.json(await DailyV
 app.get('/api/spiritual/quizzes', async (req, res) => res.json(await BibleQuiz.find()));
 app.get('/api/spiritual/quizzes/active', async (req, res) => res.json(await BibleQuiz.find({ isActive: true })));
 app.post('/api/spiritual/quizzes', async (req, res) => res.status(201).json(await new BibleQuiz(req.body).save()));
-app.put('/api/spiritual/quizzes/:id', async (req, res) => res.json(await BibleQuiz.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/api/spiritual/quizzes/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await BibleQuiz.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+});
 app.delete('/api/spiritual/quizzes/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   await BibleQuiz.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
@@ -341,40 +402,55 @@ app.post('/api/spiritual/quiz-results', async (req, res) => res.status(201).json
 // --- CMS & CONFIG ---
 app.get('/api/news', async (req, res) => res.json(await News.find().sort({ date: -1 })));
 app.post('/api/news', async (req, res) => res.status(201).json(await new News(req.body).save()));
-app.put('/api/news/:id', async (req, res) => res.json(await News.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/api/news/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await News.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+});
 app.delete('/api/news/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   await News.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
 app.get('/api/announcements', async (req, res) => res.json(await Announcement.find().sort({ date: -1 })));
 app.post('/api/announcements', async (req, res) => res.status(201).json(await new Announcement(req.body).save()));
-app.put('/api/announcements/:id', async (req, res) => res.json(await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/api/announcements/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await Announcement.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+});
 app.delete('/api/announcements/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   await Announcement.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
 app.get('/api/contacts', async (req, res) => res.json(await ContactMessage.find().sort({ date: -1 })));
 app.post('/api/contacts', async (req, res) => res.status(201).json(await new ContactMessage(req.body).save()));
-app.patch('/api/contacts/:id/read', async (req, res) => res.json(await ContactMessage.findByIdAndUpdate(req.params.id, { isRead: true }, { new: true })));
+app.patch('/api/contacts/:id/read', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  res.json(await ContactMessage.findByIdAndUpdate(req.params.id, { isRead: true }, { returnDocument: 'after' }));
+});
 app.delete('/api/contacts/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   await ContactMessage.findByIdAndDelete(req.params.id);
   res.status(204).send();
 });
 
 app.get('/api/config/home', async (req, res) => res.json(await HomeConfig.findOne() || {}));
-app.put('/api/config/home', async (req, res) => res.json(await HomeConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
+app.put('/api/config/home', async (req, res) => res.json(await HomeConfig.findOneAndUpdate({}, req.body, { upsert: true, returnDocument: 'after' })));
 app.get('/api/config/about', async (req, res) => res.json(await AboutConfig.findOne() || {}));
-app.put('/api/config/about', async (req, res) => res.json(await AboutConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
+app.put('/api/config/about', async (req, res) => res.json(await AboutConfig.findOneAndUpdate({}, req.body, { upsert: true, returnDocument: 'after' })));
 app.get('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOne() || {}));
-app.put('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOneAndUpdate({}, req.body, { upsert: true, new: true })));
+app.put('/api/config/footer', async (req, res) => res.json(await FooterConfig.findOneAndUpdate({}, req.body, { upsert: true, returnDocument: 'after' })));
 
 // --- SYSTEM ---
 app.get('/api/roles', (req, res) => {
   const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system'];
+  const excomPerms = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'];
+  
   res.json([
-    { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles'] },
-    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'] },
-    { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'] }
+    { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles'], description: 'Full system oversight and security architecture.' },
+    { id: 'accountant', label: 'Accountant', icon: 'Wallet', permissions: [...excomPerms, 'tab.donations'], description: 'Financial steward responsible for offerings, donations, and ledger verification.' },
+    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: excomPerms, description: 'Executive committee member with management access to ministries and content.' },
+    { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.' }
   ]);
 });
 

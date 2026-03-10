@@ -1,7 +1,7 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { User as UserIcon, Camera, Upload, Shield, Database, Loader2, Save, Mail, Phone, MapPin, Briefcase, GraduationCap, Star } from 'lucide-react';
+import { User as UserIcon, Camera, Upload, Shield, Database, Loader2, Save, Mail, Phone, MapPin, Briefcase, GraduationCap, Star, Calendar, ChevronDown } from 'lucide-react';
 import { User } from '../../types';
 import { DIOCESES, DEPARTMENTS, LEVELS } from '../../constants';
 
@@ -15,6 +15,15 @@ const ProfileEditorTab: React.FC<ProfileEditorTabProps> = ({ user, onUpdate, isS
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Generate years from 2003 to 2050
+  const academicYears = useMemo(() => {
+    const years = [];
+    for (let i = 2050; i >= 2003; i--) {
+      years.push(`${i}-${i + 1}`);
+    }
+    return years;
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,6 +45,7 @@ const ProfileEditorTab: React.FC<ProfileEditorTabProps> = ({ user, onUpdate, isS
       department: formData.get('department') as string,
       level: formData.get('level') as string,
       program: formData.get('program') as string,
+      academicYear: formData.get('academicYear') as string,
       profileImage: filePreview || user.profileImage
     };
     await onUpdate(updatedUser);
@@ -108,6 +118,21 @@ const ProfileEditorTab: React.FC<ProfileEditorTabProps> = ({ user, onUpdate, isS
                   <div className="relative group">
                     <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500 transition-colors" size={18} />
                     <input name="phone" defaultValue={user.phone} required className="w-full pl-16 pr-8 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none transition-all" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 ml-4 uppercase">Stewardship Academic Year</label>
+                  <div className="relative group">
+                    <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 text-cyan-500 pointer-events-none" size={18} />
+                    <select 
+                      name="academicYear" 
+                      defaultValue={user.academicYear} 
+                      className="w-full pl-16 pr-10 py-5 bg-gray-50 border-2 border-transparent focus:border-cyan-100 focus:bg-white rounded-3xl font-bold text-sm outline-none appearance-none cursor-pointer transition-all"
+                    >
+                      <option value="">Select Year...</option>
+                      {academicYears.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                    <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={16} />
                   </div>
                 </div>
               </div>
