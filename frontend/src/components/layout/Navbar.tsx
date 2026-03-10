@@ -10,9 +10,11 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface NavbarProps {
   departments: Department[];
+  isAdmin?: boolean;
+  roleLabel?: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ departments }) => {
+const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel = '' }) => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -32,18 +34,16 @@ const Navbar: React.FC<NavbarProps> = ({ departments }) => {
 
   const dashboardPath = useMemo(() => {
     if (!user) return '/portal';
-    const adminRoles = ['it', 'admin', 'executive', 'accountant', 'secretary'];
-    return adminRoles.includes(user.role) ? '/admin' : '/dashboard';
-  }, [user]);
+    return isAdmin ? '/admin' : '/dashboard';
+  }, [user, isAdmin]);
 
   const LOGO_SRC = "/logo.png";
 
   return (
-    <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${
-      scrolled
+    <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${scrolled
         ? 'bg-white/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.05)] border-b border-gray-100 py-2'
         : (isHomePage ? 'bg-transparent py-6' : 'bg-white border-b border-gray-100 py-3')
-    }`}>
+      }`}>
       <div className="max-container flex items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-4 group">
           <motion.div whileHover={{ scale: 1.05 }} className="relative h-14 w-auto flex items-center justify-center">
@@ -103,13 +103,13 @@ const Navbar: React.FC<NavbarProps> = ({ departments }) => {
               <Link to={dashboardPath} className="flex items-center gap-3 group">
                 <div className="text-right">
                   <p className="font-black text-[11px] text-gray-900 leading-none">{user.fullName.split(' ')[0]}</p>
-                  <p className="text-[8px] font-black text-cyan-600 uppercase tracking-widest mt-0.5">{user.role}</p>
+                  <p className="text-[8px] font-black text-cyan-600 uppercase tracking-widest mt-0.5">{roleLabel}</p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-cyan-500 flex items-center justify-center text-white shadow-lg shadow-cyan-100 group-hover:scale-105 transition-all overflow-hidden border-2 border-white/50 relative">
                   {user.profileImage ? (
                     <img src={user.profileImage} className="w-full h-full object-cover" alt="Profile" />
                   ) : (
-                    user.role === 'it' ? <Shield size={18}/> : <UserIcon size={18} />
+                    user.role === 'it' ? <Shield size={18} /> : <UserIcon size={18} />
                   )}
                   <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
@@ -141,11 +141,11 @@ const Navbar: React.FC<NavbarProps> = ({ departments }) => {
             {user && (
               <div className="mb-10 flex items-center gap-5 p-6 bg-gray-50 rounded-[2.5rem] border border-gray-100">
                 <div className="w-16 h-16 rounded-2xl bg-cyan-500 overflow-hidden shadow-xl border-2 border-white shrink-0">
-                  {user.profileImage ? <img src={user.profileImage} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-white">{user.role === 'it' ? <Shield size={24}/> : <UserIcon size={24} />}</div>}
+                  {user.profileImage ? <img src={user.profileImage} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-white">{user.role === 'it' ? <Shield size={24} /> : <UserIcon size={24} />}</div>}
                 </div>
                 <div>
                   <p className="font-black text-xl text-gray-900 leading-tight">{user.fullName}</p>
-                  <p className="text-xs font-black text-cyan-600 uppercase tracking-widest">{user.role} clearance</p>
+                  <p className="text-xs font-black text-cyan-600 uppercase tracking-widest">{roleLabel} clearance</p>
                 </div>
               </div>
             )}
@@ -154,10 +154,10 @@ const Navbar: React.FC<NavbarProps> = ({ departments }) => {
               {NAV_LINKS.map(link => <Link key={link.name} to={link.href} className="hover:text-cyan-500">{link.name}</Link>)}
               <div className="h-px bg-gray-100 my-4"></div>
               {user ? (
-                 <div className="space-y-6">
-                    <Link to={dashboardPath} className="flex items-center gap-4 text-cyan-600"><LayoutDashboard size={28} /> Dashboard</Link>
-                    <button onClick={logout} className="flex items-center gap-4 text-red-500"><LogOut size={28} /> Sign Out</button>
-                 </div>
+                <div className="space-y-6">
+                  <Link to={dashboardPath} className="flex items-center gap-4 text-cyan-600"><LayoutDashboard size={28} /> Dashboard</Link>
+                  <button onClick={logout} className="flex items-center gap-4 text-red-500"><LogOut size={28} /> Sign Out</button>
+                </div>
               ) : <Link to="/portal" className="bg-cyan-500 text-white py-6 rounded-3xl text-center shadow-2xl">Member Portal</Link>}
             </div>
           </motion.div>

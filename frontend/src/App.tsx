@@ -43,11 +43,12 @@ const AppContent: React.FC = () => {
 
   // Determine if the current user should be in the Admin or Member dashboard
   const userAccess = useMemo(() => {
-    if (!user) return { isAdmin: false };
+    if (!user) return { isAdmin: false, roleLabel: '' };
     const roleDef = roles.find(r => r.id === user.role);
     // IT Architect is always admin. Anyone with a "tab." permission is considered an administrative user.
     const isAdmin = user.role === 'it' || (roleDef?.permissions.some(p => p.startsWith('tab.')) ?? false);
-    return { isAdmin };
+    const roleLabel = roleDef ? roleDef.label : (user.role === 'it' ? 'IT' : 'Member');
+    return { isAdmin, roleLabel };
   }, [user, roles]);
 
   // --- DYNAMIC ROLE REDIRECTION ---
@@ -111,10 +112,10 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar departments={departments} />
+      <Navbar departments={departments} isAdmin={userAccess.isAdmin} roleLabel={userAccess.roleLabel} />
       <main className="flex-grow">
         <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
+          <Routes location={location}>
             <Route path="/" element={<Home news={news} leaders={leaders} />} />
             <Route path="/portal" element={
               user ? (
