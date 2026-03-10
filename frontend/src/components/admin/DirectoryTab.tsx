@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion as motionLib } from 'framer-motion';
 const motion = motionLib as any;
 import { Search, UserPlus, Shield, Edit, Trash2, FileText, Download, Loader2, ShieldAlert } from 'lucide-react';
-import { User } from '../../types';
+import { User, RoleDefinition } from '../../types';
 
 interface DirectoryTabProps {
   members: User[];
@@ -16,20 +16,28 @@ interface DirectoryTabProps {
   onToggleAdmin: (member: User) => void;
   currentUser: User;
   canManage: boolean;
+  roles: RoleDefinition[];
 }
 
-const DirectoryTab: React.FC<DirectoryTabProps> = ({ 
-  members, searchTerm, onSearchChange, onNewMember, onEditMember, onDeleteMember, onToggleAdmin, currentUser, canManage
+const DirectoryTab: React.FC<DirectoryTabProps> = ({
+  members, searchTerm, onSearchChange, onNewMember, onEditMember, onDeleteMember, onToggleAdmin, currentUser, canManage, roles
 }) => {
   const [isExporting, setIsExporting] = useState(false);
 
-  const filteredMembers = members.filter(m => 
-    m.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredMembers = members.filter(m =>
+    m.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.program.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const isIT = currentUser.role === 'it';
+
+  const getRoleLabel = (roleId: string) => {
+    // Safety check: ensure roles is defined before calling find
+    if (!roles) return roleId;
+    const role = roles.find(r => r.id === roleId);
+    return role ? role.label : roleId;
+  };
 
   const generateReport = async () => {
     setIsExporting(true);
@@ -40,7 +48,7 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
       m.fullName,
       m.email,
       m.phone,
-      m.role,
+      getRoleLabel(m.role),
       m.program,
       m.level,
       m.diocese,
@@ -48,8 +56,8 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
       new Date(m.createdAt).toLocaleDateString()
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n" 
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
       + rows.map(e => e.join(",")).join("\n");
 
     const encodedUri = encodeURI(csvContent);
@@ -67,18 +75,18 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
       <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search members..." 
-            value={searchTerm} 
-            onChange={(e) => onSearchChange(e.target.value)} 
-            className="w-full pl-14 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none shadow-sm focus:ring-4 focus:ring-cyan-50 transition-all" 
+          <input
+            type="text"
+            placeholder="Search members..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-14 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none shadow-sm focus:ring-4 focus:ring-cyan-50 transition-all"
           />
         </div>
-        
+
         <div className="flex flex-wrap gap-3 w-full lg:w-auto">
           {isIT && (
-            <button 
+            <button
               disabled={isExporting}
               onClick={generateReport}
               className="flex-grow lg:flex-none px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95 disabled:opacity-50"
@@ -93,8 +101,8 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
             </button>
           ) : (
             <div className="px-6 py-4 bg-gray-100 rounded-2xl flex items-center gap-3 text-gray-400">
-               <ShieldAlert size={16} />
-               <span className="text-[9px] font-black uppercase tracking-widest">Read Only Access</span>
+              <ShieldAlert size={16} />
+              <span className="text-[9px] font-black uppercase tracking-widest">Read Only Access</span>
             </div>
           )}
         </div>
@@ -107,9 +115,9 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Total database load: {members.length} records</p>
           </div>
           <div className="flex gap-2">
-             <div className="px-4 py-2 bg-green-50 text-green-600 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div> DB Sync Active
-             </div>
+            <div className="px-4 py-2 bg-green-50 text-green-600 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div> DB Sync Active
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -144,24 +152,25 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
                     <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter mt-1">{m.level} • {m.diocese}</p>
                   </td>
                   <td className="px-8 py-5">
-                    <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm ${
-                      ['it', 'admin'].includes(m.role) ? 'bg-gray-900 text-white' : 
-                      ['accountant', 'secretary', 'executive'].includes(m.role) ? 'bg-cyan-50 text-cyan-600' : 
-                      'bg-gray-50 text-gray-500'
-                    }`}>
+                    <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm ${m.role === 'it' ? 'bg-gray-900 text-white' :
+                        ['accountant', 'executive'].includes(m.role) ? 'bg-cyan-50 text-cyan-700 border border-cyan-100' :
+                          m.role === 'ministry-leader' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                            m.role === 'evangelist' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
+                              'bg-gray-50 text-gray-500'
+                      }`}>
                       {m.role === 'it' && <Shield size={10} className="text-cyan-400" />}
-                      {m.role}
+                      {getRoleLabel(m.role)}
                     </span>
                   </td>
                   {canManage && (
                     <td className="px-8 py-5 text-right">
                       <div className="flex justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
                         {isIT && (
-                          <button onClick={() => onToggleAdmin(m)} className="p-3 bg-white border border-gray-100 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm" title="Modify Clearance Protocol"><Shield size={16}/></button>
+                          <button onClick={() => onToggleAdmin(m)} className="p-3 bg-white border border-gray-100 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm" title="Modify Clearance Protocol"><Shield size={16} /></button>
                         )}
-                        <button onClick={() => onEditMember(m)} className="p-3 bg-white border border-gray-100 text-gray-400 rounded-xl hover:bg-gray-900 hover:text-white transition-all shadow-sm"><Edit size={16}/></button>
+                        <button onClick={() => onEditMember(m)} className="p-3 bg-white border border-gray-100 text-gray-400 rounded-xl hover:bg-gray-900 hover:text-white transition-all shadow-sm"><Edit size={16} /></button>
                         {isIT && (
-                          <button onClick={() => onDeleteMember(m.id)} className="p-3 bg-red-50 border border-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={16}/></button>
+                          <button onClick={() => onDeleteMember(m.id)} className="p-3 bg-red-50 border border-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={16} /></button>
                         )}
                       </div>
                     </td>

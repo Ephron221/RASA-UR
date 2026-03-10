@@ -1,19 +1,19 @@
-import { 
-  User, NewsItem, Leader, Announcement, Department, DepartmentInterest, ContactMessage, 
+import {
+  User, NewsItem, Leader, Announcement, Department, DepartmentInterest, ContactMessage,
   HomeConfig, Donation, DonationProject, AboutConfig, FooterConfig,
   DailyVerse, VerseReflection, BibleQuiz, QuizResult, RoleDefinition
 } from '../types';
 import { db } from './db';
 
 const IS_PROD = process.env.NODE_ENV === 'production';
-const API_BASE_URL = IS_PROD 
+const API_BASE_URL = IS_PROD
   ? 'https://rasa-ur-nyarugenge-ruby.vercel.app/api'
   : 'http://localhost:5000/api';
 
 const hybridFetch = async (
-  endpoint: string, 
-  method: string = 'GET', 
-  body?: any, 
+  endpoint: string,
+  method: string = 'GET',
+  body?: any,
   fallbackAction?: () => Promise<any>
 ) => {
   try {
@@ -24,7 +24,7 @@ const hybridFetch = async (
     if (body) options.body = JSON.stringify(body);
 
     const res = await fetch(`${API_BASE_URL}/${endpoint}`, options);
-    
+
     if (!res.ok) {
       if (method === 'GET' && fallbackAction) {
         return await fallbackAction();
@@ -32,7 +32,7 @@ const hybridFetch = async (
       const errorData = await res.json().catch(() => ({}));
       throw errorData; // Throw the full error object
     }
-    
+
     if (res.status === 204) return null;
     return await res.json();
   } catch (err: any) {
@@ -58,6 +58,7 @@ export const API = {
       const query = new URLSearchParams(params).toString();
       return hybridFetch(`members/report?${query}`, 'GET');
     },
+    create: (item: Partial<User>) => hybridFetch('members', 'POST', item),
     update: (id: string, updates: Partial<User>) => hybridFetch(`members/${id}`, 'PUT', updates),
     delete: (id: string) => hybridFetch(`members/${id}`, 'DELETE'),
     updateRole: (id: string, role: string) => hybridFetch(`members/${id}/role`, 'PATCH', { role })

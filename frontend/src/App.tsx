@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 // Fix framer-motion prop errors by casting motion to any
 import { AnimatePresence, motion as motionLib } from 'framer-motion';
@@ -22,7 +22,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import SacredToast from './components/SacredToast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-import { User, NewsItem, Leader, Announcement, Department, FooterConfig, HomeConfig } from './types';
+import { User, NewsItem, Leader, Announcement, Department, FooterConfig, HomeConfig, RoleDefinition } from './types';
 import { API } from './services/api';
 import { DEPARTMENTS as INITIAL_DEPTS } from './constants';
 
@@ -35,26 +35,34 @@ const AppContent: React.FC = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [footerConfig, setFooterConfig] = useState<FooterConfig | null>(null);
   const [homeConfig, setHomeConfig] = useState<HomeConfig | null>(null);
+  const [roles, setRoles] = useState<RoleDefinition[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   const location = useLocation();
   const navigate = useNavigate();
 
-  // --- AUTOMATIC ROLE REDIRECTION ---
-  // If user role changes, push them to the correct dashboard automatically
-  useEffect(() => {
-    if (!user) return;
+  // Determine if the current user should be in the Admin or Member dashboard
+  const userAccess = useMemo(() => {
+    if (!user) return { isAdmin: false };
+    const roleDef = roles.find(r => r.id === user.role);
+    // IT Architect is always admin. Anyone with a "tab." permission is considered an administrative user.
+    const isAdmin = user.role === 'it' || (roleDef?.permissions.some(p => p.startsWith('tab.')) ?? false);
+    return { isAdmin };
+  }, [user, roles]);
 
-    const isAdminRole = ['it', 'admin', 'executive', 'accountant', 'secretary'].includes(user.role);
+  // --- DYNAMIC ROLE REDIRECTION ---
+  useEffect(() => {
+    if (!user || isDataLoading) return;
+
     const isDashboardPath = location.pathname === '/dashboard';
     const isAdminPath = location.pathname === '/admin';
 
-    if (isAdminRole && isDashboardPath) {
+    if (userAccess.isAdmin && isDashboardPath) {
       navigate('/admin', { replace: true });
-    } else if (!isAdminRole && isAdminPath) {
+    } else if (!userAccess.isAdmin && isAdminPath) {
       navigate('/dashboard', { replace: true });
     }
-  }, [user?.role, location.pathname, navigate]);
+  }, [userAccess.isAdmin, location.pathname, navigate, isDataLoading, user]);
 
   const refreshGlobalData = useCallback(async () => {
     try {
@@ -65,10 +73,11 @@ const AppContent: React.FC = () => {
         API.announcements.getAll(),
         API.departments.getAll(),
         API.footer.getConfig(),
-        API.home.getConfig()
+        API.home.getConfig(),
+        API.roles.getAll()
       ]);
 
-      const [newsRes, leadersRes, membersRes, annRes, deptsRes, footerRes, homeRes] = results;
+      const [newsRes, leadersRes, membersRes, annRes, deptsRes, footerRes, homeRes, rolesRes] = results;
 
       if (newsRes.status === 'fulfilled') setNews(newsRes.value || []);
       if (leadersRes.status === 'fulfilled') setLeaders(leadersRes.value || []);
@@ -76,6 +85,7 @@ const AppContent: React.FC = () => {
       if (annRes.status === 'fulfilled') setAnnouncements(annRes.value || []);
       if (footerRes.status === 'fulfilled') setFooterConfig(footerRes.value);
       if (homeRes.status === 'fulfilled') setHomeConfig(homeRes.value);
+      if (rolesRes.status === 'fulfilled') setRoles(rolesRes.value || []);
       if (deptsRes.status === 'fulfilled') {
         setDepartments(deptsRes.value?.length ? deptsRes.value : INITIAL_DEPTS);
       }
@@ -108,7 +118,7 @@ const AppContent: React.FC = () => {
             <Route path="/" element={<Home news={news} leaders={leaders} />} />
             <Route path="/portal" element={
               user ? (
-                ['it', 'admin', 'executive', 'accountant', 'secretary'].includes(user.role)
+                userAccess.isAdmin
                   ? <Navigate to="/admin" replace />
                   : <Navigate to="/dashboard" replace />
               ) : <Portal />
@@ -125,7 +135,7 @@ const AppContent: React.FC = () => {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={['it', 'admin', 'executive', 'accountant', 'secretary']}>
+                <ProtectedRoute isAdminRequired={true}>
                   <AdminDashboard
                     members={members} news={news} leaders={leaders}
                     announcements={announcements} depts={departments}

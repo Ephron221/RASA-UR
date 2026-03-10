@@ -1,11 +1,11 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, ArrowLeft, Loader2, Camera, X, ShieldCheck, ShieldAlert, Key, Send, CheckCircle2, RefreshCw, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DIOCESES, LEVELS, DEPARTMENTS } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { API } from '../services/api';
-import { User } from '../types';
+import { User, RoleDefinition } from '../types';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 type RegStep = 'form' | 'verify';
@@ -21,6 +21,7 @@ const Portal: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [notVerifiedEmail, setNotVerifiedEmail] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [roles, setRoles] = useState<RoleDefinition[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -28,6 +29,10 @@ const Portal: React.FC = () => {
   const [confirmPass, setConfirmPass] = useState('');
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryToken, setRecoveryToken] = useState('');
+
+  useEffect(() => {
+    API.roles.getAll().then(setRoles).catch(console.error);
+  }, []);
 
   const passwordStrength = useMemo(() => {
     if (!passValue) return { score: 0, label: 'Empty', color: 'bg-gray-200' };
@@ -85,8 +90,12 @@ const Portal: React.FC = () => {
       if (mode === 'login') {
         const user = await API.auth.login(email, password);
         login(user);
-        const adminRoles = ['it', 'admin', 'executive', 'accountant', 'secretary'];
-        navigate(adminRoles.includes(user.role) ? '/admin' : '/dashboard');
+        
+        // Dynamic Redirection Protocol
+        const userRoleDef = roles.find(r => r.id === user.role);
+        const hasElevatedAccess = userRoleDef?.permissions.some(p => p.startsWith('tab.')) || user.role === 'it';
+        
+        navigate(hasElevatedAccess ? '/admin' : '/dashboard');
       } else if (mode === 'register') {
         if (regStep === 'form') {
           if (password !== confirmPass) throw new Error("Passwords do not match.");

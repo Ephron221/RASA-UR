@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, Newspaper, UserCheck, Plus, 
-  LayoutDashboard, Home as HomeIcon, Heart, 
-  MessageSquare, Briefcase, Bell, HardDrive, 
+import {
+  Users, Newspaper, UserCheck, Plus,
+  LayoutDashboard, Home as HomeIcon, Heart,
+  MessageSquare, Briefcase, Bell, HardDrive,
   History, Shield, Loader2, Database, Search, Sparkles, User as UserIcon, Settings,
   Type, X, Save, ShieldCheck, FileText, RefreshCw
 } from 'lucide-react';
@@ -53,7 +53,7 @@ interface AdminDashboardProps {
   onUpdateFooter: (config: FooterConfig) => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
+const AdminDashboard: React.FC<AdminDashboardProps> = ({
   members, news, leaders, announcements, depts,
   onUpdateNews, onUpdateLeaders, onUpdateMembers, onUpdateAnnouncements, onUpdateDepartments, onUpdateFooter
 }) => {
@@ -80,7 +80,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (isManual) setIsSyncing(true);
     try {
       const [c, h, a, health, l, f, an, de, lea, ne, me, roles] = await Promise.all([
-        API.contacts.getAll(), API.home.getConfig(), API.about.getConfig(), API.system.getHealth(), 
+        API.contacts.getAll(), API.home.getConfig(), API.about.getConfig(), API.system.getHealth(),
         API.system.getLogs(), API.footer.getConfig(), API.announcements.getAll(),
         API.departments.getAll(), API.leaders.getAll(), API.news.getAll(), API.members.getAll(),
         API.roles.getAll()
@@ -98,10 +98,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       onUpdateNews(ne || []);
       onUpdateMembers(me || []);
       if (f) onUpdateFooter(f);
-      
+
       if (isManual) notify("Kernel Synchronized", "All administrative protocols and role clearances have been updated.", "success");
-    } catch (e) { 
-      console.error("Admin Fetch Error:", e); 
+    } catch (e) {
+      console.error("Admin Fetch Error:", e);
       if (isManual) notify("Sync Failed", "Could not connect to the Divine Kernel.", "error");
     } finally {
       if (isManual) setIsSyncing(false);
@@ -111,9 +111,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // Calculated Permissions based on the specific Role Definition
-  const currentRoleDef = useMemo(() => 
-    roleDefinitions?.find(r => r.id === currentUser?.role), 
-  [roleDefinitions, currentUser?.role]);
+  const currentRoleDef = useMemo(() =>
+    roleDefinitions?.find(r => r.id === currentUser?.role),
+    [roleDefinitions, currentUser?.role]);
 
   const rolePermissions = useMemo(() => ({
     canViewTab: (tabId: string) => {
@@ -125,7 +125,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       if (tabId === 'reports' && privilegedRoles.includes(currentUser?.role || '')) {
         return true;
       }
-      
+
       if (!currentRoleDef) return false;
       return currentRoleDef.permissions.includes(`tab.${tabId}`);
     },
@@ -213,25 +213,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         const item = { title: formData.get('title') as string, content: formData.get('content') as string, category: formData.get('category') as any, mediaUrl: media, mediaType: formData.get('mediaType') as any, author: currentUser?.fullName || 'Admin', date: editingItem?.date || new Date().toISOString().split('T')[0] };
         if (editingItem) await API.news.update(editingItem.id, item); else await API.news.create({ ...item, id: Math.random().toString(36).substr(2, 9) } as any);
       } else if (showModal === 'member') {
-        const item = { 
-          fullName: formData.get('fullName') as string, 
-          email: formData.get('email') as string, 
-          phone: formData.get('phone') as string, 
-          program: formData.get('program') as string, 
-          level: formData.get('level') as string, 
-          diocese: formData.get('diocese') as string, 
-          department: formData.get('department') as string, 
+        const item = {
+          fullName: formData.get('fullName') as string,
+          email: formData.get('email') as string,
+          phone: formData.get('phone') as string,
+          program: formData.get('program') as string,
+          level: formData.get('level') as string,
+          diocese: formData.get('diocese') as string,
+          department: formData.get('department') as string,
           academicYear: formData.get('academicYear') as string,
-          profileImage: media 
+          profileImage: media
         };
-        if (editingItem) { await API.members.update(editingItem.id, item); } else { await API.members.create(item as User); }
+        if (editingItem) { await API.members.update(editingItem.id, item); } else { await API.members.create(item as Partial<User>); }
       } else if (!showModal && activeTab === 'home') {
         const updates: Partial<HomeConfig> = {
           heroTitle: formData.get('heroTitle') as string, heroSubtitle: formData.get('heroSubtitle') as string, heroImageUrl: urlInput || filePreview || homeSetup?.heroImageUrl || '', motto: formData.get('motto') as string, aboutTitle: formData.get('aboutTitle') as string, aboutText: formData.get('aboutText') as string, aboutImageUrl: (form.querySelector<HTMLInputElement>('[name="aboutImageUrl_hidden"]')?.value) || homeSetup?.aboutImageUrl || '', aboutScripture: formData.get('aboutScripture') as string, aboutScriptureRef: formData.get('aboutScriptureRef') as string,
         };
         await API.home.updateConfig(updates);
       }
-      
+
       await fetchData();
       setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput('');
       notify(notifyTitle, notifyMsg, "divine");
@@ -295,9 +295,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {activeTab === 'overview' && <OverviewTab members={members} news={news} leaders={leaders} announcements={announcements} contactMsgs={contactMsgs} depts={depts} logs={logs} />}
               {activeTab === 'profile' && currentUser && <ProfileEditorTab user={currentUser} isSyncing={isSyncing} onUpdate={async (u) => { setIsSyncing(true); await API.members.update(u.id, u); updateUser(u); fetchData(); setIsSyncing(false); notify("Stewardship Updated", "Profile synchronized.", "success"); }} />}
               {activeTab === 'reports' && <MembersReportTab />}
-              {activeTab === 'members' && <DirectoryTab members={members} searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onToggleAdmin={(m) => { setEditingItem(m); setShowModal('role'); }} currentUser={currentUser!} canManage={rolePermissions.canDo('manage_roles')} />}
+              {activeTab === 'members' && <DirectoryTab members={members} roles={roleDefinitions} searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onToggleAdmin={(m) => { setEditingItem(m); setShowModal('role'); }} currentUser={currentUser!} canManage={rolePermissions.canDo('manage_roles')} />}
               {activeTab === 'clearance' && <ClearanceTab roles={roleDefinitions} onRefresh={fetchData} />}
-              {activeTab === 'donations' && <DonationTab user={currentUser!} />}
+              {activeTab === 'donations' && <DonationTab user={currentUser!} canVerify={rolePermissions.canDo('verify_donations')} />}
               {activeTab === 'bulletin' && <BulletinTab announcements={announcements} onNew={() => { setEditingItem(null); setShowModal('ann'); }} onEdit={(a) => { setEditingItem(a); setShowModal('ann'); }} onDelete={(id) => handleDelete('ann', id)} onToggleStatus={handleUpdateAnnStatus} canManage={rolePermissions.canViewTab('bulletin')} />}
               {activeTab === 'depts' && <MinistriesTab departments={depts} onNew={() => { setEditingItem(null); setShowModal('dept'); }} onEdit={(d) => { setEditingItem(d); setShowModal('dept'); }} onDelete={(id) => handleDelete('dept', id)} />}
               {activeTab === 'leaders' && <LeadershipTab leaders={leaders} onNew={() => { setEditingItem(null); setShowModal('leader'); }} onEdit={(l) => { setEditingItem(l); setShowModal('leader'); }} onDelete={(id) => handleDelete('leaders', id)} />}
@@ -321,7 +321,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <h3 className="text-2xl font-black font-serif italic text-gray-900">
                   {showModal === 'role' ? 'Clearance Protocol' : editingItem ? 'Refine Sequence' : 'Initialize Module'}
                 </h3>
-                <button onClick={() => { setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput(''); }} className="p-3 bg-white border border-gray-100 text-gray-400 rounded-2xl hover:text-red-500 transition-all"><X size={20}/></button>
+                <button onClick={() => { setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput(''); }} className="p-3 bg-white border border-gray-100 text-gray-400 rounded-2xl hover:text-red-500 transition-all"><X size={20} /></button>
               </div>
               <div className="flex-grow overflow-y-auto p-12 scroll-hide">
                 {showModal === 'ann' && <AnnouncementForm editingItem={editingItem} onSubmit={handleSave} />}
@@ -334,7 +334,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {showModal !== 'role' && (
                 <div className="p-10 border-t border-gray-50 bg-gray-50/30 flex justify-end gap-4">
                   <button onClick={() => { setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput(''); }} className="px-8 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Discard</button>
-                  <button form="main-editor-form" type="submit" className="px-12 py-4 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-cyan-600 transition-all"><Save size={16}/> Commit Changes</button>
+                  <button form="main-editor-form" type="submit" className="px-12 py-4 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-cyan-600 transition-all"><Save size={16} /> Commit Changes</button>
                 </div>
               )}
             </motion.div>

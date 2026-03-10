@@ -45,21 +45,45 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/rasa_p
 console.log('⏳ INITIALIZING DIVINE KERNEL...');
 
 mongoose.connect(MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 60000,
+  connectTimeoutMS: 30000,
+  heartbeatFrequencyMS: 10000,
+  retryWrites: true,
+  retryReads: true,
 })
-.then(() => {
-  console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
-  bootstrapAdmin();
-  app.listen(PORT, () => {
-    console.log(`🚀 DIVINE KERNEL IS BROADCASTING ON PORT ${PORT}`);
+  .then(() => {
+    console.log('✅ KERNEL ONLINE: MongoDB Connected Successfully');
+    bootstrapAdmin();
+    app.listen(PORT, () => {
+      console.log(`🚀 DIVINE KERNEL IS BROADCASTING ON PORT ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ KERNEL CRITICAL FAILURE: Could not connect to MongoDB.');
+    console.error('Reason:', err.message);
+    // Retry after 5 seconds instead of hard exit
+    console.log('⏳ Retrying connection in 5 seconds...');
+    setTimeout(() => {
+      mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 60000,
+        connectTimeoutMS: 30000,
+        heartbeatFrequencyMS: 10000,
+        retryWrites: true,
+        retryReads: true,
+      }).then(() => {
+        console.log('✅ KERNEL ONLINE (RETRY): MongoDB Connected');
+        bootstrapAdmin();
+        app.listen(PORT, () => {
+          console.log(`🚀 DIVINE KERNEL IS BROADCASTING ON PORT ${PORT}`);
+        });
+      }).catch(err2 => {
+        console.error('❌ RETRY FAILED:', err2.message);
+        process.exit(1);
+      });
+    }, 5000);
   });
-})
-.catch(err => {
-  console.error('❌ KERNEL CRITICAL FAILURE: Could not connect to MongoDB.');
-  console.error('Reason:', err.message);
-  process.exit(1);
-});
 
 // --- AUTH ENDPOINTS ---
 
@@ -250,6 +274,35 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
 // --- MEMBERS ---
 app.get('/api/members', async (req, res) => res.json(await Member.find().sort({ createdAt: -1 })));
+
+// Admin creates a member directly (no email verification required)
+app.post('/api/members', async (req, res) => {
+  try {
+    const { email, fullName, ...rest } = req.body;
+    if (!email || !fullName) return res.status(400).json({ error: 'Full Name and Email are required.' });
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = await Member.findOne({ email: cleanEmail });
+    if (existing) return res.status(409).json({ error: 'A member with this email already exists.' });
+    const member = new Member({
+      fullName,
+      email: cleanEmail,
+      password: rest.password || 'RASA2025!',
+      phone: rest.phone || '',
+      program: rest.program || '',
+      level: rest.level || '',
+      diocese: rest.diocese || '',
+      department: rest.department || '',
+      profileImage: rest.profileImage || '',
+      academicYear: rest.academicYear || '',
+      role: rest.role || 'member',
+      isVerified: true,
+    });
+    await member.save();
+    res.status(201).json(member);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create member' });
+  }
+});
 app.get('/api/members/report', async (req, res) => {
   try {
     const { year, name, gender, level, program, diocese } = req.query;
@@ -284,20 +337,20 @@ app.patch('/api/members/:id/role', async (req, res) => {
     if (role === 'accountant') {
       const year = member.academicYear;
       if (!year) {
-        return res.status(400).json({ 
-          error: 'Clearance Blocked: Academic Year must be defined in the profile before granting Accountant status.' 
+        return res.status(400).json({
+          error: 'Clearance Blocked: Academic Year must be defined in the profile before granting Accountant status.'
         });
       }
-      
-      const existingAccountant = await Member.findOne({ 
-        role: 'accountant', 
+
+      const existingAccountant = await Member.findOne({
+        role: 'accountant',
         academicYear: year,
         _id: { $ne: member._id }
       });
 
       if (existingAccountant) {
-        return res.status(400).json({ 
-          error: `Clearance Conflict: ${existingAccountant.fullName} is already assigned as Accountant for ${year}.` 
+        return res.status(400).json({
+          error: `Clearance Conflict: ${existingAccountant.fullName} is already assigned as Accountant for ${year}.`
         });
       }
     }
@@ -481,19 +534,25 @@ const bootstrapAdmin = async () => {
   }
 
   // Bootstrap Default Roles
-  const count = await Role.countDocuments();
-  if (count === 0) {
-    const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system', 'tab.clearance'];
-    const excomPerms = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'];
-    
-    const defaults = [
-      { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles'], description: 'Full system oversight and security architecture.', isSystem: true },
-      { id: 'accountant', label: 'Accountant', icon: 'Wallet', permissions: [...excomPerms, 'tab.donations'], description: 'Financial steward responsible for offerings, donations, and ledger verification.', isSystem: true },
-      { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: excomPerms, description: 'Executive committee member with management access to ministries and content.', isSystem: true },
-      { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.', isSystem: true }
-    ];
-    await Role.insertMany(defaults);
-    console.log('🔑 DEFAULT ROLES BOOTSTRAPPED');
+  const existingRoleIds = (await Role.find().select('id')).map((r: any) => r.id);
+
+  const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system', 'tab.clearance'];
+  const excomPerms = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'];
+
+  const defaults = [
+    { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles', 'action.edit_members', 'action.reset_db'], description: 'Full system oversight and security architecture.', isSystem: true },
+    { id: 'accountant', label: 'Accountant', icon: 'Wallet', permissions: [...excomPerms, 'tab.donations', 'action.verify_donations'], description: 'Financial steward responsible for offerings, donations, and ledger verification.', isSystem: true },
+    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: excomPerms, description: 'Executive committee member with management access to ministries and content.', isSystem: true },
+    { id: 'ministry-leader', label: 'Ministry Leader', icon: 'Landmark', permissions: ['tab.overview', 'tab.profile', 'tab.members', 'tab.depts'], description: 'Ministry Leader (e.g. choir secretary) — can view ministry members and approve join requests.', isSystem: true },
+    { id: 'evangelist', label: 'Evangelist', icon: 'MessageSquare', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Has access to the spiritual hub to publish daily verses and prepare Bible quizzes.', isSystem: true },
+    { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.', isSystem: true },
+  ];
+
+  // Insert only roles that don't already exist
+  const missing = defaults.filter(d => !existingRoleIds.includes(d.id));
+  if (missing.length > 0) {
+    await Role.insertMany(missing);
+    console.log(`🔑 ROLES BOOTSTRAPPED: ${missing.map(r => r.label).join(', ')}`);
   }
 };
 
