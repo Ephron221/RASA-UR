@@ -99,7 +99,7 @@ const Portal: React.FC = () => {
       } else if (mode === 'register') {
         if (regStep === 'form') {
           if (password !== confirmPass) throw new Error("Passwords do not match.");
-          const newUser: Partial<User> = {
+          const newUser = {
             fullName: formData.get('fullName') as string, email, password,
             phone: formData.get('phone') as string, role: 'member',
             program: formData.get('program') as string, level: formData.get('level') as string,

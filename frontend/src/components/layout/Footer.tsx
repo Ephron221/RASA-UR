@@ -8,7 +8,7 @@ import {
   MapPin, ArrowUp, Send, CheckCircle2, Sparkles, 
   Heart, Github, Linkedin, ExternalLink, Youtube, MessageCircle, Music
 } from 'lucide-react';
-import { Department, FooterConfig } from '../types';
+import { Department, FooterConfig } from '../../types';
 
 interface FooterProps {
   departments: Department[];

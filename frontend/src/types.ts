@@ -14,6 +14,8 @@ export interface User {
   profileImage?: string;
   createdAt: string;
   spiritPoints?: number;
+  gender?: string;
+  academicYear?: string;
 }
 
 export interface Permission {
@@ -31,7 +33,6 @@ export interface RoleDefinition {
   isSystem?: boolean; // Cannot be deleted
 }
 
-// ... existing interfaces remain unchanged ...
 export interface NewsItem {
   id: string;
   title: string;
@@ -175,6 +176,7 @@ export interface Donation {
   date: string;
   status: 'Completed' | 'Pending' | 'Failed' | 'Rejected';
   transactionId: string;
+  paymentProof?: string;
 }
 
 export interface DonationProject {

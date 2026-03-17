@@ -46,7 +46,7 @@ const hybridFetch = async (
 export const API = {
   auth: {
     login: (email: string, password: string): Promise<User> => hybridFetch('auth/login', 'POST', { email, password }),
-    register: (userData: Partial<User>): Promise<{ message: string }> => hybridFetch('auth/register', 'POST', userData),
+    register: (userData: Partial<User> & { password?: string }): Promise<{ message: string }> => hybridFetch('auth/register', 'POST', userData),
     verify: (email: string, token: string): Promise<User> => hybridFetch('auth/verify', 'POST', { email, token }),
     resendOtp: (email: string): Promise<{ message: string }> => hybridFetch('auth/resend-otp', 'POST', { email }),
     forgotPassword: (email: string): Promise<{ message: string }> => hybridFetch('auth/forgot-password', 'POST', { email }),
@@ -81,6 +81,7 @@ export const API = {
       delete: (id: string) => hybridFetch(`spiritual/verses/${id}`, 'DELETE'),
       addReflection: (r: VerseReflection) => hybridFetch('spiritual/reflections', 'POST', r),
       getReflections: () => hybridFetch('spiritual/reflections', 'GET', null, () => db.getCollection('reflections')),
+      deleteReflection: (id: string) => hybridFetch(`spiritual/reflections/${id}`, 'DELETE'),
     },
     quizzes: {
       getAll: () => hybridFetch('spiritual/quizzes', 'GET', null, () => db.getCollection('quizzes')),
@@ -93,6 +94,7 @@ export const API = {
       delete: (id: string) => hybridFetch(`spiritual/quizzes/${id}`, 'DELETE'),
       submitResult: (r: QuizResult) => hybridFetch('spiritual/quiz-results', 'POST', r),
       getResults: () => hybridFetch('spiritual/quiz-results', 'GET', null, () => db.getCollection('quizResults')),
+      deleteResult: (id: string) => hybridFetch(`spiritual/quiz-results/${id}`, 'DELETE'),
     }
   },
   news: {
