@@ -193,7 +193,23 @@ const ContactMessageSchema = new Schema({
   isRead: { type: Boolean, default: false }
 }, schemaOptions);
 
-const HomeConfigSchema = new Schema({ heroTitle: String, heroSubtitle: String, heroImageUrl: String, motto: String, aboutTitle: String, aboutText: String, aboutImageUrl: String, aboutScripture: String, aboutScriptureRef: String }, { ...schemaOptions, collection: 'config_home' });
+const HomeConfigSchema = new Schema({ 
+  heroTitle: String, 
+  heroSubtitle: String, 
+  heroImageUrl: String, 
+  motto: String, 
+  aboutTitle: String, 
+  aboutText: String, 
+  aboutImageUrl: String, 
+  aboutScripture: String, 
+  aboutScriptureRef: String,
+  stat1Value: String,
+  stat1Label: String,
+  stat2Value: String,
+  stat2Label: String,
+  youtubeVideos: [String]
+}, { ...schemaOptions, collection: 'config_home' });
+
 const AboutConfigSchema = new Schema({ heroTitle: String, heroSubtitle: String, heroImage: String, historyTitle: String, historyContent: String, historyImage: String, visionTitle: String, visionContent: String, missionTitle: String, missionContent: String, values: Array, timeline: Array }, { ...schemaOptions, collection: 'config_about' });
 const FooterConfigSchema = new Schema({ description: String, facebookUrl: String, twitterUrl: String, instagramUrl: String, linkedinUrl: String, youtubeUrl: String, whatsappUrl: String, tiktokUrl: String, address: String, phone: String, email: String }, { ...schemaOptions, collection: 'config_footer' });
 

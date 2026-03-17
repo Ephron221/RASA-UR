@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // Fix framer-motion prop errors by casting motion to any
 import { motion as motionLib, AnimatePresence } from 'framer-motion';
 const motion = motionLib as any;
-import { Sparkles, ArrowUpRight, Zap, Target, Heart, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowUpRight, Zap, Target, Heart, Loader2, Youtube, Play, Video } from 'lucide-react';
 import { NewsItem, Leader, HomeConfig } from '../types';
 import { API } from '../services/api';
 
@@ -67,6 +67,20 @@ const Home: React.FC<HomeProps> = ({ news, leaders }) => {
 
   const ActiveIcon = PULSE_MSGS[pulseIdx].icon;
 
+  const getEmbedUrl = (url: string) => {
+    try {
+      if (url.includes('youtube.com/embed/')) return url;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      if (match && match[2].length === 11) {
+        return `https://www.youtube.com/embed/${match[2]}`;
+      }
+      return url;
+    } catch (e) {
+      return url;
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0 }} 
@@ -96,6 +110,56 @@ const Home: React.FC<HomeProps> = ({ news, leaders }) => {
 
       {/* Overview Section */}
       <Overview config={config} />
+
+      {/* MULTIMEDIA GALLERY SECTION */}
+      {config.youtubeVideos && config.youtubeVideos.length > 0 && (
+        <section className="py-24 bg-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px]"></div>
+            <div className="max-container px-4 relative z-10">
+                <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-50 border border-cyan-100 rounded-full text-cyan-600 font-black text-[9px] uppercase tracking-[0.3em]">
+                            <Video size={14} /> Multimedia Sanctuary
+                        </div>
+                        <h2 className="text-5xl md:text-7xl font-bold font-serif italic text-gray-900 leading-none">Visions in <span className="text-cyan-500">Motion</span></h2>
+                        <p className="text-gray-500 font-medium text-lg italic">"A digital window into the vibrant life of RASA Ministries."</p>
+                    </div>
+                </header>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    {config.youtubeVideos.map((url, idx) => (
+                        <motion.div 
+                            key={`video-${idx}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="group relative"
+                        >
+                            <div className="aspect-video bg-gray-900 rounded-[3rem] overflow-hidden shadow-3xl border-8 border-gray-50 relative group-hover:border-cyan-50 transition-all duration-500">
+                                <iframe 
+                                    className="w-full h-full"
+                                    src={getEmbedUrl(url)}
+                                    title={`Multimedia Vision ${idx + 1}`}
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                                {/* Optional Overlay */}
+                                <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-[3rem]"></div>
+                            </div>
+                            <div className="mt-6 flex items-center gap-4 px-6">
+                                <div className="w-10 h-10 bg-cyan-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-cyan-500/20">
+                                    <Play size={18} fill="currentColor" />
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Archival Broadcast #{idx + 1}</span>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+        </section>
+      )}
 
       {/* Daily Verse Section */}
       <DailyVerseSection />

@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 // Fix framer-motion prop errors by casting motion to any
 import { motion as motionLib } from 'framer-motion';
 const motion = motionLib as any;
-import { Camera, Home as HomeIcon, Edit3, Image as ImageIcon, Sparkles, Quote, BarChart3 } from 'lucide-react';
+import { Camera, Home as HomeIcon, Edit3, Image as ImageIcon, Sparkles, Quote, BarChart3, Youtube, Plus, Trash2, Video } from 'lucide-react';
 import { HomeConfig } from '../../types';
 
 interface HomeEditorTabProps {
@@ -22,6 +22,7 @@ const HomeEditorTab: React.FC<HomeEditorTabProps> = ({
   
   // Track separate preview for vision image
   const [visionPreview, setVisionPreview] = useState<string | null>(null);
+  const [youtubeUrls, setYoutubeUrls] = useState<string[]>(homeSetup?.youtubeVideos || []);
 
   const handleVisionFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,6 +31,14 @@ const HomeEditorTab: React.FC<HomeEditorTabProps> = ({
       reader.onloadend = () => setVisionPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
+  };
+
+  const addVideoField = () => setYoutubeUrls([...youtubeUrls, '']);
+  const removeVideoField = (index: number) => setYoutubeUrls(youtubeUrls.filter((_, i) => i !== index));
+  const updateVideoUrl = (index: number, val: string) => {
+    const next = [...youtubeUrls];
+    next[index] = val;
+    setYoutubeUrls(next);
   };
 
   if (!homeSetup) return null;
@@ -52,6 +61,16 @@ const HomeEditorTab: React.FC<HomeEditorTabProps> = ({
           input.value = visionPreview;
           (e.target as HTMLFormElement).appendChild(input);
         }
+        
+        // Add YouTube URLs
+        youtubeUrls.filter(u => u.trim()).forEach(url => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'youtubeVideos[]';
+            input.value = url;
+            (e.target as HTMLFormElement).appendChild(input);
+        });
+
         onSubmit(e);
       }} className="space-y-12">
         
@@ -204,6 +223,50 @@ const HomeEditorTab: React.FC<HomeEditorTabProps> = ({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Section 3: YouTube Gallery */}
+        <div className="pt-12 border-t border-gray-50 space-y-8">
+            <div className="flex justify-between items-center">
+                <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-cyan-600">
+                    <Youtube size={18} /> Multimedia Sanctuary (YouTube)
+                </h4>
+                <button 
+                    type="button" 
+                    onClick={addVideoField}
+                    className="flex items-center gap-2 px-6 py-3 bg-cyan-500/10 text-cyan-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-cyan-500 hover:text-white transition-all"
+                >
+                    <Plus size={14} /> Add Video Link
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {youtubeUrls.map((url, i) => (
+                    <div key={i} className="flex gap-4 items-center group">
+                        <div className="flex-grow relative">
+                            <Video className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-cyan-500" size={18} />
+                            <input 
+                                value={url} 
+                                onChange={(e) => updateVideoUrl(i, e.target.value)} 
+                                placeholder="https://www.youtube.com/watch?v=..." 
+                                className="w-full pl-14 pr-6 py-5 bg-gray-50 rounded-[1.8rem] font-bold text-xs border-0 outline-none focus:ring-4 focus:ring-cyan-50 transition-all"
+                            />
+                        </div>
+                        <button 
+                            type="button" 
+                            onClick={() => removeVideoField(i)}
+                            className="p-5 bg-red-50 text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            {youtubeUrls.length === 0 && (
+                <div className="text-center py-10 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-100">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No multimedia assets deployed.</p>
+                </div>
+            )}
         </div>
 
         <div className="pt-10 flex justify-end">

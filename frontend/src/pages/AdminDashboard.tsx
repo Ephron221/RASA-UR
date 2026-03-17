@@ -227,7 +227,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         if (editingItem) { await API.members.update(editingItem.id, item); } else { await API.members.create(item as Partial<User>); }
       } else if (!showModal && activeTab === 'home') {
         const updates: Partial<HomeConfig> = {
-          heroTitle: formData.get('heroTitle') as string, heroSubtitle: formData.get('heroSubtitle') as string, heroImageUrl: urlInput || filePreview || homeSetup?.heroImageUrl || '', motto: formData.get('motto') as string, aboutTitle: formData.get('aboutTitle') as string, aboutText: formData.get('aboutText') as string, aboutImageUrl: (form.querySelector<HTMLInputElement>('[name="aboutImageUrl_hidden"]')?.value) || homeSetup?.aboutImageUrl || '', aboutScripture: formData.get('aboutScripture') as string, aboutScriptureRef: formData.get('aboutScriptureRef') as string,
+          heroTitle: formData.get('heroTitle') as string, 
+          heroSubtitle: formData.get('heroSubtitle') as string, 
+          heroImageUrl: urlInput || filePreview || homeSetup?.heroImageUrl || '', 
+          motto: formData.get('motto') as string, 
+          aboutTitle: formData.get('aboutTitle') as string, 
+          aboutText: formData.get('aboutText') as string, 
+          aboutImageUrl: (form.querySelector<HTMLInputElement>('[name="aboutImageUrl_hidden"]')?.value) || homeSetup?.aboutImageUrl || '', 
+          aboutScripture: formData.get('aboutScripture') as string, 
+          aboutScriptureRef: formData.get('aboutScriptureRef') as string,
+          youtubeVideos: formData.getAll('youtubeVideos[]') as string[],
+          stat1Value: formData.get('stat1Value') as string,
+          stat1Label: formData.get('stat1Label') as string,
+          stat2Value: formData.get('stat2Value') as string,
+          stat2Label: formData.get('stat2Label') as string,
         };
         await API.home.updateConfig(updates);
       }

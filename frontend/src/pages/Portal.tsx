@@ -176,9 +176,32 @@ const Portal: React.FC = () => {
       </div>
       <motion.div layout className="w-full max-w-xl bg-white p-8 md:p-12 rounded-[3.5rem] shadow-3xl z-10 border border-white my-10 relative">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-cyan-600 font-bold mb-4 hover:underline"><ArrowLeft size={16} /> Home</Link>
-          <h2 className="text-4xl font-bold font-serif italic mb-2">{mode === 'login' ? 'Divine Access' : mode === 'register' ? 'Register Member' : 'Recover Key'}</h2>
-          <p className="text-gray-500 text-sm font-medium">{mode === 'login' ? 'Portal authentication' : mode === 'register' ? (regStep === 'form' ? 'Join RASA' : 'Verify your Email') : 'Security loop'}</p>
+          <Link to="/" className="inline-flex items-center gap-2 text-cyan-600 font-bold mb-6 hover:underline">
+            <ArrowLeft size={16} /> Home
+          </Link>
+          
+          {/* LARGE LOGO INTEGRATION */}
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex justify-center mb-8"
+          >
+            <div className="relative group">
+              <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <img 
+                src="/RASA-logo.png" 
+                alt="RASA Logo" 
+                className="w-32 h-32 md:w-40 md:h-40 object-contain relative z-10 transition-transform duration-500 group-hover:scale-110"
+              />
+            </div>
+          </motion.div>
+
+          <h2 className="text-4xl font-bold font-serif italic mb-2">
+            {mode === 'login' ? 'Divine Access' : mode === 'register' ? 'Register Member' : 'Recover Key'}
+          </h2>
+          <p className="text-gray-500 text-sm font-medium">
+            {mode === 'login' ? 'Portal authentication' : mode === 'register' ? (regStep === 'form' ? 'Join RASA' : 'Verify your Email') : 'Security loop'}
+          </p>
         </div>
 
         {error && (

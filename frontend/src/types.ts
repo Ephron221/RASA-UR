@@ -203,6 +203,7 @@ export interface HomeConfig {
   stat1Label: string;
   stat2Value: string;
   stat2Label: string;
+  youtubeVideos?: string[];
 }
 
 export interface AboutValue {
