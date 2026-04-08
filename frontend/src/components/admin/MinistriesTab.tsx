@@ -27,12 +27,12 @@ const MinistriesTab: React.FC<MinistriesTabProps> = ({ departments, onNew, onEdi
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="space-y-1 text-center md:text-left">
-          <h3 className="text-4xl font-black font-serif italic text-gray-900 flex items-center gap-4">
-            <Sparkles className="text-cyan-500" size={36} /> Ministry Ecosystem
+          <h3 className="text-4xl font-black font-serif italic text-black flex items-center gap-4">
+            <Sparkles className="text-secondary" size={36} /> Ministry Ecosystem
           </h3>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Functional departments & spiritual units</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40">Functional departments & spiritual units</p>
         </div>
-        <button onClick={onNew} className="px-10 py-5 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(6,182,212,0.2)] flex items-center gap-3 active:scale-95 transition-all">
+        <button onClick={onNew} className="px-10 py-5 bg-secondary text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(59,107,31,0.2)] flex items-center gap-3 active:scale-95 transition-all">
           <Plus size={20} /> Initialize Ministry
         </button>
       </div>
@@ -44,37 +44,37 @@ const MinistriesTab: React.FC<MinistriesTabProps> = ({ departments, onNew, onEdi
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="bg-white rounded-[3.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-3xl hover:shadow-cyan-500/5 transition-all duration-700 flex flex-col group h-full"
+            className="bg-white rounded-[3.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-3xl hover:shadow-secondary/5 transition-all duration-700 flex flex-col group h-full"
           >
             <div className="p-4 flex-grow flex flex-col">
               <div className="relative aspect-[4/3] rounded-[2.8rem] overflow-hidden mb-8 shadow-inner border border-gray-50">
                 <img src={dept.image || 'https://images.unsplash.com/photo-1544427928-c49cdfebf193?q=80&w=2000'} className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="" />
-                <div className="absolute top-6 left-6 w-16 h-16 bg-white/95 backdrop-blur-xl rounded-3xl flex items-center justify-center text-cyan-500 shadow-2xl border border-white/20 p-4">
+                <div className="absolute top-6 left-6 w-16 h-16 bg-white/95 backdrop-blur-xl rounded-3xl flex items-center justify-center text-secondary shadow-2xl border border-white/20 p-4">
                   <SmartIcon icon={dept.icon} size={32} />
                 </div>
                 <div className="absolute bottom-6 right-6">
-                  <span className="px-5 py-2 bg-gray-900/90 backdrop-blur-md text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em]">{dept.category || 'Ministry'}</span>
+                  <span className="px-5 py-2 bg-black/90 backdrop-blur-md text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em]">{dept.category || 'Ministry'}</span>
                 </div>
               </div>
               
               <div className="px-6 space-y-6">
                 <div>
-                  <h4 className="text-3xl font-black text-gray-900 tracking-tight mb-2 group-hover:text-cyan-600 transition-colors">{dept.name}</h4>
-                  <p className="text-gray-400 text-sm font-medium leading-relaxed line-clamp-2">{dept.description}</p>
+                  <h4 className="text-3xl font-black text-black tracking-tight mb-2 group-hover:text-secondary transition-colors">{dept.name}</h4>
+                  <p className="text-black/40 text-sm font-medium leading-relaxed line-clamp-2">{dept.description}</p>
                 </div>
                 
                 <div className="h-px bg-gray-50"></div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-5 rounded-3xl space-y-1">
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Projects</p>
-                    <p className="text-lg font-black text-gray-900">{dept.activities?.length || 0}</p>
+                    <p className="text-[8px] font-black text-black/40 uppercase tracking-widest">Projects</p>
+                    <p className="text-lg font-black text-black">{dept.activities?.length || 0}</p>
                   </div>
                   <div className="bg-gray-50 p-5 rounded-3xl space-y-1">
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Health</p>
+                    <p className="text-[8px] font-black text-black/40 uppercase tracking-widest">Health</p>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                      <span className="text-[11px] font-black text-gray-700 uppercase">Active</span>
+                      <span className="text-[11px] font-black text-black/70 uppercase">Active</span>
                     </div>
                   </div>
                 </div>
@@ -84,7 +84,7 @@ const MinistriesTab: React.FC<MinistriesTabProps> = ({ departments, onNew, onEdi
             <div className="p-8 mt-auto flex items-center gap-4 bg-gray-50/30">
               <button 
                 onClick={() => onEdit(dept)} 
-                className="flex-grow py-5 bg-white text-gray-900 border border-gray-100 rounded-3xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-cyan-500 hover:text-white hover:border-cyan-500 transition-all shadow-sm group/btn"
+                className="flex-grow py-5 bg-white text-black border border-gray-100 rounded-3xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-secondary hover:text-white hover:border-secondary transition-all shadow-sm group/btn"
               >
                 View & Edit
               </button>
@@ -105,8 +105,8 @@ const MinistriesTab: React.FC<MinistriesTabProps> = ({ departments, onNew, onEdi
              <Plus size={48} />
            </div>
            <div className="space-y-2">
-             <h3 className="text-2xl font-bold font-serif italic text-gray-400">Divine Layer Unpopulated</h3>
-             <p className="text-gray-400 max-w-xs mx-auto">Initialize your first ministry sequence to begin campus synchronization.</p>
+             <h3 className="text-2xl font-bold font-serif italic text-gray-300">Divine Layer Unpopulated</h3>
+             <p className="text-gray-300 max-w-xs mx-auto">Initialize your first ministry sequence to begin campus synchronization.</p>
            </div>
         </div>
       )}

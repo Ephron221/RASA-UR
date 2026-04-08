@@ -1,11 +1,11 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Loader2, Camera, X, ShieldCheck, ShieldAlert, Key, Send, CheckCircle2, RefreshCw, Calendar } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Camera, ShieldCheck, ShieldAlert, Send, CheckCircle2, RefreshCw, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DIOCESES, LEVELS, DEPARTMENTS } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { API } from '../services/api';
-import { User, RoleDefinition } from '../types';
+import { RoleDefinition } from '../types';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 type RegStep = 'form' | 'verify';
@@ -44,7 +44,7 @@ const Portal: React.FC = () => {
     if (/[^A-Za-z0-9]/.test(passValue)) score++;
     if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500' };
     if (score <= 4) return { score, label: 'Fair', color: 'bg-yellow-500' };
-    return { score, label: 'Strong', color: 'bg-green-500' };
+    return { score, label: 'Strong', color: 'bg-secondary' };
   }, [passValue]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,25 +169,24 @@ const Portal: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center bg-gray-50 relative overflow-hidden">
+    <div className="min-h-screen pt-20 flex items-center justify-center bg-primary relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-cyan-200 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-cyan-100 rounded-full blur-[120px]"></div>
+        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-secondary/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-accent/10 rounded-full blur-[120px]"></div>
       </div>
-      <motion.div layout className="w-full max-w-xl bg-white p-8 md:p-12 rounded-[3.5rem] shadow-3xl z-10 border border-white my-10 relative">
+      <motion.div layout className="w-full max-w-xl bg-primary p-8 md:p-12 rounded-[3.5rem] shadow-2xl z-10 border border-gray-100 my-10 relative">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-cyan-600 font-bold mb-6 hover:underline">
+          <Link to="/" className="inline-flex items-center gap-2 text-secondary font-bold mb-6 hover:text-accent transition-colors">
             <ArrowLeft size={16} /> Home
           </Link>
           
-          {/* LARGE LOGO INTEGRATION */}
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="flex justify-center mb-8"
           >
             <div className="relative group">
-              <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-secondary/10 blur-3xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <img 
                 src="/RASA-logo.png" 
                 alt="RASA Logo" 
@@ -196,11 +195,11 @@ const Portal: React.FC = () => {
             </div>
           </motion.div>
 
-          <h2 className="text-4xl font-bold font-serif italic mb-2">
-            {mode === 'login' ? 'Divine Access' : mode === 'register' ? 'Register Member' : 'Recover Key'}
+          <h2 className="text-4xl font-bold font-serif italic mb-2 text-black">
+            {mode === 'login' ? 'Member Access' : mode === 'register' ? 'Join Community' : 'Recover Key'}
           </h2>
-          <p className="text-gray-500 text-sm font-medium">
-            {mode === 'login' ? 'Portal authentication' : mode === 'register' ? (regStep === 'form' ? 'Join RASA' : 'Verify your Email') : 'Security loop'}
+          <p className="text-black/50 text-sm font-medium">
+            {mode === 'login' ? 'Portal authentication' : mode === 'register' ? (regStep === 'form' ? 'Join RASA UR' : 'Verify your Email') : 'Security loop'}
           </p>
         </div>
 
@@ -210,7 +209,7 @@ const Portal: React.FC = () => {
             {notVerifiedEmail && (
               <button 
                 onClick={handleResendOtp}
-                className="block mt-2 mx-auto text-cyan-600 underline hover:text-cyan-700 flex items-center justify-center gap-1"
+                className="block mt-2 mx-auto text-secondary underline hover:text-accent flex items-center justify-center gap-1"
                 disabled={resending}
               >
                 {resending ? <Loader2 size={12} className="animate-spin"/> : <RefreshCw size={12}/>}
@@ -234,24 +233,24 @@ const Portal: React.FC = () => {
               <AnimatePresence>
                 {mode === 'register' && regStep === 'form' && (
                   <motion.div key="reg" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 overflow-hidden">
-                    <div onClick={() => fileInputRef.current?.click()} className="relative flex flex-col items-center justify-center border-2 border-dashed rounded-[2.5rem] p-6 cursor-pointer bg-gray-50 hover:bg-white border-gray-200 hover:border-cyan-400">
+                    <div onClick={() => fileInputRef.current?.click()} className="relative flex flex-col items-center justify-center border-2 border-dashed rounded-[2.5rem] p-6 cursor-pointer bg-gray-50 hover:bg-white border-gray-200 hover:border-secondary transition-colors">
                       <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-                      {imagePreview ? <img src={imagePreview} className="w-24 h-24 object-cover rounded-3xl" alt=""/> : <div className="text-center"><Camera className="mx-auto text-cyan-500"/><p className="text-[10px] font-black uppercase text-gray-400">Portrait</p></div>}
+                      {imagePreview ? <img src={imagePreview} className="w-24 h-24 object-cover rounded-3xl" alt=""/> : <div className="text-center"><Camera className="mx-auto text-secondary"/><p className="text-[10px] font-black uppercase text-black/40">Portrait</p></div>}
                     </div>
-                    <input name="fullName" required placeholder="Full Name" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none font-bold text-sm" />
+                    <input name="fullName" required placeholder="Full Name" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none font-bold text-sm text-black" />
                     <div className="grid grid-cols-2 gap-4">
-                      <input name="phone" required placeholder="Phone" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" />
-                      <select name="level" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm">{LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <select name="diocese" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm">{DIOCESES.map(d => <option key={d} value={d}>{d}</option>)}</select>
-                      <select name="department" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm">{DEPARTMENTS.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select>
+                      <input name="phone" required placeholder="Phone" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
+                      <select name="level" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black">{LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <input name="program" required placeholder="Program" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" />
+                      <select name="diocese" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black">{DIOCESES.map(d => <option key={d} value={d}>{d}</option>)}</select>
+                      <select name="department" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black">{DEPARTMENTS.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <input name="program" required placeholder="Program" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
                       <div className="relative">
-                        <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-cyan-500" size={16}/>
-                        <input name="academicYear" required placeholder="Year (e.g. 2024-2025)" className="w-full pl-12 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" />
+                        <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-secondary" size={16}/>
+                        <input name="academicYear" required placeholder="Year (e.g. 2024-2025)" className="w-full pl-12 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
                       </div>
                     </div>
                   </motion.div>
@@ -259,53 +258,53 @@ const Portal: React.FC = () => {
               </AnimatePresence>
               { (mode === 'login' || (mode === 'register' && regStep === 'form')) && (
                 <div className="space-y-4">
-                  <div className="relative"><Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20}/><input name="email" type="email" required placeholder="Email" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" /></div>
+                  <div className="relative"><Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-black/40" size={20}/><input name="email" type="email" required placeholder="Email" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" /></div>
                   <div className="space-y-2">
-                    <div className="relative"><Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20}/><input name="password" type="password" required value={passValue} onChange={e => setPassValue(e.target.value)} placeholder="Password" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" /></div>
+                    <div className="relative"><Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-black/40" size={20}/><input name="password" type="password" required value={passValue} onChange={e => setPassValue(e.target.value)} placeholder="Password" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" /></div>
                     {mode === 'register' && <div className="h-1.5 w-full bg-gray-100 rounded-full flex gap-1">{[1,2,3,4,5].map(i => <div key={i} className={`h-full flex-1 transition-all ${i <= passwordStrength.score ? passwordStrength.color : 'bg-gray-100'}`} />)}</div>}
                   </div>
-                  {mode === 'register' && <div className="relative"><ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20}/><input type="password" required value={confirmPass} onChange={e => setConfirmPass(e.target.value)} placeholder="Confirm" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm" /></div>}
+                  {mode === 'register' && <div className="relative"><ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-black/40" size={20}/><input type="password" required value={confirmPass} onChange={e => setConfirmPass(e.target.value)} placeholder="Confirm" className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" /></div>}
                 </div>
               )}
               { mode === 'register' && regStep === 'verify' && (
                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                    <input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em]" />
+                    <input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em] text-black" />
                     <button 
                       type="button"
                       onClick={handleResendOtp}
                       disabled={resending}
-                      className="w-full text-xs font-black text-cyan-600 uppercase flex items-center justify-center gap-2 hover:underline"
+                      className="w-full text-xs font-black text-secondary uppercase flex items-center justify-center gap-2 hover:text-accent transition-colors"
                     >
                       {resending ? <Loader2 size={14} className="animate-spin"/> : <RefreshCw size={14}/>}
                       Resend Code
                     </button>
                   </motion.div>
               )}
-              <button type="submit" disabled={loading} className="w-full py-5 bg-cyan-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-cyan-600 flex items-center justify-center gap-3 active:scale-95">{loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Enter Sanctuary' : (regStep === 'form' ? 'Register' : 'Verify & Create Account'))}</button>
+              <button type="submit" disabled={loading} className="w-full py-5 bg-secondary text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-accent flex items-center justify-center gap-3 active:scale-95 transition-all">{loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Enter Portal' : (regStep === 'form' ? 'Register' : 'Verify & Create Account'))}</button>
             </motion.form>
           ) : (
             <motion.form key="recoveryForm" onSubmit={handleRecovery} className="space-y-8"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
                <AnimatePresence mode="wait">
-                  {recoveryStep === 1 && <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="email" type="email" required placeholder="Email" className="w-full px-6 py-5 bg-gray-50 rounded-[1.8rem] font-bold text-sm" /></motion.div>}
+                  {recoveryStep === 1 && <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="email" type="email" required placeholder="Email" className="w-full px-6 py-5 bg-gray-50 rounded-[1.8rem] font-bold text-sm text-black" /></motion.div>}
                   {recoveryStep === 2 && <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                    <input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em]" />
+                    <input name="otp" required maxLength={6} placeholder="######" className="w-full py-5 bg-gray-50 rounded-[1.8rem] text-center text-3xl font-black tracking-[0.5em] text-black" />
                   </motion.div>}
-                  {recoveryStep === 3 && <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="newPassword" type="password" required placeholder="New Password" className="w-full px-6 py-5 bg-gray-50 rounded-[1.8rem] font-bold text-sm" /></motion.div>}
+                  {recoveryStep === 3 && <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><input name="newPassword" type="password" required placeholder="New Password" className="w-full px-6 py-5 bg-gray-50 rounded-[1.8rem] font-bold text-sm text-black" /></motion.div>}
                </AnimatePresence>
-               <button type="submit" disabled={loading} className="w-full py-5 bg-gray-900 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3">{loading ? <Loader2 className="animate-spin" /> : recoveryStep === 3 ? 'Reset' : 'Broadcast Token'} <Send size={18} /></button>
+               <button type="submit" disabled={loading} className="w-full py-5 bg-secondary text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-accent transition-all active:scale-95">{loading ? <Loader2 className="animate-spin" /> : recoveryStep === 3 ? 'Reset Password' : 'Send Recovery Token'} <Send size={18} /></button>
             </motion.form>
           )}
         </AnimatePresence>
         <div className="mt-10 flex flex-col gap-4 text-center">
-          {mode === 'login' && <button onClick={() => setMode('forgot')} className="text-xs font-black text-gray-400 uppercase">Forgot Password?</button>}
+          {mode === 'login' && <button onClick={() => setMode('forgot')} className="text-xs font-black text-black/40 uppercase hover:text-secondary transition-colors">Forgot Password?</button>}
           <button onClick={() => {
             setMode(mode === 'login' ? 'register' : 'login');
             setRegStep('form');
             setError(null);
             setSuccessMsg(null);
-          }} className="text-cyan-600 font-black text-sm">{mode === 'login' ? "New? Register" : "Member? Login"}</button>
+          }} className="text-secondary font-black text-sm hover:text-accent transition-colors">{mode === 'login' ? "New Here? Register" : "Member? Login Now"}</button>
         </div>
       </motion.div>
     </div>

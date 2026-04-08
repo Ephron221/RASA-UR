@@ -85,7 +85,7 @@ const MembersReportTab: React.FC = () => {
  <Styles>
   <Style ss:ID="header">
    <Font ss:Bold="1" ss:Color="#FFFFFF"/>
-   <Interior ss:Color="#06b6d4" ss:Pattern="Solid"/>
+   <Interior ss:Color="#3B6B1F" ss:Pattern="Solid"/>
   </Style>
  </Styles>
  <Worksheet ss:Name="RASA Members">
@@ -132,7 +132,7 @@ const MembersReportTab: React.FC = () => {
             <title>RASA Members Report - ${filters.year || 'All Years'}</title>
             <style>
               body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1a1a1a; }
-              .header { text-align: center; border-bottom: 4px solid #06b6d4; padding-bottom: 20px; margin-bottom: 30px; }
+              .header { text-align: center; border-bottom: 4px solid #3B6B1F; padding-bottom: 20px; margin-bottom: 30px; }
               .header h1 { margin: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
               .header p { margin: 5px 0 0; color: #666; font-weight: bold; }
               .meta { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 12px; color: #888; font-weight: bold; text-transform: uppercase; }
@@ -195,10 +195,10 @@ const MembersReportTab: React.FC = () => {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Members Archive & Reports</h2>
+          <h2 className="text-2xl font-black text-black uppercase tracking-tight">Members Archive & Reports</h2>
           <div className="flex items-center gap-2 mt-1">
-            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Stewardship Data Repository</p>
+            <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
+            <p className="text-xs text-black/40 font-bold uppercase tracking-widest">Stewardship Data Repository</p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -222,34 +222,34 @@ const MembersReportTab: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-8 rounded-[3rem] shadow-2xl shadow-cyan-900/5 border border-gray-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-50/50 rounded-full -mr-16 -mt-16 blur-2xl" />
+      <div className="bg-white p-8 rounded-[3rem] shadow-2xl shadow-secondary/5 border border-gray-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -mr-16 -mt-16 blur-2xl" />
         
         <div className="space-y-2 relative">
-          <label className="text-[9px] font-black uppercase text-cyan-600/60 ml-1 tracking-widest">Search Name</label>
+          <label className="text-[9px] font-black uppercase text-secondary/60 ml-1 tracking-widest">Search Name</label>
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-cyan-500 transition-colors" size={16} />
-            <input type="text" name="name" placeholder="Filter identity..." value={filters.name} onChange={handleFilterChange} className="w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-cyan-500 outline-none transition-all shadow-inner" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30 group-focus-within:text-secondary transition-colors" size={16} />
+            <input type="text" name="name" placeholder="Filter identity..." value={filters.name} onChange={handleFilterChange} className="w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-secondary outline-none transition-all shadow-inner" />
           </div>
         </div>
 
         <div className="space-y-2 relative">
-          <label className="text-[9px] font-black uppercase text-cyan-600/60 ml-1 tracking-widest">Academic Year</label>
+          <label className="text-[9px] font-black uppercase text-secondary/60 ml-1 tracking-widest">Academic Year</label>
           <div className="relative group">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-cyan-500 transition-colors pointer-events-none" size={16} />
-            <select name="year" value={filters.year} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-cyan-500 outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30 group-focus-within:text-secondary transition-colors pointer-events-none" size={16} />
+            <select name="year" value={filters.year} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-secondary outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
               <option value="">Global Timeline</option>
               {academicYears.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={14} />
           </div>
         </div>
 
         <div className="space-y-2 relative">
-          <label className="text-[9px] font-black uppercase text-cyan-600/60 ml-1 tracking-widest">Clearance Level</label>
+          <label className="text-[9px] font-black uppercase text-secondary/60 ml-1 tracking-widest">Clearance Level</label>
           <div className="relative group">
-            <Layers className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-cyan-500 transition-colors pointer-events-none" size={16} />
-            <select name="level" value={filters.level} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-cyan-500 outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
+            <Layers className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30 group-focus-within:text-secondary transition-colors pointer-events-none" size={16} />
+            <select name="level" value={filters.level} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-secondary outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
               <option value="">All Tiers</option>
               <option value="Level 1">Level 1</option>
               <option value="Level 2">Level 2</option>
@@ -258,28 +258,28 @@ const MembersReportTab: React.FC = () => {
               <option value="Level 5">Level 5</option>
               <option value="Post-RASA">Post-RASA</option>
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={14} />
           </div>
         </div>
 
         <div className="space-y-2 relative">
-          <label className="text-[9px] font-black uppercase text-cyan-600/60 ml-1 tracking-widest">Gender</label>
+          <label className="text-[9px] font-black uppercase text-secondary/60 ml-1 tracking-widest">Gender</label>
           <div className="relative group">
-            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-cyan-500 transition-colors pointer-events-none" size={16} />
-            <select name="gender" value={filters.gender} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-cyan-500 outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
+            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30 group-focus-within:text-secondary transition-colors pointer-events-none" size={16} />
+            <select name="gender" value={filters.gender} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-secondary outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
               <option value="">All Essence</option>
               <option value="Male">Boy</option>
               <option value="Female">Girl</option>
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={14} />
           </div>
         </div>
 
         <div className="space-y-2 relative">
-          <label className="text-[9px] font-black uppercase text-cyan-600/60 ml-1 tracking-widest">Diocese</label>
+          <label className="text-[9px] font-black uppercase text-secondary/60 ml-1 tracking-widest">Diocese</label>
           <div className="relative group">
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-cyan-500 transition-colors pointer-events-none" size={16} />
-            <select name="diocese" value={filters.diocese} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-cyan-500 outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30 group-focus-within:text-secondary transition-colors pointer-events-none" size={16} />
+            <select name="diocese" value={filters.diocese} onChange={handleFilterChange} className="w-full pl-11 pr-10 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-xs font-bold focus:bg-white focus:border-secondary outline-none appearance-none transition-all shadow-inner cursor-pointer hover:bg-gray-100/50">
               <option value="">All Dioceses</option>
               <option value="Kigali">Kigali</option>
               <option value="Butare">Butare</option>
@@ -293,12 +293,12 @@ const MembersReportTab: React.FC = () => {
               <option value="Shyogwe">Shyogwe</option>
               <option value="Nyagatare">Nyagatare</option>
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" size={14} />
           </div>
         </div>
 
         <div className="flex items-end">
-          <button onClick={() => setFilters({name: '', year: '', level: '', program: '', gender: '', diocese: ''})} className="w-full py-4 bg-gray-900 text-white rounded-[1.2rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-cyan-600 transition-all flex items-center justify-center gap-2 group active:scale-95">
+          <button onClick={() => setFilters({name: '', year: '', level: '', program: '', gender: '', diocese: ''})} className="w-full py-4 bg-black text-white rounded-[1.2rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-secondary transition-all flex items-center justify-center gap-2 group active:scale-95">
             <X size={14} className="group-hover:rotate-90 transition-transform" /> Reset
           </button>
         </div>
@@ -310,11 +310,11 @@ const MembersReportTab: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100">
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Steward / Identity</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Temporal Context</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Clearance & Protocol</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Territory</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Sync Point</th>
+                <th className="px-8 py-6 text-[10px] font-black text-black/40 uppercase tracking-widest">Steward / Identity</th>
+                <th className="px-8 py-6 text-[10px] font-black text-black/40 uppercase tracking-widest">Temporal Context</th>
+                <th className="px-8 py-6 text-[10px] font-black text-black/40 uppercase tracking-widest">Clearance & Protocol</th>
+                <th className="px-8 py-6 text-[10px] font-black text-black/40 uppercase tracking-widest">Territory</th>
+                <th className="px-8 py-6 text-[10px] font-black text-black/40 uppercase tracking-widest">Sync Point</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -325,11 +325,11 @@ const MembersReportTab: React.FC = () => {
                       <motion.div 
                         animate={{ rotate: 360 }} 
                         transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                        className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full"
+                        className="w-16 h-16 border-4 border-secondary border-t-transparent rounded-full"
                       />
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-[0.3em]">Synchronizing Archives</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase">Consulting Divine Kernel...</p>
+                        <p className="text-[10px] font-black text-black uppercase tracking-[0.3em]">Synchronizing Archives</p>
+                        <p className="text-[9px] font-bold text-black/40 uppercase">Consulting Divine Kernel...</p>
                       </div>
                     </div>
                   </td>
@@ -338,12 +338,12 @@ const MembersReportTab: React.FC = () => {
                 <tr>
                   <td colSpan={5} className="px-8 py-32 text-center">
                     <div className="bg-gray-50 inline-flex p-6 rounded-full mb-4"><Layers className="text-gray-300" size={32}/></div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No matching sequences found in repository</p>
+                    <p className="text-[10px] font-black text-black/40 uppercase tracking-widest">No matching sequences found in repository</p>
                   </td>
                 </tr>
               ) : (
                 members.map((member) => (
-                  <tr key={member.id} className="hover:bg-cyan-50/20 transition-all group">
+                  <tr key={member.id} className="hover:bg-secondary/5 transition-all group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-5">
                         <div className="w-14 h-14 rounded-2xl bg-gray-100 border-2 border-white shadow-sm overflow-hidden flex-shrink-0 relative group-hover:scale-110 transition-transform">
@@ -356,47 +356,47 @@ const MembersReportTab: React.FC = () => {
                           )}
                         </div>
                         <div>
-                          <p className="font-black text-[13px] text-gray-900 uppercase tracking-tight">{member.fullName}</p>
+                          <p className="font-black text-[13px] text-black uppercase tracking-tight">{member.fullName}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className={`w-1.5 h-1.5 rounded-full ${member.gender === 'Male' ? 'bg-blue-400' : 'bg-pink-400'}`} />
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{member.gender || 'UNDEFINED'}</p>
+                            <p className="text-[9px] font-black text-black/40 uppercase tracking-widest">{member.gender || 'UNDEFINED'}</p>
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gray-50 rounded-lg text-gray-400 group-hover:text-cyan-500 transition-colors"><Calendar size={16} /></div>
-                        <span className="text-[11px] font-black text-gray-600 uppercase">{member.academicYear || 'Eternal'}</span>
+                        <div className="p-2 bg-gray-50 rounded-lg text-black/40 group-hover:text-secondary transition-colors"><Calendar size={16} /></div>
+                        <span className="text-[11px] font-black text-black/60 uppercase">{member.academicYear || 'Eternal'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="space-y-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-50 text-cyan-600 rounded-lg">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 text-secondary rounded-lg">
                           <Layers size={12} strokeWidth={3} />
                           <span className="text-[9px] font-black uppercase tracking-tighter">{member.level}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <GraduationCap size={12} className="text-gray-300" />
-                          <span className="text-[10px] font-bold text-gray-400 line-clamp-1">{member.program}</span>
+                          <span className="text-[10px] font-bold text-black/40 line-clamp-1">{member.program}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-red-50 rounded-lg text-red-400"><MapPin size={16} /></div>
-                        <span className="text-[11px] font-black text-gray-600 uppercase">{member.diocese}</span>
+                        <div className="p-2 bg-secondary/5 rounded-lg text-secondary"><MapPin size={16} /></div>
+                        <span className="text-[11px] font-black text-black/60 uppercase">{member.diocese}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                          <p className="text-[11px] font-black text-gray-900 lowercase">{member.email}</p>
+                          <div className="w-1.5 h-1.5 bg-secondary rounded-full" />
+                          <p className="text-[11px] font-black text-black lowercase">{member.email}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 bg-gray-200 rounded-full" />
-                          <p className="text-[10px] font-bold text-gray-400">{member.phone}</p>
+                          <p className="text-[10px] font-bold text-black/40">{member.phone}</p>
                         </div>
                       </div>
                     </td>
@@ -409,8 +409,8 @@ const MembersReportTab: React.FC = () => {
         
         {/* Sync Status Bar */}
         <div className="bg-gray-50 px-8 py-3 flex items-center justify-between border-t border-gray-100">
-          <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">Divine Registry Connection: <span className="text-emerald-500">Active</span></p>
-          <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">Identity Sequences: {members.length}</p>
+          <p className="text-[8px] font-black text-black/40 uppercase tracking-[0.2em]">Divine Registry Connection: <span className="text-secondary">Active</span></p>
+          <p className="text-[8px] font-black text-black/40 uppercase tracking-[0.2em]">Identity Sequences: {members.length}</p>
         </div>
       </div>
     </motion.div>

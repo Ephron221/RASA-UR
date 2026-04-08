@@ -37,14 +37,14 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-20 bg-[#F9FBFC]">
+    <div className="min-h-screen pt-32 pb-20 bg-primary">
       <div className="max-container px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           <div className="lg:col-span-5 space-y-12">
             <header className="space-y-4">
-              <p className="text-cyan-600 font-black text-xs uppercase tracking-[0.4em]">Get In Touch</p>
-              <h1 className="text-5xl md:text-7xl font-bold font-serif italic text-gray-900 leading-tight">Connect With <span className="text-cyan-500">RASA</span></h1>
-              <p className="text-gray-500 text-lg font-medium">Have questions? We are here to listen and respond.</p>
+              <p className="text-secondary font-black text-xs uppercase tracking-[0.4em]">Get In Touch</p>
+              <h1 className="text-5xl md:text-7xl font-bold font-serif italic text-black leading-tight">Connect With <span className="text-secondary">RASA</span></h1>
+              <p className="text-black/50 text-lg font-medium">Have questions? We are here to listen and respond.</p>
             </header>
             <div className="space-y-6">
               {[
@@ -53,8 +53,8 @@ const Contact: React.FC = () => {
                 { icon: Mail, label: 'Email', value: 'connect@rasa-nyg.org' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl group transition-all">
-                  <div className="p-4 bg-cyan-50 text-cyan-600 rounded-2xl group-hover:bg-cyan-500 group-hover:text-white transition-all"><item.icon size={24} /></div>
-                  <div><p className="text-[10px] font-black text-gray-400 uppercase">{item.label}</p><p className="font-bold text-gray-900">{item.value}</p></div>
+                  <div className="p-4 bg-secondary/5 text-secondary rounded-2xl group-hover:bg-secondary group-hover:text-white transition-all"><item.icon size={24} /></div>
+                  <div><p className="text-[10px] font-black text-black/40 uppercase">{item.label}</p><p className="font-bold text-black">{item.value}</p></div>
                 </div>
               ))}
             </div>
@@ -65,29 +65,29 @@ const Contact: React.FC = () => {
               <form className="space-y-8" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Full Name</label>
-                    <input required name="fullName" type="text" placeholder="John Doe" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" />
+                    <label className="text-[10px] font-black text-black/40 ml-4 block uppercase tracking-widest">Full Name</label>
+                    <input required name="fullName" type="text" placeholder="John Doe" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-secondary/20 outline-none font-bold text-sm" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Email</label>
-                    <input required name="email" type="email" placeholder="john@example.com" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" />
+                    <label className="text-[10px] font-black text-black/40 ml-4 block uppercase tracking-widest">Email</label>
+                    <input required name="email" type="email" placeholder="john@example.com" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-secondary/20 outline-none font-bold text-sm" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Phone Number</label>
-                    <input required name="phone" type="tel" placeholder="+250..." className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" />
+                    <label className="text-[10px] font-black text-black/40 ml-4 block uppercase tracking-widest">Phone Number</label>
+                    <input required name="phone" type="tel" placeholder="+250..." className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-secondary/20 outline-none font-bold text-sm" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Subject</label>
-                    <input required name="subject" type="text" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-bold text-sm" placeholder="Purpose of contact" />
+                    <label className="text-[10px] font-black text-black/40 ml-4 block uppercase tracking-widest">Subject</label>
+                    <input required name="subject" type="text" className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-secondary/20 outline-none font-bold text-sm" placeholder="Purpose of contact" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 ml-4 block uppercase tracking-widest">Message</label>
-                  <textarea required name="message" rows={5} placeholder="Type your message..." className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-cyan-100 outline-none font-medium text-sm transition-all resize-none"></textarea>
+                  <label className="text-[10px] font-black text-black/40 ml-4 block uppercase tracking-widest">Message</label>
+                  <textarea required name="message" rows={5} placeholder="Type your message..." className="w-full px-8 py-5 bg-gray-50 border border-transparent rounded-[1.8rem] focus:bg-white focus:border-secondary/20 outline-none font-medium text-sm transition-all resize-none"></textarea>
                 </div>
-                <button disabled={isSubmitting} className="w-full py-5 bg-cyan-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:bg-cyan-600 transition-all flex items-center justify-center gap-3 active:scale-95">
+                <button disabled={isSubmitting} className="w-full py-5 bg-secondary text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:bg-secondary/90 transition-all flex items-center justify-center gap-3 active:scale-95">
                   {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />} Send Message
                 </button>
               </form>

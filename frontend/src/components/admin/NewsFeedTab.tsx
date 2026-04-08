@@ -26,12 +26,12 @@ const NewsFeedTab: React.FC<NewsFeedTabProps> = ({ news, onNew, onEdit, onDelete
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="space-y-1">
-          <h3 className="text-3xl font-black font-serif italic text-gray-900 flex items-center gap-4">
-            <Newspaper className="text-cyan-500" size={32} /> Spirit Feed Hub
+          <h3 className="text-3xl font-black font-serif italic text-black flex items-center gap-4">
+            <Newspaper className="text-secondary" size={32} /> Spirit Feed Hub
           </h3>
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Archival media & divine testimonies</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-black/40">Archival media & divine testimonies</p>
         </div>
-        <button onClick={onNew} className="px-8 py-4 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-cyan-500/20 flex items-center gap-3 active:scale-95 transition-all">
+        <button onClick={onNew} className="px-8 py-4 bg-secondary text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-secondary/10 flex items-center justify-center gap-3 active:scale-95 transition-all">
           <Plus size={18} /> Publish New Story
         </button>
       </div>
@@ -42,7 +42,7 @@ const NewsFeedTab: React.FC<NewsFeedTabProps> = ({ news, onNew, onEdit, onDelete
             <button 
               key={`filter-${f}`} 
               onClick={() => setFilter(f as any)} 
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-cyan-600 hover:bg-cyan-50'}`}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-black text-white shadow-lg' : 'text-black/40 hover:text-secondary hover:bg-secondary/5'}`}
             >
               {f}
             </button>
@@ -55,7 +55,7 @@ const NewsFeedTab: React.FC<NewsFeedTabProps> = ({ news, onNew, onEdit, onDelete
             placeholder="Search archive..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-0 rounded-2xl font-bold text-xs outline-none focus:ring-4 focus:ring-cyan-50 transition-all"
+            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-0 rounded-2xl font-bold text-xs outline-none focus:ring-4 focus:ring-secondary/10 transition-all"
           />
         </div>
       </div>
@@ -69,28 +69,28 @@ const NewsFeedTab: React.FC<NewsFeedTabProps> = ({ news, onNew, onEdit, onDelete
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95 }}
-              className="group bg-white p-6 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-cyan-500/5 transition-all flex flex-col md:flex-row items-center gap-8"
+              className="group bg-white p-6 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-secondary/5 transition-all flex flex-col md:flex-row items-center gap-8"
             >
               <div className="w-full md:w-56 h-40 rounded-[2.2rem] overflow-hidden shrink-0 relative">
                 <img src={item.mediaUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="" />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
-                <div className="absolute top-4 left-4 p-2 bg-white/90 backdrop-blur rounded-xl shadow-sm text-cyan-600">
+                <div className="absolute top-4 left-4 p-2 bg-white/90 backdrop-blur rounded-xl shadow-sm text-secondary">
                   {item.mediaType === 'video' ? <Play size={14} fill="currentColor" /> : item.mediaType === 'audio' ? <Mic size={14} /> : <ImageIcon size={14} />}
                 </div>
               </div>
 
               <div className="flex-grow space-y-3 min-w-0">
                 <div className="flex items-center gap-4">
-                  <span className="px-3 py-1 bg-cyan-50 text-cyan-600 rounded-lg text-[9px] font-black uppercase tracking-widest">{item.category}</span>
-                  <span className="text-[10px] font-black text-gray-300 flex items-center gap-2"><Calendar size={12}/> {item.date}</span>
-                  <span className="text-[10px] font-black text-gray-300 flex items-center gap-2"><User size={12}/> {item.author}</span>
+                  <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-lg text-[9px] font-black uppercase tracking-widest">{item.category}</span>
+                  <span className="text-[10px] font-black text-black/30 flex items-center gap-2"><Calendar size={12}/> {item.date}</span>
+                  <span className="text-[10px] font-black text-black/30 flex items-center gap-2"><User size={12}/> {item.author}</span>
                 </div>
-                <h4 className="text-xl font-black text-gray-900 leading-tight truncate">{item.title}</h4>
-                <p className="text-sm text-gray-400 font-medium line-clamp-2 leading-relaxed">{item.content}</p>
+                <h4 className="text-xl font-black text-black leading-tight truncate">{item.title}</h4>
+                <p className="text-sm text-black/40 font-medium line-clamp-2 leading-relaxed">{item.content}</p>
               </div>
 
               <div className="flex gap-2 shrink-0 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => onEdit(item)} className="p-4 bg-gray-50 text-gray-400 rounded-[1.5rem] hover:bg-gray-900 hover:text-white transition-all shadow-sm active:scale-95"><Edit size={20}/></button>
+                <button onClick={() => onEdit(item)} className="p-4 bg-gray-50 text-black/30 rounded-[1.5rem] hover:bg-black hover:text-white transition-all shadow-sm active:scale-95"><Edit size={20}/></button>
                 <button onClick={() => onDelete(item.id)} className="p-4 bg-red-50 text-red-500 rounded-[1.5rem] hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95"><Trash2 size={20}/></button>
               </div>
             </motion.div>

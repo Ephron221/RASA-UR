@@ -27,8 +27,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       label: 'Total Members', 
       value: members.length, 
       icon: Users, 
-      color: 'text-blue-600', 
-      bg: 'bg-blue-50', 
+      color: 'text-secondary', 
+      bg: 'bg-secondary/10', 
       trend: '+12% growth',
       description: 'Registered campus students'
     },
@@ -36,8 +36,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       label: 'Unread Messages', 
       value: contactMsgs.filter(m => !m.isRead).length, 
       icon: MessageSquare, 
-      color: 'text-orange-600', 
-      bg: 'bg-orange-50', 
+      color: 'text-accent', 
+      bg: 'bg-accent/10', 
       trend: 'Needs attention',
       description: 'Pending inbox inquiries'
     },
@@ -45,8 +45,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       label: 'Official Leaders', 
       value: leaders.length, 
       icon: UserCheck, 
-      color: 'text-purple-600', 
-      bg: 'bg-purple-50', 
+      color: 'text-secondary', 
+      bg: 'bg-secondary/10', 
       trend: 'Term 2024/25',
       description: 'Committee members'
     },
@@ -54,8 +54,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       label: 'Ministries', 
       value: depts.length, 
       icon: Briefcase, 
-      color: 'text-cyan-600', 
-      bg: 'bg-cyan-50', 
+      color: 'text-accent', 
+      bg: 'bg-accent/10', 
       trend: 'Active work',
       description: 'RASA Departments'
     },
@@ -84,7 +84,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 <div className={`p-4 rounded-2xl ${s.bg} ${s.color}`}>
                   <s.icon size={26} />
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase">
+                <div className="flex items-center gap-1 px-2 py-1 bg-secondary/5 text-secondary rounded-lg text-[9px] font-black uppercase">
                   <ArrowUpRight size={12} /> {s.trend}
                 </div>
               </div>
@@ -102,12 +102,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Welcome Card */}
         <div className="lg:col-span-8">
-          <div className="bg-gray-900 p-12 rounded-[3.5rem] text-white relative overflow-hidden shadow-2xl h-full flex flex-col justify-center">
+          <div className="bg-black p-12 rounded-[3.5rem] text-white relative overflow-hidden shadow-2xl h-full flex flex-col justify-center">
             <div className="absolute top-0 right-0 p-12 opacity-10">
               <ShieldCheck size={200} />
             </div>
             <h3 className="text-4xl font-black font-serif italic mb-4 relative z-10">Admin Control Center</h3>
-            <p className="text-cyan-400 text-sm font-black uppercase tracking-widest relative z-10 mb-6 flex items-center gap-3">
+            <p className="text-accent text-sm font-black uppercase tracking-widest relative z-10 mb-6 flex items-center gap-3">
               <Clock size={16} /> Last Login: {new Date().toLocaleTimeString()}
             </p>
             <p className="text-gray-400 text-lg max-w-lg relative z-10 leading-relaxed font-light">
@@ -123,7 +123,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           <div className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm h-full">
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                <Database size={16} className="text-cyan-500" /> System Logs
+                <Database size={16} className="text-secondary" /> System Logs
               </h4>
               <span className="text-[10px] font-bold text-gray-400">Recent Activity</span>
             </div>
@@ -131,7 +131,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             <div className="space-y-4">
               {logs.slice(0, 5).map((log, i) => (
                 <div key={i} className="flex gap-4 items-start pb-4 border-b border-gray-50 last:border-0">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-accent mt-1.5 shrink-0"></div>
                   <div>
                     <p className="text-[11px] font-bold text-gray-700 leading-tight">{log.action}</p>
                     <p className="text-[9px] text-gray-400 mt-1">{new Date(log.timestamp).toLocaleTimeString()}</p>

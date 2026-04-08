@@ -270,11 +270,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   return (
-    <div className="min-h-screen pt-28 pb-20 bg-[#F9FBFC]">
+    <div className="min-h-screen pt-28 pb-20 bg-primary">
       <AnimatePresence>
         {isSyncing && (
-          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} className="fixed bottom-10 right-10 z-[300] bg-gray-900 text-white px-6 py-4 rounded-2xl flex items-center gap-4 shadow-2xl">
-            <Loader2 size={18} className="animate-spin text-cyan-400" />
+          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} className="fixed bottom-10 right-10 z-[300] bg-black text-white px-6 py-4 rounded-2xl flex items-center gap-4 shadow-2xl">
+            <Loader2 size={18} className="animate-spin text-secondary" />
             <span className="text-[10px] uppercase tracking-widest font-black">Kernel Sync...</span>
           </motion.div>
         )}
@@ -286,16 +286,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="bg-white p-4 rounded-[2.5rem] shadow-sm border border-gray-100 sticky top-28">
               <div className="flex items-center justify-between mb-8 ml-4 pt-4 pr-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center text-white shadow-lg"><Shield size={20} className="text-cyan-400" /></div>
-                  <div><p className="text-[9px] font-black uppercase text-gray-400 mb-1">Clearance</p><p className="text-xs font-black text-gray-900 uppercase">{currentRoleDef?.label || currentUser?.role}</p></div>
+                  <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white shadow-lg"><Shield size={20} className="text-secondary" /></div>
+                  <div><p className="text-[9px] font-black uppercase text-black/40 mb-1">Clearance</p><p className="text-xs font-black text-black uppercase">{currentRoleDef?.label || currentUser?.role}</p></div>
                 </div>
-                <button onClick={() => fetchData(true)} className="p-2 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-cyan-500 transition-colors" title="Force Refresh Permissions">
+                <button onClick={() => fetchData(true)} className="p-2 hover:bg-gray-50 rounded-xl text-black/20 hover:text-secondary transition-colors" title="Force Refresh Permissions">
                   <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
                 </button>
               </div>
               <div className="space-y-1">
                 {tabs.map(tab => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-full flex items-center gap-4 px-6 py-3.5 rounded-2xl font-bold text-xs transition-all ${activeTab === tab.id ? 'bg-[#0D1117] text-white shadow-lg' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'}`}>
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-full flex items-center gap-4 px-6 py-3.5 rounded-2xl font-bold text-xs transition-all ${activeTab === tab.id ? 'bg-black text-white shadow-lg' : 'text-black/40 hover:text-black hover:bg-gray-50'}`}>
                     <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} /> <span>{tab.label}</span>
                   </button>
                 ))}
@@ -331,10 +331,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white w-full max-w-2xl rounded-[3rem] shadow-3xl overflow-hidden border border-white flex flex-col max-h-[90vh]">
               <div className="p-10 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-                <h3 className="text-2xl font-black font-serif italic text-gray-900">
+                <h3 className="text-2xl font-black font-serif italic text-black">
                   {showModal === 'role' ? 'Clearance Protocol' : editingItem ? 'Refine Sequence' : 'Initialize Module'}
                 </h3>
-                <button onClick={() => { setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput(''); }} className="p-3 bg-white border border-gray-100 text-gray-400 rounded-2xl hover:text-red-500 transition-all"><X size={20} /></button>
+                <button onClick={() => { setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput(''); }} className="p-3 bg-white border border-gray-100 text-black/20 rounded-2xl hover:text-red-500 transition-all"><X size={20} /></button>
               </div>
               <div className="flex-grow overflow-y-auto p-12 scroll-hide">
                 {showModal === 'ann' && <AnnouncementForm editingItem={editingItem} onSubmit={handleSave} />}
@@ -346,8 +346,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
               {showModal !== 'role' && (
                 <div className="p-10 border-t border-gray-50 bg-gray-50/30 flex justify-end gap-4">
-                  <button onClick={() => { setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput(''); }} className="px-8 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Discard</button>
-                  <button form="main-editor-form" type="submit" className="px-12 py-4 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-cyan-600 transition-all"><Save size={16} /> Commit Changes</button>
+                  <button onClick={() => { setShowModal(null); setEditingItem(null); setFilePreview(null); setUrlInput(''); }} className="px-8 py-4 text-black/40 font-black text-[10px] uppercase tracking-widest">Discard</button>
+                  <button form="main-editor-form" type="submit" className="px-12 py-4 bg-secondary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-secondary/90 transition-all"><Save size={16} /> Commit Changes</button>
                 </div>
               )}
             </motion.div>

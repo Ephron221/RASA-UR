@@ -80,7 +80,7 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
             placeholder="Search members..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none shadow-sm focus:ring-4 focus:ring-cyan-50 transition-all"
+            className="w-full pl-14 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none shadow-sm focus:ring-4 focus:ring-secondary/5 transition-all"
           />
         </div>
 
@@ -89,14 +89,14 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
             <button
               disabled={isExporting}
               onClick={generateReport}
-              className="flex-grow lg:flex-none px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95 disabled:opacity-50"
+              className="flex-grow lg:flex-none px-8 py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-black/90 transition-all active:scale-95 disabled:opacity-50"
             >
               {isExporting ? <Loader2 className="animate-spin" size={16} /> : <FileText size={16} />}
               Generate Global Report
             </button>
           )}
           {isIT ? (
-            <button onClick={onNewMember} className="flex-grow lg:flex-none px-8 py-4 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-cyan-600 transition-all active:scale-95">
+            <button onClick={onNewMember} className="flex-grow lg:flex-none px-8 py-4 bg-secondary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-accent transition-all active:scale-95">
               <UserPlus size={16} /> New Member
             </button>
           ) : (
@@ -111,18 +111,18 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
       <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm">
         <div className="p-8 border-b border-gray-50 flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-black font-serif italic text-gray-900 leading-tight">Member Registry</h3>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Total database load: {members.length} records</p>
+            <h3 className="text-xl font-black font-serif italic text-black leading-tight">Member Registry</h3>
+            <p className="text-[10px] font-black text-black/40 uppercase tracking-widest mt-1">Total database load: {members.length} records</p>
           </div>
           <div className="flex gap-2">
-            <div className="px-4 py-2 bg-green-50 text-green-600 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div> DB Sync Active
+            <div className="px-4 py-2 bg-secondary/10 text-secondary rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></div> DB Sync Active
             </div>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <thead className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black text-black/40 uppercase tracking-widest">
               <tr>
                 <th className="px-8 py-6">Identity & Email</th>
                 <th className="px-8 py-6">Academic Domain</th>
@@ -132,33 +132,33 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredMembers.map(m => (
-                <tr key={m.id} className="group hover:bg-cyan-50/30 transition-all duration-500">
+                <tr key={m.id} className="group hover:bg-secondary/5 transition-all duration-500">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-5">
                       <div className="relative">
-                        <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-cyan-600 font-black overflow-hidden shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-secondary font-black overflow-hidden shrink-0 shadow-inner group-hover:scale-110 transition-transform">
                           {m.profileImage ? <img src={m.profileImage} className="w-full h-full object-cover" alt="" /> : m.fullName.charAt(0)}
                         </div>
                         <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-black text-gray-900 truncate group-hover:text-cyan-600 transition-colors">{m.fullName}</p>
-                        <p className="text-[10px] text-gray-400 font-bold truncate tracking-tight">{m.email}</p>
+                        <p className="text-sm font-black text-black truncate group-hover:text-secondary transition-colors">{m.fullName}</p>
+                        <p className="text-[10px] text-black/40 font-bold truncate tracking-tight">{m.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <p className="text-xs font-bold text-gray-700 truncate">{m.program}</p>
-                    <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter mt-1">{m.level} • {m.diocese}</p>
+                    <p className="text-xs font-bold text-black/70 truncate">{m.program}</p>
+                    <p className="text-[9px] text-black/40 font-black uppercase tracking-tighter mt-1">{m.level} • {m.diocese}</p>
                   </td>
                   <td className="px-8 py-5">
-                    <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm ${m.role === 'it' ? 'bg-gray-900 text-white' :
-                        ['accountant', 'executive'].includes(m.role) ? 'bg-cyan-50 text-cyan-700 border border-cyan-100' :
-                          m.role === 'ministry-leader' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                    <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm ${m.role === 'it' ? 'bg-black text-white' :
+                        ['accountant', 'executive'].includes(m.role) ? 'bg-secondary/10 text-secondary border border-secondary/20' :
+                          m.role === 'ministry-leader' ? 'bg-accent/10 text-accent border border-accent/20' :
                             m.role === 'evangelist' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
                               'bg-gray-50 text-gray-500'
                       }`}>
-                      {m.role === 'it' && <Shield size={10} className="text-cyan-400" />}
+                      {m.role === 'it' && <Shield size={10} className="text-secondary" />}
                       {getRoleLabel(m.role)}
                     </span>
                   </td>
@@ -166,9 +166,9 @@ const DirectoryTab: React.FC<DirectoryTabProps> = ({
                     <td className="px-8 py-5 text-right">
                       <div className="flex justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
                         {isIT && (
-                          <button onClick={() => onToggleAdmin(m)} className="p-3 bg-white border border-gray-100 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm" title="Modify Clearance Protocol"><Shield size={16} /></button>
+                          <button onClick={() => onToggleAdmin(m)} className="p-3 bg-white border border-gray-100 text-secondary rounded-xl hover:bg-secondary hover:text-white transition-all shadow-sm" title="Modify Clearance Protocol"><Shield size={16} /></button>
                         )}
-                        <button onClick={() => onEditMember(m)} className="p-3 bg-white border border-gray-100 text-gray-400 rounded-xl hover:bg-gray-900 hover:text-white transition-all shadow-sm"><Edit size={16} /></button>
+                        <button onClick={() => onEditMember(m)} className="p-3 bg-white border border-gray-100 text-black/40 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm"><Edit size={16} /></button>
                         {isIT && (
                           <button onClick={() => onDeleteMember(m.id)} className="p-3 bg-red-50 border border-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={16} /></button>
                         )}

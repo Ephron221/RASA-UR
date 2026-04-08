@@ -6,7 +6,7 @@ const motion = motionLib as any;
 import { 
   Facebook, Twitter, Instagram, Mail, Phone, 
   MapPin, ArrowUp, Send, CheckCircle2, Sparkles, 
-  Heart, Github, Linkedin, ExternalLink, Youtube, MessageCircle, Music
+  Heart, ExternalLink, Youtube, MessageCircle, Music, Linkedin
 } from 'lucide-react';
 import { Department, FooterConfig } from '../../types';
 
@@ -49,13 +49,14 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
   const contactBio = config?.description || 'Showing Christ to Academicians since 1997. A vibrant sanctuary for faith, excellence, and community within the University of Rwanda.';
   const contactAddress = config?.address || 'UR CST Campus, Nyarugenge, Kigali';
   const contactPhone = config?.phone || '+250 787 846 433';
-  const contactEmail = config?.email || 'connect@rasa-nyg.org';
+  const contactEmail = config?.email || 'connect@rasa-ur.org';
+
+  const LOGO_SRC = "/RASA-logo.png";
 
   return (
-    <footer className="bg-[#020617] text-white pt-24 pb-12 relative overflow-hidden">
+    <footer className="bg-primary text-black pt-24 pb-12 relative overflow-hidden border-t border-gray-100">
       {/* Decorative Gradient Pulse */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
-      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px]"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-secondary/50 to-transparent"></div>
 
       <div className="max-container px-6 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-20">
@@ -63,15 +64,13 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
           {/* Brand Identity Column */}
           <div className="lg:col-span-4 space-y-8">
             <Link to="/" className="inline-flex items-center gap-4 group">
-              <div className="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-[0_0_25px_rgba(6,182,212,0.3)] group-hover:rotate-[360deg] transition-transform duration-1000">
-                R
-              </div>
+              <img src={LOGO_SRC} alt="Logo" className="w-12 h-12 object-contain" />
               <span className="text-3xl font-black italic font-serif tracking-tighter">
-                RASA <span className="text-cyan-500">NYG</span>
+                RASA <span className="text-secondary">UR</span>
               </span>
             </Link>
             
-            <p className="text-gray-400 text-lg leading-relaxed font-light">
+            <p className="text-black/60 text-lg leading-relaxed font-light">
               {contactBio}
             </p>
 
@@ -83,7 +82,7 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ y: -5, scale: 1.1 }}
-                  className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all shadow-xl"
+                  className="w-12 h-12 bg-secondary/5 border border-secondary/10 rounded-2xl flex items-center justify-center text-black/60 hover:text-white hover:bg-accent transition-all shadow-sm"
                   aria-label={social.label}
                 >
                   <social.icon size={20} />
@@ -94,7 +93,7 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
 
           {/* Dynamic Ministries Column */}
           <div className="lg:col-span-2 space-y-8">
-            <h4 className="text-sm font-black uppercase tracking-[0.3em] text-cyan-500 flex items-center gap-2">
+            <h4 className="text-sm font-black uppercase tracking-[0.3em] text-secondary flex items-center gap-2">
               <Sparkles size={14} /> Ministries
             </h4>
             <ul className="space-y-4">
@@ -102,15 +101,15 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
                 <li key={`footer-dept-${dept.id || i}`}>
                   <Link 
                     to={`/departments/${dept.id}`}
-                    className="text-gray-400 hover:text-white flex items-center gap-2 group transition-colors text-sm font-bold"
+                    className="text-black/60 hover:text-accent flex items-center gap-2 group transition-colors text-sm font-bold"
                   >
-                    <div className="w-1 h-1 bg-cyan-500 rounded-full group-hover:scale-150 transition-transform"></div>
+                    <div className="w-1 h-1 bg-secondary rounded-full group-hover:scale-150 transition-transform"></div>
                     {dept.name}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link to="/departments" className="text-cyan-500 hover:text-cyan-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 pt-2">
+                <Link to="/departments" className="text-secondary hover:text-accent text-[10px] font-black uppercase tracking-widest flex items-center gap-2 pt-2 transition-colors">
                   View All <ExternalLink size={12} />
                 </Link>
               </li>
@@ -119,7 +118,7 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
 
           {/* Quick Navigation Column */}
           <div className="lg:col-span-2 space-y-8">
-            <h4 className="text-sm font-black uppercase tracking-[0.3em] text-cyan-500 flex items-center gap-2">
+            <h4 className="text-sm font-black uppercase tracking-[0.3em] text-secondary flex items-center gap-2">
               <ArrowUp size={14} /> Navigate
             </h4>
             <ul className="space-y-4">
@@ -133,9 +132,9 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
                 <li key={`nav-${link.name}-${i}`}>
                   <Link 
                     to={link.href}
-                    className="text-gray-400 hover:text-white transition-colors text-sm font-bold flex items-center gap-2 group"
+                    className="text-black/60 hover:text-accent transition-colors text-sm font-bold flex items-center gap-2 group"
                   >
-                    <div className="w-1 h-1 bg-white/20 rounded-full group-hover:bg-cyan-500 transition-colors"></div>
+                    <div className="w-1 h-1 bg-black/10 rounded-full group-hover:bg-secondary transition-colors"></div>
                     {link.name}
                   </Link>
                 </li>
@@ -145,10 +144,10 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
 
           {/* Newsletter Column */}
           <div className="lg:col-span-4 space-y-8">
-            <h4 className="text-sm font-black uppercase tracking-[0.3em] text-cyan-500 flex items-center gap-2">
+            <h4 className="text-sm font-black uppercase tracking-[0.3em] text-secondary flex items-center gap-2">
               <Mail size={14} /> Divine Digest
             </h4>
-            <p className="text-gray-400 text-sm font-medium leading-relaxed">
+            <p className="text-black/60 text-sm font-medium leading-relaxed">
               Receive weekly scriptures and association updates directly in your digital mailbox.
             </p>
             
@@ -160,7 +159,7 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
                       key="success"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-2xl flex items-center gap-3 text-xs font-black uppercase tracking-widest"
+                      className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 p-4 rounded-2xl flex items-center gap-3 text-xs font-black uppercase tracking-widest"
                     >
                       <CheckCircle2 size={18} /> Stewardship Synchronized
                     </motion.div>
@@ -177,11 +176,11 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="yourname@ur.ac.rw"
-                        className="flex-grow bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold focus:bg-white/10 focus:border-cyan-500 outline-none transition-all placeholder:text-gray-600"
+                        className="flex-grow bg-secondary/5 border border-secondary/10 rounded-2xl px-6 py-4 text-sm font-bold focus:bg-primary focus:border-secondary outline-none transition-all placeholder:text-black/30 text-black"
                       />
                       <button 
                         type="submit"
-                        className="p-4 bg-cyan-500 text-white rounded-2xl shadow-xl shadow-cyan-500/20 hover:bg-cyan-600 active:scale-95 transition-all"
+                        className="p-4 bg-secondary text-white rounded-2xl shadow-md hover:bg-accent active:scale-95 transition-all"
                       >
                         <Send size={20} />
                       </button>
@@ -191,17 +190,17 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
               </div>
             </form>
 
-            <div className="space-y-3 pt-4 border-t border-white/5">
-              <p className="flex items-center gap-3 text-gray-400 text-sm font-medium">
-                <MapPin className="text-cyan-500 shrink-0" size={18} /> 
+            <div className="space-y-3 pt-4 border-t border-black/5">
+              <p className="flex items-center gap-3 text-black/60 text-sm font-medium">
+                <MapPin className="text-secondary shrink-0" size={18} /> 
                 {contactAddress}
               </p>
-              <p className="flex items-center gap-3 text-gray-400 text-sm font-medium">
-                <Phone className="text-cyan-500 shrink-0" size={18} /> 
+              <p className="flex items-center gap-3 text-black/60 text-sm font-medium">
+                <Phone className="text-secondary shrink-0" size={18} /> 
                 {contactPhone}
               </p>
-              <a href={`mailto:${contactEmail}`} className="flex items-center gap-3 text-gray-400 text-sm font-medium hover:text-white transition-colors group">
-                <Mail className="text-cyan-500 shrink-0" size={18} /> 
+              <a href={`mailto:${contactEmail}`} className="flex items-center gap-3 text-black/60 text-sm font-medium hover:text-accent transition-colors group">
+                <Mail className="text-secondary shrink-0" size={18} /> 
                 {contactEmail}
                 <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
@@ -210,31 +209,31 @@ const Footer: React.FC<FooterProps> = ({ departments, config }) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="pt-12 border-t border-black/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <p className="text-gray-500 text-[11px] font-black uppercase tracking-widest">
-              © {new Date().getFullYear()} RASA UR-Nyarugenge
+            <p className="text-black/40 text-[11px] font-black uppercase tracking-widest">
+              © {new Date().getFullYear()} RASA UR
             </p>
-            <div className="hidden md:block w-1.5 h-1.5 bg-white/10 rounded-full"></div>
-            <p className="text-cyan-500/60 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+            <div className="hidden md:block w-1.5 h-1.5 bg-black/10 rounded-full"></div>
+            <p className="text-secondary/60 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
               <Heart size={12} fill="currentColor" /> Agakiza • Urukundo • Umurimo
             </p>
           </div>
 
           <div className="flex items-center gap-8">
             {/* System Status */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Divine Kernel: Connected</span>
+            <div className="flex items-center gap-3 px-4 py-2 bg-secondary/5 border border-secondary/10 rounded-full">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/40">System Online</span>
             </div>
 
             {/* Back to top */}
             <button 
               onClick={scrollToTop}
-              className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white group transition-colors"
+              className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-black/40 hover:text-black group transition-colors"
             >
-              Ascend to Nexus
-              <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-cyan-500 group-hover:border-cyan-500 group-hover:text-white transition-all">
+              Back to Top
+              <div className="w-10 h-10 bg-secondary/5 border border-secondary/10 rounded-xl flex items-center justify-center group-hover:bg-accent group-hover:border-accent group-hover:text-white transition-all">
                 <ArrowUp size={16} />
               </div>
             </button>
