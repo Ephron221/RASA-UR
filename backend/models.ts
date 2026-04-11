@@ -170,9 +170,14 @@ const DonationSchema = new Schema({
   currency: { type: String, default: 'RWF' },
   category: String,
   project: String,
-  status: { type: String, enum: ['Completed', 'Pending', 'Failed', 'Rejected'], default: 'Pending' },
+  status: { 
+    type: String, 
+    enum: ['Completed', 'Pending', 'Failed', 'Rejected', 'DeletionPending'], 
+    default: 'Pending' 
+  },
   transactionId: { type: String, unique: true },
   paymentProof: String, // Base64 or URL of the bank slip/receipt
+  date: { type: String, default: () => new Date().toISOString() }
 }, schemaOptions);
 
 const DonationProjectSchema = new Schema({

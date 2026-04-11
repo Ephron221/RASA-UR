@@ -174,7 +174,7 @@ export interface Donation {
   category: 'One-time' | 'Monthly' | 'Project-based';
   project?: string;
   date: string;
-  status: 'Completed' | 'Pending' | 'Failed' | 'Rejected';
+  status: 'Completed' | 'Pending' | 'Failed' | 'Rejected' | 'DeletionPending';
   transactionId: string;
   paymentProof?: string;
 }
