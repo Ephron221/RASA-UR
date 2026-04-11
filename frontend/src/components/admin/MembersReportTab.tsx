@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, FileText, User as UserIcon, 
   Calendar, GraduationCap, MapPin, Layers, 
   X, RefreshCw, ChevronDown, Binary,
   Edit, Trash2, ShieldAlert, Zap, Plus,
-  Mail, Phone
+  Mail, Phone, Eye, Briefcase, Award, ExternalLink
 } from 'lucide-react';
 import { API } from '../../services/api';
 import { User } from '../../types';
@@ -25,6 +25,7 @@ const MembersReportTab: React.FC<MembersReportTabProps> = ({ onEditMember, onDel
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState<string | null>(null);
+  const [selectedMember, setSelectedMember] = useState<User | null>(null);
   const [filters, setFilters] = useState({
     name: '',
     year: '',
@@ -401,14 +402,15 @@ const MembersReportTab: React.FC<MembersReportTabProps> = ({ onEditMember, onDel
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      {isIT ? (
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button onClick={() => onEditMember(member)} className="p-3 bg-white border border-gray-100 text-black/40 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm" title="Refine Identity"><Edit size={16} /></button>
-                          <button onClick={() => onDeleteMember(member.id)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Purge Record"><Trash2 size={16} /></button>
-                        </div>
-                      ) : (
-                        <div className="text-black/10 flex justify-end" title="IT Architect Clearance Required"><ShieldAlert size={20} /></div>
-                      )}
+                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <button onClick={() => setSelectedMember(member)} className="p-3 bg-white border border-gray-100 text-secondary rounded-xl hover:bg-secondary hover:text-white transition-all shadow-sm" title="View Details"><Eye size={16} /></button>
+                        {isIT && (
+                          <>
+                            <button onClick={() => onEditMember(member)} className="p-3 bg-white border border-gray-100 text-black/40 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm" title="Refine Identity"><Edit size={16} /></button>
+                            <button onClick={() => onDeleteMember(member.id)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Purge Record"><Trash2 size={16} /></button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -416,7 +418,7 @@ const MembersReportTab: React.FC<MembersReportTabProps> = ({ onEditMember, onDel
             </tbody>
           </table>
         </div>
-        
+
         {/* Status Bar */}
         <div className="bg-gray-50 px-8 py-4 flex items-center justify-between border-t border-gray-100">
           <div className="flex items-center gap-6">
@@ -427,6 +429,119 @@ const MembersReportTab: React.FC<MembersReportTabProps> = ({ onEditMember, onDel
           <p className="text-[8px] font-black text-black/30 uppercase tracking-[0.4em]">Stewardship Management Systems v3.0</p>
         </div>
       </div>
+
+      {/* Member Details Modal */}
+      <AnimatePresence>
+        {selectedMember && (
+          <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+              className="bg-white w-full max-w-2xl rounded-[3rem] shadow-3xl overflow-hidden border border-white flex flex-col max-h-[90vh]"
+            >
+              <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-secondary shadow-lg"><UserIcon size={20} /></div>
+                  <h3 className="text-2xl font-black font-serif italic text-black">Member Identity Profile</h3>
+                </div>
+                <button onClick={() => setSelectedMember(null)} className="p-3 bg-white border border-gray-100 text-black/20 rounded-2xl hover:text-red-500 transition-all"><X size={20} /></button>
+              </div>
+              
+              <div className="flex-grow overflow-y-auto p-10 scroll-hide space-y-10">
+                {/* Header Profile */}
+                <div className="flex flex-col md:flex-row items-center gap-8 bg-gray-50/50 p-8 rounded-[2.5rem] border border-gray-100">
+                  <div className="w-32 h-32 rounded-[2rem] bg-secondary overflow-hidden border-4 border-white shadow-2xl shrink-0">
+                    {selectedMember.profileImage ? (
+                      <img src={selectedMember.profileImage} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-5xl font-black">{selectedMember.fullName.charAt(0)}</div>
+                    )}
+                  </div>
+                  <div className="text-center md:text-left space-y-2">
+                    <h2 className="text-3xl font-black text-black uppercase tracking-tight">{selectedMember.fullName}</h2>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${selectedMember.gender === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>
+                        {selectedMember.gender || 'Not Defined'}
+                      </span>
+                      <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-[9px] font-black uppercase tracking-widest">
+                        {selectedMember.role} clearance
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] ml-1">Contact Protocol</p>
+                      <div className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-secondary"><Mail size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Email Nexus</p><p className="text-xs font-bold text-black">{selectedMember.email}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-secondary"><Phone size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Phone Pulse</p><p className="text-xs font-bold text-black">{selectedMember.phone || 'N/A'}</p></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] ml-1">Academic Context</p>
+                      <div className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-secondary"><GraduationCap size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Program of Study</p><p className="text-xs font-bold text-black">{selectedMember.program}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-secondary"><Layers size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Clearance Level</p><p className="text-xs font-bold text-black">{selectedMember.level}</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] ml-1">Church Connection</p>
+                      <div className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-secondary"><MapPin size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Diocese of Origin</p><p className="text-xs font-bold text-black">{selectedMember.diocese}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-secondary"><Briefcase size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Ministry Department</p><p className="text-xs font-bold text-black">{selectedMember.department || 'General Assembly'}</p></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] ml-1">Stewardship Metrics</p>
+                      <div className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-amber-500"><Award size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Spiritual Vitality</p><p className="text-xs font-black text-black">{selectedMember.spiritPoints || 0} Points</p></div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-secondary"><Calendar size={18} /></div>
+                          <div><p className="text-[9px] font-black text-black/40 uppercase">Archival Timeline</p><p className="text-xs font-bold text-black">{selectedMember.academicYear || 'Eternal'}</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 border-t border-gray-50 bg-gray-50/30 flex justify-end gap-4">
+                <button onClick={() => setSelectedMember(null)} className="px-10 py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-secondary transition-all">Close Profile</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
