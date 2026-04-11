@@ -425,6 +425,11 @@ app.patch('/api/donations/:id/status', async (req, res) => {
   }
   res.json(d);
 });
+app.delete('/api/donations/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  await Donation.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
 app.get('/api/donation-projects', async (req, res) => res.json(await DonationProject.find()));
 app.post('/api/donation-projects', async (req, res) => res.status(201).json(await new DonationProject(req.body).save()));
 app.put('/api/donation-projects/:id', async (req, res) => {
@@ -486,6 +491,10 @@ app.post('/api/contacts', async (req, res) => res.status(201).json(await new Con
 app.patch('/api/contacts/:id/read', async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
   res.json(await ContactMessage.findByIdAndUpdate(req.params.id, { isRead: true }, { returnDocument: 'after' }));
+});
+app.patch('/api/contacts/read-all', async (req, res) => {
+  await ContactMessage.updateMany({}, { isRead: true });
+  res.json({ success: true });
 });
 app.delete('/api/contacts/:id', async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });

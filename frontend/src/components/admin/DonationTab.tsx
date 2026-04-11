@@ -26,10 +26,10 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
   // --- STRICT PERMISSION PROTOCOL ---
-  const isIT = user.role === 'it';
-  const isAccountant = user.role === 'accountant';
-  
-  const canSeeProof = isAccountant || isIT;
+  // isIT is sourced from the stored role ID which is always 'it'
+  const isIT = (user.role || '').toLowerCase().trim() === 'it';
+  // canVerify prop is computed from the real permissions system in AdminDashboard — do NOT use hardcoded role strings
+  const canSeeProof = canVerify || isIT;
 
   const fetchData = async () => {
     setLoading(true);
@@ -90,20 +90,32 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
   };
 
   const handleConfirmPurge = async (donation: Donation) => {
-    if (!isAccountant) return;
+    if (!canVerify) return;
     if (!window.confirm(`FINAL PURGE: Permanently delete this contribution from the Divine Registry? This action is irreversible.`)) return;
 
     setIsSyncing(donation.id);
     try {
+      console.log('[PURGE] Attempting delete for donation ID:', donation.id);
       await API.donations.delete(donation.id);
+      console.log('[PURGE] Delete successful, refreshing data...');
       await fetchData();
       setSelectedDonation(null);
       notify("Archive Cleansed", "Contribution record has been permanently removed.", "divine");
-    } catch (err) {
-      notify("Purge Error", "Failed to remove record from Kernel.", "error");
+    } catch (err: any) {
+      const msg = err?.error || err?.message || JSON.stringify(err);
+      console.error('[PURGE] Delete failed:', msg, err);
+      notify("Purge Error", `Failed: ${msg}`, "error");
     } finally {
       setIsSyncing(null);
     }
+  };
+
+  const handleRejectPurge = async (donation: Donation) => {
+    if (!canVerify) return;
+    if (!window.confirm(`REJECT PURGE: Restore ${donation.donorName}'s record back to Completed status? The deletion request will be cancelled.`)) return;
+
+    handleUpdateStatus(donation.id, 'Completed', 'Purge Rejected — Restored');
+    if (selectedDonation?.id === donation.id) setSelectedDonation(null);
   };
 
   const isPDF = (url: string) => url?.startsWith('data:application/pdf') || url?.toLowerCase().endsWith('.pdf');
@@ -193,8 +205,31 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                     )}
                   </td>
                   <td className="px-10 py-5 text-right space-x-2 whitespace-nowrap">
+                    {/* --- Pending Purge actions: ALWAYS VISIBLE for accountant --- */}
+                    {d.status === 'DeletionPending' && canVerify && (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleRejectPurge(d)}
+                          disabled={!!isSyncing}
+                          className="px-4 py-2 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-amber-500 hover:text-white hover:border-transparent transition-all shadow-sm"
+                          title="Reject deletion — restore to Completed"
+                        >
+                          {isSyncing === d.id ? <RefreshCw className="animate-spin" size={12} /> : <ShieldAlert size={12} />} Reject
+                        </button>
+                        <button
+                          onClick={() => handleConfirmPurge(d)}
+                          disabled={!!isSyncing}
+                          className="px-4 py-2 bg-black text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl"
+                          title="Confirm permanent deletion"
+                        >
+                          {isSyncing === d.id ? <RefreshCw className="animate-spin" size={12} /> : <Trash2 size={12} />} Confirm Purge
+                        </button>
+                      </div>
+                    )}
+
+                    {/* --- Hover-revealed actions for Pending/IT --- */}
                     <div className="opacity-0 group-hover:opacity-100 transition-all flex justify-end gap-2 translate-x-4 group-hover:translate-x-0">
-                      {d.status === 'Pending' && isAccountant && (
+                      {d.status === 'Pending' && canVerify && (
                         <>
                           <button
                             onClick={() => handleUpdateStatus(d.id, 'Completed', 'Verify')}
@@ -213,16 +248,6 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                             <XCircle size={16} />
                           </button>
                         </>
-                      )}
-                      
-                      {d.status === 'DeletionPending' && isAccountant && (
-                        <button
-                          onClick={() => handleConfirmPurge(d)}
-                          disabled={!!isSyncing}
-                          className="px-4 py-2 bg-black text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl"
-                        >
-                          {isSyncing === d.id ? <RefreshCw className="animate-spin" size={12} /> : <Trash2 size={12} />} Confirm Purge
-                        </button>
                       )}
 
                       {d.status !== 'DeletionPending' && isIT && (
@@ -293,7 +318,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                 </div>
 
                 <div className="pt-10 space-y-3">
-                  {selectedDonation.status === 'Pending' && isAccountant && (
+                  {selectedDonation.status === 'Pending' && canVerify && (
                     <div className="grid grid-cols-2 gap-3">
                       <button 
                         onClick={() => handleUpdateStatus(selectedDonation.id, 'Completed', 'Verify')}
@@ -309,6 +334,29 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                       </button>
                     </div>
                   )}
+
+                  {selectedDonation.status === 'DeletionPending' && canVerify && (
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-black/30 uppercase tracking-widest text-center">Purge Request Awaiting Decision</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => handleRejectPurge(selectedDonation)}
+                          disabled={!!isSyncing}
+                          className="py-4 bg-amber-50 text-amber-600 border border-amber-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-500 hover:text-white hover:border-transparent transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <ShieldAlert size={13} /> Reject
+                        </button>
+                        <button
+                          onClick={() => handleConfirmPurge(selectedDonation)}
+                          disabled={!!isSyncing}
+                          className="py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xl"
+                        >
+                          {isSyncing === selectedDonation.id ? <RefreshCw className="animate-spin" size={13} /> : <Trash2 size={13} />} Purge
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <a 
                     href={selectedDonation.paymentProof} 
                     download={`Proof_${selectedDonation.donorName.replace(/\s+/g, '_')}.png`}
