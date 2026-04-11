@@ -174,7 +174,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setEditingItem(null);
       notify("Clearance Migration", `Tier protocols for ${editingItem.fullName} have been successfully updated.`, "divine");
     } catch (err: any) {
-      // Corrected error access for fetch-based API
       const errorMsg = err.error || (err.response?.data?.error) || "Failed to update role protocols.";
       notify("Clearance Error", errorMsg, "error");
     } finally { setIsSyncing(false); }
@@ -222,6 +221,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           diocese: formData.get('diocese') as string,
           department: formData.get('department') as string,
           academicYear: formData.get('academicYear') as string,
+          gender: formData.get('gender') as string,
           profileImage: media
         };
         if (editingItem) { await API.members.update(editingItem.id, item); } else { await API.members.create(item as Partial<User>); }
@@ -307,7 +307,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && <OverviewTab members={members} news={news} leaders={leaders} announcements={announcements} contactMsgs={contactMsgs} depts={depts} logs={logs} />}
               {activeTab === 'profile' && currentUser && <ProfileEditorTab user={currentUser} isSyncing={isSyncing} onUpdate={async (u) => { setIsSyncing(true); await API.members.update(u.id, u); updateUser(u); fetchData(); setIsSyncing(false); notify("Stewardship Updated", "Profile synchronized.", "success"); }} />}
-              {activeTab === 'reports' && <MembersReportTab />}
+              {activeTab === 'reports' && <MembersReportTab onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} />}
               {activeTab === 'members' && <DirectoryTab members={members} roles={roleDefinitions} searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onToggleAdmin={(m) => { setEditingItem(m); setShowModal('role'); }} currentUser={currentUser!} canManage={rolePermissions.canDo('manage_roles')} />}
               {activeTab === 'clearance' && <ClearanceTab roles={roleDefinitions} onRefresh={fetchData} />}
               {activeTab === 'donations' && <DonationTab user={currentUser!} canVerify={rolePermissions.canDo('verify_donations')} />}

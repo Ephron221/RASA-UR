@@ -85,7 +85,19 @@ export const NAV_LINKS = [
 ];
 
 export const DIOCESES = [
-  'Butare', 'Cyangugu', 'Gahini', 'Kigali', 'Kigeme', 'Kivu', 'Muhabura', 'Mityana', 'Byumba', 'Nyagatare'
+  'Butare Diocese',
+  'Byumba Diocese',
+  'Cyangugu Diocese',
+  'Gahini Diocese',
+  'Gasabo Diocese',
+  'Karongi Diocese',
+  'Kibungo Diocese',
+  'Kigali Diocese',
+  'Kigeme Diocese',
+  'Kivu Diocese',
+  'Nyaruguru Diocese',
+  'Shyira Diocese',
+  'Shyogwe Diocese'
 ];
 
 export const LEVELS = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Post-RASA'];

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Loader2, Camera, ShieldCheck, ShieldAlert, Send, CheckCircle2, RefreshCw, Calendar } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Camera, ShieldCheck, ShieldAlert, Send, CheckCircle2, RefreshCw, Calendar, User as UserIcon, PlusCircle, UserCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DIOCESES, LEVELS, DEPARTMENTS } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,6 +22,10 @@ const Portal: React.FC = () => {
   const [notVerifiedEmail, setNotVerifiedEmail] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [roles, setRoles] = useState<RoleDefinition[]>([]);
+  
+  // Custom Department Logic
+  const [deptChoice, setDeptChoice] = useState(DEPARTMENTS[0].name);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -82,29 +86,38 @@ const Portal: React.FC = () => {
     setSuccessMsg(null);
     setNotVerifiedEmail(null);
 
-    const formData = new FormData(e.target as HTMLFormElement);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
     const email = (formData.get('email') as string)?.toLowerCase();
     const password = formData.get('password') as string;
+
+    // Resolve final department value
+    const finalDept = deptChoice === 'Other' 
+      ? formData.get('department_custom') as string 
+      : deptChoice;
 
     try {
       if (mode === 'login') {
         const user = await API.auth.login(email, password);
         login(user);
-        
-        // Dynamic Redirection Protocol
         const userRoleDef = roles.find(r => r.id === user.role);
         const hasElevatedAccess = userRoleDef?.permissions.some(p => p.startsWith('tab.')) || user.role === 'it';
-        
         navigate(hasElevatedAccess ? '/admin' : '/dashboard');
       } else if (mode === 'register') {
         if (regStep === 'form') {
           if (password !== confirmPass) throw new Error("Passwords do not match.");
           const newUser = {
-            fullName: formData.get('fullName') as string, email, password,
-            phone: formData.get('phone') as string, role: 'member',
-            program: formData.get('program') as string, level: formData.get('level') as string,
-            diocese: formData.get('diocese') as string, department: formData.get('department') as string,
+            fullName: formData.get('fullName') as string, 
+            email, 
+            password,
+            phone: formData.get('phone') as string, 
+            role: 'member',
+            program: formData.get('program') as string, 
+            level: formData.get('level') as string,
+            diocese: formData.get('diocese') as string, 
+            department: finalDept,
             academicYear: formData.get('academicYear') as string,
+            gender: formData.get('gender') as string,
             profileImage: imagePreview || '',
           };
           await API.auth.register(newUser);
@@ -153,7 +166,6 @@ const Portal: React.FC = () => {
       } else if (recoveryStep === 3) {
         const newPassword = formData.get('newPassword') as string;
         if (!newPassword) throw new Error('Please enter a new password.');
-
         const res = await API.auth.resetPassword(recoveryEmail, recoveryToken, newPassword);
         setSuccessMsg(res.message);
         setMode('login');
@@ -240,19 +252,56 @@ const Portal: React.FC = () => {
                     <input name="fullName" required placeholder="Full Name" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none font-bold text-sm text-black" />
                     <div className="grid grid-cols-2 gap-4">
                       <input name="phone" required placeholder="Phone" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
+                      <select name="gender" required className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black">
+                        <option value="">Select Gender</option>
+                        <option value="Male">Boy (Male)</option>
+                        <option value="Female">Girl (Female)</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <select name="level" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black">{LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
                       <select name="diocese" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black">{DIOCESES.map(d => <option key={d} value={d}>{d}</option>)}</select>
-                      <select name="department" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black">{DEPARTMENTS.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <input name="program" required placeholder="Program" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
-                      <div className="relative">
-                        <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-secondary" size={16}/>
-                        <input name="academicYear" required placeholder="Year (e.g. 2024-2025)" className="w-full pl-12 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
+                    
+                    {/* Department with "Other" functionality */}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <select 
+                          name="department_choice" 
+                          value={deptChoice}
+                          onChange={(e) => setDeptChoice(e.target.value)}
+                          className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold text-sm text-black"
+                        >
+                          {DEPARTMENTS.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                          <option value="Other">Other / Not Listed</option>
+                        </select>
+                        <div className="relative">
+                          <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-secondary" size={16}/>
+                          <input name="academicYear" required placeholder="Year (e.g. 2024-2025)" className="w-full pl-12 pr-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
+                        </div>
                       </div>
+                      
+                      <AnimatePresence>
+                        {deptChoice === 'Other' && (
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0, y: -10 }} 
+                            animate={{ opacity: 1, height: 'auto', y: 0 }} 
+                            exit={{ opacity: 0, height: 0, y: -10 }}
+                            className="relative"
+                          >
+                            <PlusCircle className="absolute left-5 top-1/2 -translate-y-1/2 text-secondary" size={18} />
+                            <input 
+                              name="department_custom" 
+                              required 
+                              placeholder="Enter your Ministry/Department name" 
+                              className="w-full pl-14 pr-6 py-4 bg-white border-2 border-secondary/20 rounded-2xl outline-none font-bold text-sm text-black shadow-sm" 
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
+
+                    <input name="program" required placeholder="Program of Study" className="w-full px-6 py-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-black" />
                   </motion.div>
                 )}
               </AnimatePresence>

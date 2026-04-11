@@ -62,7 +62,6 @@ mongoose.connect(MONGODB_URI, {
   .catch(err => {
     console.error('❌ KERNEL CRITICAL FAILURE: Could not connect to MongoDB.');
     console.error('Reason:', err.message);
-    // Retry after 5 seconds instead of hard exit
     console.log('⏳ Retrying connection in 5 seconds...');
     setTimeout(() => {
       mongoose.connect(MONGODB_URI, {
@@ -114,7 +113,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, fullName, password, phone, program, level, diocese, department, profileImage, academicYear } = req.body;
+    const { email, fullName, password, phone, program, level, diocese, department, profileImage, academicYear, gender } = req.body;
 
     if (!email || !fullName || !password) {
       return res.status(400).json({ error: 'Full Name, Email, and Password are required.' });
@@ -141,6 +140,7 @@ app.post('/api/auth/register', async (req, res) => {
       department,
       profileImage,
       academicYear,
+      gender,
       isVerified: false,
       verificationToken: otp,
       verificationExpires: expiry
@@ -275,7 +275,6 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // --- MEMBERS ---
 app.get('/api/members', async (req, res) => res.json(await Member.find().sort({ createdAt: -1 })));
 
-// Admin creates a member directly (no email verification required)
 app.post('/api/members', async (req, res) => {
   try {
     const { email, fullName, ...rest } = req.body;
@@ -294,6 +293,7 @@ app.post('/api/members', async (req, res) => {
       department: rest.department || '',
       profileImage: rest.profileImage || '',
       academicYear: rest.academicYear || '',
+      gender: rest.gender || '',
       role: rest.role || 'member',
       isVerified: true,
     });
@@ -303,18 +303,25 @@ app.post('/api/members', async (req, res) => {
     res.status(500).json({ error: err.message || 'Failed to create member' });
   }
 });
+
 app.get('/api/members/report', async (req, res) => {
   try {
     const { year, name, gender, level, program, diocese } = req.query;
     const filter: any = {};
     if (year) filter.academicYear = year;
     if (name) filter.fullName = { $regex: name, $options: 'i' };
-    if (gender) filter.gender = gender;
-    if (level) filter.level = level;
-    if (program) filter.program = program;
-    if (diocese) filter.diocese = diocese;
+    
+    // Case-insensitive matching for filters
+    if (gender) filter.gender = { $regex: `^${gender}$`, $options: 'i' };
+    if (level) filter.level = { $regex: `^${level}$`, $options: 'i' };
+    if (program) filter.program = { $regex: program, $options: 'i' };
+    if (diocese) filter.diocese = { $regex: `^${diocese}$`, $options: 'i' };
+    
     res.json(await Member.find(filter).sort({ fullName: 1 }));
-  } catch (err: any) { res.status(500).json({ error: 'Report failed' }); }
+  } catch (err: any) { 
+    console.error('Report Error:', err);
+    res.status(500).json({ error: 'Report failed' }); 
+  }
 });
 
 app.put('/api/members/:id', async (req, res) => {
@@ -333,7 +340,6 @@ app.patch('/api/members/:id/role', async (req, res) => {
     const member = await Member.findById(req.params.id);
     if (!member) return res.status(404).json({ error: 'Member identity not found.' });
 
-    // Accountant Exclusive Logic
     if (role === 'accountant') {
       const year = member.academicYear;
       if (!year) {
@@ -529,12 +535,9 @@ const bootstrapAdmin = async () => {
   const email = 'ephrontuyishime21@gmail.com';
   let user = await Member.findOne({ email });
   if (!user) {
-    await new Member({ fullName: 'Esron Tuyishime (IT)', email, password: 'admin', role: 'it', diocese: 'Kigali', isVerified: true }).save();
+    await new Member({ fullName: 'Esron Tuyishime (IT)', email, password: 'admin', role: 'it', diocese: 'Kigali Diocese', isVerified: true }).save();
     console.log('🛡️ ADMIN BOOTSTRAPPED');
   }
-
-  // Bootstrap Default Roles
-  const existingRoleIds = (await Role.find().select('id')).map((r: any) => r.id);
 
   const all = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts', 'tab.system', 'tab.clearance'];
   const excomPerms = ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts'];
@@ -548,7 +551,6 @@ const bootstrapAdmin = async () => {
     { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.', isSystem: true },
   ];
 
-  // Upsert all default roles to ensure existing roles get updated permissions
   for (const defaultRole of defaults) {
     await Role.findOneAndUpdate(
       { id: defaultRole.id },

@@ -27,7 +27,21 @@ const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => setIsOpen(false), [location]);
+  // Close mobile menu on location change or when user clicks a link
+  useEffect(() => {
+    setIsOpen(false);
+    // Ensure body scroll is re-enabled when navigating
+    document.body.style.overflow = 'unset';
+  }, [location]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isOpen]);
 
   const isHomePage = location.pathname === '/';
   const navTextColor = 'text-black';
@@ -41,7 +55,7 @@ const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel
 
   return (
     <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${scrolled
-        ? 'bg-primary/95 backdrop-blur-xl shadow-sm border-b border-gray-100 py-2'
+        ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100 py-2'
         : (isHomePage ? 'bg-transparent py-6' : 'bg-primary border-b border-gray-100 py-3')
       }`}>
       <div className="max-container flex items-center justify-between px-4">
@@ -59,8 +73,8 @@ const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel
             />
           </motion.div>
           <div className="flex flex-col">
-            <span className={`font-black text-2xl tracking-tighter leading-none ${navTextColor}`}>RASA <span className="text-secondary">UR</span></span>
-            <span className={`text-[7px] font-black uppercase tracking-[0.3em] mt-1 ${navTextColor} opacity-60`}>Agakiza • Urukundo • Umurimo</span>
+            <span className={`font-black text-2xl tracking-tighter leading-none ${navTextColor} ${!scrolled && isHomePage ? 'text-white' : ''}`}>RASA <span className="text-secondary">UR</span></span>
+            <span className={`text-[7px] font-black uppercase tracking-[0.3em] mt-1 ${navTextColor} ${!scrolled && isHomePage ? 'text-white/80' : 'opacity-60'}`}>Agakiza • Urukundo • Umurimo</span>
           </div>
         </Link>
 
@@ -69,22 +83,22 @@ const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel
             <Link
               key={link.name}
               to={link.href}
-              className={`font-bold text-sm uppercase tracking-widest transition-all hover:text-accent relative ${location.pathname === link.href ? 'text-secondary' : navTextColor}`}>
+              className={`font-bold text-sm uppercase tracking-widest transition-all hover:text-accent relative ${location.pathname === link.href ? 'text-secondary' : (isHomePage && !scrolled ? 'text-white' : navTextColor)}`}>
               {link.name}
               {location.pathname === link.href && <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 w-full h-1 bg-secondary rounded-full" />}
             </Link>
           ))}
 
           <div className="relative" onMouseEnter={() => setShowDepts(true)} onMouseLeave={() => setShowDepts(false)}>
-            <Link to="/departments" className={`flex items-center gap-1 font-bold text-sm uppercase tracking-widest transition-all hover:text-accent ${location.pathname.startsWith('/departments') ? 'text-secondary' : navTextColor}`}>
+            <Link to="/departments" className={`flex items-center gap-1 font-bold text-sm uppercase tracking-widest transition-all hover:text-accent ${location.pathname.startsWith('/departments') ? 'text-secondary' : (isHomePage && !scrolled ? 'text-white' : navTextColor)}`}>
               Ministries <ChevronDown size={14} className={`transition-transform duration-300 ${showDepts ? 'rotate-180' : ''}`} />
             </Link>
             <AnimatePresence>
               {showDepts && (
-                <motion.div initial={{ opacity: 0, y: 15, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 15, scale: 0.95 }} className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-72 bg-primary shadow-2xl rounded-3xl overflow-hidden border border-gray-100 p-3">
+                <motion.div initial={{ opacity: 0, y: 15, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 15, scale: 0.95 }} className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-72 bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100 p-3">
                   <div className="grid grid-cols-1 gap-1">
                     {departments.map((dept) => (
-                      <Link key={dept.id} to={`/departments/${dept.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-accent/10 rounded-2xl text-sm font-bold text-black transition-all hover:translate-x-1">
+                      <Link key={dept.id} to={`/departments/${dept.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/10 rounded-2xl text-sm font-bold text-black transition-all hover:translate-x-1">
                         <div className="w-2 h-2 rounded-full bg-secondary"></div>{dept.name}
                       </Link>
                     ))}
@@ -97,10 +111,10 @@ const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel
 
         <div className="hidden lg:flex items-center gap-4">
           {user ? (
-            <div className="flex items-center gap-4 bg-gray-50/50 p-1.5 pl-5 rounded-full border border-gray-100 backdrop-blur-md">
+            <div className={`flex items-center gap-4 p-1.5 pl-5 rounded-full border border-gray-100 backdrop-blur-md ${isHomePage && !scrolled ? 'bg-white/10 border-white/20' : 'bg-gray-50/50'}`}>
               <Link to={dashboardPath} className="flex items-center gap-3 group">
                 <div className="text-right">
-                  <p className="font-black text-[11px] text-black leading-none">{user.fullName.split(' ')[0]}</p>
+                  <p className={`font-black text-[11px] leading-none ${isHomePage && !scrolled ? 'text-white' : 'text-black'}`}>{user.fullName.split(' ')[0]}</p>
                   <p className="text-[8px] font-black text-secondary uppercase tracking-widest mt-0.5">{roleLabel}</p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-all overflow-hidden border-2 border-white/50 relative">
@@ -112,22 +126,28 @@ const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel
                   <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
               </Link>
-              <div className="w-px h-6 bg-gray-200 mx-1"></div>
+              <div className={`w-px h-6 mx-1 ${isHomePage && !scrolled ? 'bg-white/20' : 'bg-gray-200'}`}></div>
               <button onClick={logout} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Logout"><LogOut size={18} /></button>
             </div>
           ) : (
-            <Link to="/portal" className={`px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-[0.2em] transition-all transform hover:scale-105 shadow-md ${scrolled || !isHomePage ? 'bg-secondary text-white hover:bg-accent' : 'bg-primary text-secondary hover:bg-accent hover:text-white shadow-white/20'}`}>Access Portal</Link>
+            <Link to="/portal" className={`px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-[0.2em] transition-all transform hover:scale-105 shadow-md ${scrolled || !isHomePage ? 'bg-secondary text-white hover:bg-accent' : 'bg-white text-secondary hover:bg-secondary hover:text-white shadow-white/20'}`}>Access Portal</Link>
           )}
         </div>
 
-        <button className={`p-2 rounded-xl lg:hidden ${navTextColor}`} onClick={() => setIsOpen(!isOpen)}>
+        <button className={`p-2 rounded-xl lg:hidden ${isHomePage && !scrolled ? 'text-white' : navTextColor}`} onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '100%' }} className="fixed inset-0 bg-primary z-[60] lg:hidden flex flex-col p-8">
+          <motion.div 
+            initial={{ opacity: 0, x: '100%' }} 
+            animate={{ opacity: 1, x: 0 }} 
+            exit={{ opacity: 0, x: '100%' }} 
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 bg-white z-[60] lg:hidden flex flex-col p-8 overflow-y-auto"
+          >
             <div className="flex justify-between items-center mb-12">
               <div className="flex items-center gap-3">
                 <img src={LOGO_SRC} alt="Logo" className="h-10 w-auto" />
@@ -149,14 +169,30 @@ const Navbar: React.FC<NavbarProps> = ({ departments, isAdmin = false, roleLabel
             )}
 
             <div className="flex flex-col gap-6 text-2xl font-black text-black">
-              {NAV_LINKS.map(link => <Link key={link.name} to={link.href} className="hover:text-accent">{link.name}</Link>)}
+              {NAV_LINKS.map(link => (
+                <Link 
+                  key={link.name} 
+                  to={link.href} 
+                  onClick={() => setIsOpen(false)}
+                  className={`hover:text-secondary transition-colors ${location.pathname === link.href ? 'text-secondary' : ''}`}
+                >
+                  {link.name}
+                </Link>
+              ))}
               <div className="h-px bg-gray-100 my-4"></div>
               {user ? (
                 <div className="space-y-6">
-                  <Link to={dashboardPath} className="flex items-center gap-4 text-secondary"><LayoutDashboard size={28} /> Dashboard</Link>
-                  <button onClick={logout} className="flex items-center gap-4 text-red-500"><LogOut size={28} /> Sign Out</button>
+                  <Link to={dashboardPath} onClick={() => setIsOpen(false)} className="flex items-center gap-4 text-secondary"><LayoutDashboard size={28} /> Dashboard</Link>
+                  <button onClick={() => { logout(); setIsOpen(false); }} className="flex items-center gap-4 text-red-500 w-full text-left"><LogOut size={28} /> Sign Out</button>
                 </div>
-              ) : <Link to="/portal" className="bg-secondary text-white py-6 rounded-3xl text-center shadow-2xl hover:bg-accent transition-colors">Member Portal</Link>}
+              ) : (
+                <Link to="/portal" onClick={() => setIsOpen(false)} className="bg-secondary text-white py-6 rounded-3xl text-center shadow-2xl hover:bg-accent transition-all active:scale-95">Member Portal</Link>
+              )}
+            </div>
+            
+            {/* Footer space in mobile menu to prevent content clipping */}
+            <div className="mt-auto pt-10 text-center">
+              <p className="text-[8px] font-black text-black/20 uppercase tracking-[0.4em]">Agakiza • Urukundo • Umurimo</p>
             </div>
           </motion.div>
         )}
