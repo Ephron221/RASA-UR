@@ -1,0 +1,166 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Quote, Sparkles, MessageSquare, Heart, Calendar as CalendarIcon, Bell, ExternalLink, ArrowRight, BookOpen, Clock, Target, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { DailyVerse, NewsItem, Announcement, BibleQuiz, User } from '../../types';
+
+interface MemberOverviewTabProps {
+  currentUser: User;
+  dailyVerse: DailyVerse | null;
+  upcomingEvents: NewsItem[];
+  announcements: Announcement[];
+  quizzes: BibleQuiz[];
+  setActiveQuiz: (q: BibleQuiz) => void;
+  currentLevelProgress: number;
+}
+
+const MemberOverviewTab: React.FC<MemberOverviewTabProps> = ({ 
+  currentUser, dailyVerse, upcomingEvents, announcements, quizzes, setActiveQuiz, currentLevelProgress 
+}) => {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
+      {/* Primary Content: Daily Bread & Events */}
+      <div className="lg:col-span-8 space-y-8">
+        
+        {/* Modern Daily Bread */}
+        {dailyVerse && (
+          <div className="bg-secondary text-white p-12 rounded-[3.5rem] shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700"><Quote size={160}/></div>
+              <div className="relative z-10 space-y-8">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="text-accent animate-pulse" size={20}/>
+                  <p className="text-accent font-black text-[10px] uppercase tracking-[0.5em]">The Eternal Sequence</p>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-4xl font-black font-serif italic leading-tight">{dailyVerse.theme}</h3>
+                  <p className="text-2xl md:text-3xl font-serif italic text-white/90 leading-relaxed max-w-2xl">
+                    "{dailyVerse.verse}"
+                  </p>
+                </div>
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <p className="text-accent font-black text-xs uppercase tracking-widest">{dailyVerse.reference}</p>
+                  <div className="flex gap-2">
+                    <button className="p-3 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-md transition-all"><MessageSquare size={18}/></button>
+                    <button className="p-3 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-md transition-all"><Heart size={18}/></button>
+                  </div>
+                </div>
+              </div>
+          </div>
+        )}
+
+        {/* Upcoming Events Horizontal Scroll */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xl font-black font-serif italic text-black">Upcoming Assemblies</h4>
+            <Link to="/news" className="text-[10px] font-black text-secondary uppercase tracking-widest hover:underline flex items-center gap-2">View Archive <ArrowRight size={14}/></Link>
+          </div>
+          <div className="flex gap-6 overflow-x-auto pb-6 scroll-hide">
+            {upcomingEvents.length > 0 ? upcomingEvents.map(event => (
+              <div key={event.id} className="min-w-[300px] bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group shrink-0">
+                <div className="relative h-40 rounded-2xl overflow-hidden mb-6">
+                  <img src={event.mediaUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                  <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black uppercase text-secondary">Assembly Event</div>
+                </div>
+                <h5 className="text-lg font-black text-black mb-2 line-clamp-1">{event.title}</h5>
+                <div className="flex items-center gap-4 text-black/40 mb-6">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold"><CalendarIcon size={12}/> {event.date}</div>
+                </div>
+                <button className="w-full py-4 bg-gray-50 text-black font-black text-[9px] uppercase tracking-widest group-hover:bg-black group-hover:text-white transition-all rounded-xl">Sequence Details</button>
+              </div>
+            )) : (
+              <div className="w-full py-12 bg-white rounded-[2.5rem] border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
+                <CalendarIcon size={32} className="mb-2 opacity-20"/>
+                <p className="text-[10px] font-black uppercase tracking-widest">No pending assemblies found</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quest Hub Overview */}
+        <div className="space-y-6">
+            <h4 className="text-xl font-black font-serif italic text-black">Active Quests</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {quizzes.slice(0, 2).map(q => (
+                <div key={q.id} className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="w-12 h-12 bg-secondary/5 text-secondary rounded-2xl flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all"><BookOpen size={24}/></div>
+                      <span className="text-[10px] font-black text-black/40 uppercase tracking-widest flex items-center gap-2"><Clock size={12}/> {q.timeLimit}m</span>
+                    </div>
+                    <h5 className="text-xl font-black text-black mb-2">{q.title}</h5>
+                    <p className="text-sm text-black/50 mb-6 italic line-clamp-2">"{q.description}"</p>
+                    <button onClick={() => setActiveQuiz(q)} className="w-full py-4 bg-gray-50 text-black font-black text-[10px] uppercase tracking-widest group-hover:bg-secondary group-hover:text-white transition-all rounded-2xl">Begin Quest</button>
+                </div>
+              ))}
+            </div>
+        </div>
+      </div>
+
+      {/* Sidebar Layout */}
+      <div className="lg:col-span-4 space-y-8">
+
+        {/* Stewardship Stats Card */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }} 
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-black text-white p-8 rounded-[3.5rem] shadow-2xl relative overflow-hidden flex flex-col justify-between"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary/20 to-transparent pointer-events-none" />
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-8">
+              <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-xl"><Target size={24} className="text-secondary"/></div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Global Rank</p>
+                <p className="text-xl font-black">STRIKER</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <h3 className="text-5xl font-black">{currentUser.spiritPoints || 0}</h3>
+                <p className="text-secondary font-black text-xs uppercase tracking-widest mb-1">Spirit Points</p>
+              </div>
+              <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${currentLevelProgress}%` }}
+                  className="h-full bg-secondary shadow-[0_0_20px_rgba(59,107,31,0.5)]" 
+                />
+              </div>
+              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                {500 - ((currentUser.spiritPoints || 0) % 500)} points until next Archival Tier
+              </p>
+            </div>
+          </div>
+
+          <Link to="/portal" className="mt-8 group flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all">
+            <span className="text-[10px] font-black uppercase tracking-widest">Reflection Hub</span>
+            <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </motion.div>
+
+        {/* Bulletins Widget */}
+        <div className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <h4 className="text-sm font-black text-black uppercase tracking-widest flex items-center gap-2"><Bell size={16} className="text-secondary"/> Bulletins</h4>
+              <Link to="/announcements" className="p-2 bg-gray-50 rounded-xl hover:text-secondary transition-colors"><ExternalLink size={14}/></Link>
+            </div>
+            <div className="space-y-6">
+              {announcements.filter(a => a.isActive).slice(0, 4).map(ann => (
+                <div key={ann.id} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-3 hover:border-secondary/20 transition-all cursor-default group">
+                    <div className="flex justify-between items-start">
+                      <span className={`px-2 py-0.5 rounded-md text-[7px] font-black uppercase ${ann.status === 'Urgent' ? 'bg-red-100 text-red-600' : 'bg-secondary/10 text-secondary'}`}>{ann.status}</span>
+                      <p className="text-[8px] font-bold text-black/20">{ann.date}</p>
+                    </div>
+                    <h6 className="font-black text-black text-sm leading-tight group-hover:text-secondary transition-colors">{ann.title}</h6>
+                    <p className="text-[11px] text-black/50 line-clamp-2 leading-relaxed">{ann.content}</p>
+                </div>
+              ))}
+            </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default MemberOverviewTab;
