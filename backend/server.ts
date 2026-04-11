@@ -554,7 +554,7 @@ const bootstrapAdmin = async () => {
   const defaults = [
     { id: 'it', label: 'IT Architect', icon: 'Shield', permissions: [...all, 'action.manage_roles', 'action.edit_members', 'action.reset_db'], description: 'Full system oversight and security architecture.', isSystem: true },
     { id: 'accountant', label: 'Accountant', icon: 'Wallet', permissions: [...excomPerms, 'tab.donations', 'action.verify_donations'], description: 'Financial steward responsible for offerings, donations, and ledger verification.', isSystem: true },
-    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: excomPerms, description: 'Executive committee member with management access to ministries and content.', isSystem: true },
+    { id: 'executive', label: 'EXCOM', icon: 'Briefcase', permissions: [...excomPerms, 'tab.donations', 'tab.spiritual', 'tab.members'], description: 'Executive committee member with management access to ministries and content.', isSystem: true },
     { id: 'ministry-leader', label: 'Ministry Leader', icon: 'Landmark', permissions: ['tab.overview', 'tab.profile', 'tab.members', 'tab.depts'], description: 'Ministry Leader (e.g. choir secretary) — can view ministry members and approve join requests.', isSystem: true },
     { id: 'evangelist', label: 'Evangelist', icon: 'MessageSquare', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Has access to the spiritual hub to publish daily verses and prepare Bible quizzes.', isSystem: true },
     { id: 'member', label: 'Member', icon: 'User', permissions: ['tab.overview', 'tab.profile', 'tab.spiritual'], description: 'Standard member access to profile and spiritual resources.', isSystem: true },

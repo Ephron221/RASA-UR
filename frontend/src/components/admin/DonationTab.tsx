@@ -13,9 +13,11 @@ import { useNotification } from '../../contexts/NotificationContext';
 interface DonationTabProps {
   user: User;
   canVerify?: boolean;
+  isIT?: boolean;
+  isEXCOM?: boolean;
 }
 
-const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) => {
+const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false, isIT = false, isEXCOM = false }) => {
   const { notify } = useNotification();
   const [donations, setDonations] = useState<Donation[]>([]);
   const [projects, setProjects] = useState<DonationProject[]>([]);
@@ -26,10 +28,8 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
   // --- STRICT PERMISSION PROTOCOL ---
-  // isIT is sourced from the stored role ID which is always 'it'
-  const isIT = (user.role || '').toLowerCase().trim() === 'it';
-  // canVerify prop is computed from the real permissions system in AdminDashboard — do NOT use hardcoded role strings
-  const canSeeProof = canVerify || isIT;
+  // The permissions and roles are safely computed by AdminDashboard using Clearance logic
+  const canSeeProof = canVerify || isIT || isEXCOM;
 
   const fetchData = async () => {
     setLoading(true);
@@ -142,7 +142,9 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
       <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm">
         <div className="p-8 md:p-10 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-gray-50/30">
           <div className="space-y-1">
-            <h3 className="text-2xl font-black font-serif italic text-gray-900 leading-none">Mission Ledger</h3>
+            <h3 className="text-2xl font-black font-serif italic text-gray-900 leading-none">
+              Mission Ledger
+            </h3>
             <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.3em]">Global Financial Synchronization</p>
           </div>
           <div className="flex flex-wrap gap-2 bg-white p-2 rounded-[1.5rem] border border-gray-100 shadow-inner">
@@ -159,7 +161,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                 <th className="px-10 py-6">Magnitude</th>
                 <th className="px-10 py-6">Status</th>
                 <th className="px-10 py-6">Evidence</th>
-                <th className="px-10 py-6 text-right whitespace-nowrap">Confirmation Sequences</th>
+                {!isEXCOM && <th className="px-10 py-6 text-right whitespace-nowrap">Confirmation Sequences</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -204,7 +206,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                       <span className="text-[9px] font-bold text-gray-300 italic uppercase tracking-tighter">No Evidence</span>
                     )}
                   </td>
-                  <td className="px-10 py-5 text-right space-x-2 whitespace-nowrap">
+                  {!isEXCOM && <td className="px-10 py-5 text-right space-x-2 whitespace-nowrap">
                     {/* --- Pending Purge actions: ALWAYS VISIBLE for authorized roles --- */}
                     {d.status === 'DeletionPending' && canVerify && (
                       <div className="flex justify-end gap-2">
@@ -263,7 +265,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                         </button>
                       )}
                     </div>
-                  </td>
+                  </td>}
                 </tr>
               ))}
             </tbody>

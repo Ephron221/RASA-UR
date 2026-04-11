@@ -310,7 +310,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {activeTab === 'reports' && <MembersReportTab onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} />}
               {activeTab === 'members' && <DirectoryTab members={members} roles={roleDefinitions} searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onToggleAdmin={(m) => { setEditingItem(m); setShowModal('role'); }} currentUser={currentUser!} canManage={rolePermissions.canDo('manage_roles')} />}
               {activeTab === 'clearance' && <ClearanceTab roles={roleDefinitions} onRefresh={fetchData} />}
-              {activeTab === 'donations' && <DonationTab user={currentUser!} canVerify={rolePermissions.canDo('verify_donations')} />}
+              {activeTab === 'donations' && <DonationTab 
+                user={currentUser!} 
+                canVerify={rolePermissions.canDo('verify_donations')} 
+                isIT={currentUser?.role === 'it' || !!currentRoleDef?.label?.toLowerCase().includes('it')}
+                isEXCOM={['executive', 'excom'].includes(currentUser?.role || '') || !!currentRoleDef?.label?.toLowerCase().includes('excom') || !!currentRoleDef?.label?.toLowerCase().includes('executive')}
+              />}
               {activeTab === 'bulletin' && <BulletinTab announcements={announcements} onNew={() => { setEditingItem(null); setShowModal('ann'); }} onEdit={(a) => { setEditingItem(a); setShowModal('ann'); }} onDelete={(id) => handleDelete('ann', id)} onToggleStatus={handleUpdateAnnStatus} canManage={rolePermissions.canViewTab('bulletin')} />}
               {activeTab === 'depts' && <MinistriesTab departments={depts} onNew={() => { setEditingItem(null); setShowModal('dept'); }} onEdit={(d) => { setEditingItem(d); setShowModal('dept'); }} onDelete={(id) => handleDelete('dept', id)} />}
               {activeTab === 'leaders' && <LeadershipTab leaders={leaders} onNew={() => { setEditingItem(null); setShowModal('leader'); }} onEdit={(l) => { setEditingItem(l); setShowModal('leader'); }} onDelete={(id) => handleDelete('leaders', id)} />}

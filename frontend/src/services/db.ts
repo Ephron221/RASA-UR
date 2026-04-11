@@ -69,7 +69,7 @@ const INITIAL_DATA: DatabaseSchema = {
       label: 'EXCOM Member',
       icon: 'Briefcase',
       description: 'General management and ministry oversight.',
-      permissions: ['tab.overview', 'tab.profile', 'tab.home', 'tab.about', 'tab.footer', 'tab.spiritual', 'tab.members', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.donations', 'tab.contacts'],
+      permissions: ['tab.overview', 'tab.profile', 'tab.reports', 'tab.content', 'tab.bulletin', 'tab.depts', 'tab.leaders', 'tab.contacts', 'tab.donations', 'tab.spiritual', 'tab.members'],
       isSystem: true
     },
     {
