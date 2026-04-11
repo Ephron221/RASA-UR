@@ -90,7 +90,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
   };
 
   const handleConfirmPurge = async (donation: Donation) => {
-    if (!canVerify) return;
+    if (!canVerify || isIT) return; // IT cannot confirm deletion, only accountants can
     if (!window.confirm(`FINAL PURGE: Permanently delete this contribution from the Divine Registry? This action is irreversible.`)) return;
 
     setIsSyncing(donation.id);
@@ -205,7 +205,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                     )}
                   </td>
                   <td className="px-10 py-5 text-right space-x-2 whitespace-nowrap">
-                    {/* --- Pending Purge actions: ALWAYS VISIBLE for accountant --- */}
+                    {/* --- Pending Purge actions: ALWAYS VISIBLE for authorized roles --- */}
                     {d.status === 'DeletionPending' && canVerify && (
                       <div className="flex justify-end gap-2">
                         <button
@@ -216,14 +216,16 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                         >
                           {isSyncing === d.id ? <RefreshCw className="animate-spin" size={12} /> : <ShieldAlert size={12} />} Reject
                         </button>
-                        <button
-                          onClick={() => handleConfirmPurge(d)}
-                          disabled={!!isSyncing}
-                          className="px-4 py-2 bg-black text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl"
-                          title="Confirm permanent deletion"
-                        >
-                          {isSyncing === d.id ? <RefreshCw className="animate-spin" size={12} /> : <Trash2 size={12} />} Confirm Purge
-                        </button>
+                        {!isIT && (
+                          <button
+                            onClick={() => handleConfirmPurge(d)}
+                            disabled={!!isSyncing}
+                            className="px-4 py-2 bg-black text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl"
+                            title="Confirm permanent deletion"
+                          >
+                            {isSyncing === d.id ? <RefreshCw className="animate-spin" size={12} /> : <Trash2 size={12} />} Confirm Purge
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -338,7 +340,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                   {selectedDonation.status === 'DeletionPending' && canVerify && (
                     <div className="space-y-2">
                       <p className="text-[9px] font-black text-black/30 uppercase tracking-widest text-center">Purge Request Awaiting Decision</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className={`grid ${!isIT ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
                         <button
                           onClick={() => handleRejectPurge(selectedDonation)}
                           disabled={!!isSyncing}
@@ -346,13 +348,15 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false }) =>
                         >
                           <ShieldAlert size={13} /> Reject
                         </button>
-                        <button
-                          onClick={() => handleConfirmPurge(selectedDonation)}
-                          disabled={!!isSyncing}
-                          className="py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xl"
-                        >
-                          {isSyncing === selectedDonation.id ? <RefreshCw className="animate-spin" size={13} /> : <Trash2 size={13} />} Purge
-                        </button>
+                        {!isIT && (
+                          <button
+                            onClick={() => handleConfirmPurge(selectedDonation)}
+                            disabled={!!isSyncing}
+                            className="py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xl"
+                          >
+                            {isSyncing === selectedDonation.id ? <RefreshCw className="animate-spin" size={13} /> : <Trash2 size={13} />} Purge
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
