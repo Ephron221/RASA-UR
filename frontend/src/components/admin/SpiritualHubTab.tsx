@@ -7,7 +7,7 @@ import {
   X, Loader2, Award, User, Target, BarChart, Settings, CheckSquare,
   Database, PlusCircle, Trash, ChevronDown, Check, BookOpen, Calendar, Search, Filter, AlertTriangle
 } from 'lucide-react';
-import { DailyVerse, BibleQuiz, QuizQuestion, VerseReflection, QuizResult } from '../../types';
+import { DailyVerse, BibleQuiz, QuizQuestion, VerseReflection, QuizResult, User as AppUser } from '../../types';
 import { API } from '../../services/api';
 
 const SpiritualHubTab: React.FC = () => {
@@ -16,6 +16,7 @@ const SpiritualHubTab: React.FC = () => {
   const [quizzes, setQuizzes] = useState<BibleQuiz[]>([]);
   const [reflections, setReflections] = useState<VerseReflection[]>([]);
   const [results, setResults] = useState<QuizResult[]>([]);
+  const [members, setMembers] = useState<AppUser[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
 
   // Search & Filters
@@ -31,16 +32,18 @@ const SpiritualHubTab: React.FC = () => {
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
 
   const fetchData = async () => {
-    const [v, q, r, res] = await Promise.all([
+    const [v, q, r, res, m] = await Promise.all([
       API.spiritual.verses.getAll(),
       API.spiritual.quizzes.getAll(),
       API.spiritual.verses.getReflections(),
-      API.spiritual.quizzes.getResults()
+      API.spiritual.quizzes.getResults(),
+      API.members.getAll()
     ]);
-    setVerses(v);
-    setQuizzes(q);
-    setReflections(r);
-    setResults(res);
+    setVerses(v || []);
+    setQuizzes(q || []);
+    setReflections(r || []);
+    setResults(res || []);
+    setMembers(m || []);
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -232,26 +235,33 @@ const SpiritualHubTab: React.FC = () => {
                     <h4 className="text-xl font-black font-serif italic text-black">Member Reflections Moderation</h4>
                     <span className="text-[10px] font-black text-black/40 uppercase tracking-widest">{reflections.length} Total transmitted insights</span>
                  </div>
-                 <div className="divide-y divide-gray-50">
-                    {reflections.map(r => (
-                       <div key={r.id} className="p-8 flex items-start gap-6 hover:bg-gray-50/50 transition-all group">
-                          <div className="w-14 h-14 bg-secondary text-white rounded-2xl flex items-center justify-center font-black text-xl shrink-0 shadow-lg">{r.userName.charAt(0)}</div>
-                          <div className="flex-grow space-y-2">
-                             <div className="flex items-center gap-3">
-                                <span className="font-black text-black">{r.userName}</span>
-                                <span className="text-[10px] text-black/40 uppercase font-bold">{new Date(r.timestamp).toLocaleString()}</span>
-                             </div>
-                             <p className="text-sm text-black/60 leading-relaxed font-medium italic">"{r.content}"</p>
-                          </div>
-                          <button 
-                            onClick={() => confirmDelete(() => API.spiritual.verses.deleteReflection(r.id), "Purge this member reflection?")}
-                            className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm"
-                            title="Moderation: Delete"
-                          >
-                             <Trash2 size={18}/>
-                          </button>
-                       </div>
-                    ))}
+                 <div className="divide-y divide-gray-50">                     {reflections.map(r => {
+                        const user = members.find(m => m.id === r.userId || (m as any)._id === r.userId);
+                        const displayName = user?.fullName || r.userName || r.userId || 'Unknown';
+                        const rawDate = r.timestamp || (r as any).createdAt || (r as any).date;
+                        const displayDate = rawDate ? new Date(rawDate).toLocaleString() : 'Unknown Date';
+                        const refId = r.id || (r as any)._id;
+
+                        return (
+                           <div key={refId} className="p-8 flex items-start gap-6 hover:bg-gray-50/50 transition-all group">
+                              <div className="w-14 h-14 bg-secondary text-white rounded-2xl flex items-center justify-center font-black text-xl shrink-0 shadow-lg">{displayName.charAt(0)}</div>
+                              <div className="flex-grow space-y-2">
+                                 <div className="flex items-center gap-3">
+                                    <span className="font-black text-black">{displayName}</span>
+                                    <span className="text-[10px] text-black/40 uppercase font-bold">{displayDate === 'Invalid Date' ? 'Unknown Date' : displayDate}</span>
+                                 </div>
+                                 <p className="text-sm text-black/60 leading-relaxed font-medium italic">"{r.content}"</p>
+                              </div>
+                              <button 
+                                onClick={() => confirmDelete(() => API.spiritual.verses.deleteReflection(refId), "Purge this member reflection?")}
+                                className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                                title="Moderation: Delete"
+                              >
+                                 <Trash2 size={18}/>
+                              </button>
+                           </div>
+                        );
+                     })}
                     {reflections.length === 0 && <div className="py-32 text-center text-gray-300 italic font-serif">No member reflections recorded in this era.</div>}
                  </div>
               </div>
@@ -325,44 +335,53 @@ const SpiritualHubTab: React.FC = () => {
                           </tr>
                        </thead>
                        <tbody className="divide-y divide-gray-50">
-                          {filteredResults.map(res => (
-                             <tr key={res.id} className="hover:bg-secondary/5 transition-all group">
-                                <td className="px-8 py-5">
-                                   <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center font-black text-xs shadow-md group-hover:scale-110 transition-transform">{res.userId.charAt(0)}</div>
-                                      <div>
-                                         <p className="font-black text-black text-sm tracking-tight">{res.userId}</p>
-                                         <p className="text-[9px] font-bold text-black/40 uppercase tracking-widest">{new Date(res.timestamp).toLocaleDateString()}</p>
-                                      </div>
-                                   </div>
-                                </td>
-                                <td className="px-8 py-5">
-                                   <div className="flex items-center gap-2">
-                                      <BookOpen size={12} className="text-secondary" />
-                                      <span className="text-xs font-bold text-black/50 truncate max-w-[150px]">{quizzes.find(q => q.id === res.quizId)?.title || res.quizId}</span>
-                                   </div>
-                                </td>
-                                <td className="px-8 py-5">
-                                   <div className="flex flex-col gap-1.5">
-                                      <div className="flex justify-between items-center w-32">
-                                         <span className="text-xs font-black text-black">{res.score}/{res.total} pts</span>
-                                         <span className="text-[9px] font-black text-secondary">+{Math.floor((res.score / res.total) * 100)} SP</span>
-                                      </div>
-                                      <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                         <motion.div initial={{ width: 0 }} animate={{ width: `${(res.score / res.total) * 100}%` }} className="h-full bg-secondary shadow-sm" />
-                                      </div>
-                                   </div>
-                                </td>
-                                <td className="px-8 py-5 text-right">
-                                   <button 
-                                      onClick={() => confirmDelete(() => API.spiritual.quizzes.deleteResult(res.id), "Wipe this score from the record?")}
-                                      className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm"
-                                   >
-                                      <Trash2 size={16}/>
-                                   </button>
-                                </td>
-                             </tr>
-                          ))}
+                          {filteredResults.map(res => {
+                              const user = members.find(m => m.id === res.userId || (m as any)._id === res.userId);
+                              const userName = user?.fullName || res.userId || 'Unknown';
+                              const rawDate = res.timestamp || (res as any).createdAt || (res as any).date;
+                              const displayDate = rawDate ? new Date(rawDate).toLocaleDateString() : 'Unknown Date';
+                              const resId = res.id || (res as any)._id;
+
+                              return (
+                              <tr key={resId} className="hover:bg-secondary/5 transition-all group">
+                                 <td className="px-8 py-5">
+                                    <div className="flex items-center gap-4">
+                                       <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center font-black text-xs shadow-md group-hover:scale-110 transition-transform">{userName.charAt(0)}</div>
+                                       <div>
+                                          <p className="font-black text-black text-sm tracking-tight truncate max-w-[150px]" title={userName}>{userName}</p>
+                                          <p className="text-[9px] font-bold text-black/40 uppercase tracking-widest">{displayDate === 'Invalid Date' ? 'Unknown Date' : displayDate}</p>
+                                       </div>
+                                    </div>
+                                 </td>
+                                 <td className="px-8 py-5">
+                                    <div className="flex items-center gap-2">
+                                       <BookOpen size={12} className="text-secondary" />
+                                       <span className="text-xs font-bold text-black/50 truncate max-w-[150px]">
+                                          {quizzes.find(q => q.id === res.quizId || (q as any)._id === res.quizId)?.title || 'Archived Challenge'}
+                                       </span>
+                                    </div>
+                                 </td>
+                                 <td className="px-8 py-5">
+                                    <div className="flex flex-col gap-1.5">
+                                       <div className="flex justify-between items-center w-32">
+                                          <span className="text-xs font-black text-black">{res.score}/{res.total} pts</span>
+                                          <span className="text-[9px] font-black text-secondary">+{Math.floor((res.score / res.total) * 100)} SP</span>
+                                       </div>
+                                       <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                          <motion.div initial={{ width: 0 }} animate={{ width: `${(res.score / res.total) * 100}%` }} className="h-full bg-secondary shadow-sm" />
+                                       </div>
+                                    </div>
+                                 </td>
+                                 <td className="px-8 py-5 text-right">
+                                    <button 
+                                       onClick={() => confirmDelete(() => API.spiritual.quizzes.deleteResult(resId), "Wipe this score from the record?")}
+                                       className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                                    >
+                                       <Trash2 size={16}/>
+                                    </button>
+                                 </td>
+                              </tr>
+                           )})}
                           {filteredResults.length === 0 && (
                              <tr><td colSpan={4} className="py-32 text-center text-gray-300 italic font-serif">No scores recorded for this sequence category.</td></tr>
                           )}

@@ -1,8 +1,10 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Quote, Sparkles, MessageSquare, Heart, Calendar as CalendarIcon, Bell, ExternalLink, ArrowRight, BookOpen, Clock, Target, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Quote, Sparkles, MessageSquare, Heart, Calendar as CalendarIcon, Bell, ExternalLink, ArrowRight, BookOpen, Clock, Target, ChevronRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DailyVerse, NewsItem, Announcement, BibleQuiz, User } from '../../types';
+import { useNotification } from '../../contexts/NotificationContext';
+import { API } from '../../services/api';
 
 interface MemberOverviewTabProps {
   currentUser: User;
@@ -17,6 +19,33 @@ interface MemberOverviewTabProps {
 const MemberOverviewTab: React.FC<MemberOverviewTabProps> = ({ 
   currentUser, dailyVerse, upcomingEvents, announcements, quizzes, setActiveQuiz, currentLevelProgress 
 }) => {
+  const { notify } = useNotification();
+  const [showReflection, setShowReflection] = useState(false);
+  const [reflectionText, setReflectionText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmitReflection = async () => {
+    if (!reflectionText.trim() || !dailyVerse) return;
+    setIsSubmitting(true);
+    try {
+      await API.spiritual.verses.addReflection({
+        id: Math.random().toString(36).substr(2, 9),
+        verseId: dailyVerse.id || (dailyVerse as any)._id,
+        userId: currentUser.id || (currentUser as any)._id,
+        userName: currentUser.fullName,
+        content: reflectionText,
+        timestamp: new Date().toISOString()
+      });
+      notify("Insight Transmitted", "Your reflection has been securely submitted.", "success");
+      setReflectionText('');
+      setShowReflection(false);
+    } catch (e) {
+      notify("Transmission Error", "Could not send reflection. Try again later.", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
       {/* Primary Content: Daily Bread & Events */}
@@ -40,10 +69,36 @@ const MemberOverviewTab: React.FC<MemberOverviewTabProps> = ({
                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <p className="text-accent font-black text-xs uppercase tracking-widest">{dailyVerse.reference}</p>
                   <div className="flex gap-2">
-                    <button className="p-3 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-md transition-all"><MessageSquare size={18}/></button>
+                    <button onClick={() => setShowReflection(!showReflection)} className={`p-3 rounded-xl backdrop-blur-md transition-all ${showReflection ? 'bg-white text-secondary' : 'bg-white/10 hover:bg-white/20'}`}><MessageSquare size={18}/></button>
                     <button className="p-3 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-md transition-all"><Heart size={18}/></button>
                   </div>
                 </div>
+
+                <AnimatePresence>
+                  {showReflection && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pt-2 overflow-hidden overflow-visible">
+                      <div className="relative">
+                         <textarea 
+                           value={reflectionText}
+                           onChange={(e) => setReflectionText(e.target.value)}
+                           placeholder="Share your spiritual insight on this scripture..." 
+                           rows={3}
+                           className="w-full bg-black/20 text-white placeholder-white/40 border-2 border-white/10 rounded-2xl p-6 outline-none focus:border-accent font-medium leading-relaxed resize-none shadow-inner"
+                         />
+                      </div>
+                      <div className="flex justify-end mt-4">
+                        <button 
+                          disabled={isSubmitting || !reflectionText.trim()}
+                          onClick={handleSubmitReflection}
+                          className="px-8 py-4 bg-accent text-secondary font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-white transition-all disabled:opacity-50 flex items-center gap-3 shadow-xl active:scale-95"
+                        >
+                          {isSubmitting ? <Loader2 className="animate-spin" size={16}/> : <MessageSquare size={16}/>} 
+                          {isSubmitting ? 'Transmitting...' : 'Transmit Reflection'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
           </div>
         )}

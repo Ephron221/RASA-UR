@@ -443,25 +443,89 @@ app.delete('/api/donation-projects/:id', async (req, res) => {
 });
 
 // --- SPIRITUAL HUB ---
-app.get('/api/spiritual/verses', async (req, res) => res.json(await DailyVerse.find().sort({ date: -1 })));
-app.post('/api/spiritual/verses', async (req, res) => res.status(201).json(await new DailyVerse(req.body).save()));
-app.get('/api/spiritual/verses/daily', async (req, res) => res.json(await DailyVerse.findOne({ isActive: true }).sort({ date: -1 }) || {}));
-app.get('/api/spiritual/quizzes', async (req, res) => res.json(await BibleQuiz.find()));
-app.get('/api/spiritual/quizzes/active', async (req, res) => res.json(await BibleQuiz.find({ isActive: true })));
-app.post('/api/spiritual/quizzes', async (req, res) => res.status(201).json(await new BibleQuiz(req.body).save()));
+app.get('/api/spiritual/verses', async (req, res) => {
+  try { res.json(await DailyVerse.find().sort({ date: -1 })); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/spiritual/verses', async (req, res) => {
+  try { res.status(201).json(await new DailyVerse(req.body).save()); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.put('/api/spiritual/verses/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    res.json(await DailyVerse.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/spiritual/verses/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    await DailyVerse.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.get('/api/spiritual/verses/daily', async (req, res) => {
+  try { res.json(await DailyVerse.findOne({ isActive: true }).sort({ date: -1 }) || {}); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/spiritual/quizzes', async (req, res) => {
+  try { res.json(await BibleQuiz.find()); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.get('/api/spiritual/quizzes/active', async (req, res) => {
+  try { res.json(await BibleQuiz.find({ isActive: true })); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/spiritual/quizzes', async (req, res) => {
+  try { res.status(201).json(await new BibleQuiz(req.body).save()); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 app.put('/api/spiritual/quizzes/:id', async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
-  res.json(await BibleQuiz.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    res.json(await BibleQuiz.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }));
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 app.delete('/api/spiritual/quizzes/:id', async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
-  await BibleQuiz.findByIdAndDelete(req.params.id);
-  res.status(204).send();
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    await BibleQuiz.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-app.get('/api/spiritual/reflections', async (req, res) => res.json(await VerseReflection.find().sort({ createdAt: -1 })));
-app.post('/api/spiritual/reflections', async (req, res) => res.status(201).json(await new VerseReflection(req.body).save()));
-app.get('/api/spiritual/quiz-results', async (req, res) => res.json(await QuizResult.find().sort({ createdAt: -1 })));
-app.post('/api/spiritual/quiz-results', async (req, res) => res.status(201).json(await new QuizResult(req.body).save()));
+
+app.get('/api/spiritual/reflections', async (req, res) => {
+  try { res.json(await VerseReflection.find().sort({ createdAt: -1 })); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/spiritual/reflections', async (req, res) => {
+  try { res.status(201).json(await new VerseReflection(req.body).save()); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/spiritual/reflections/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    await VerseReflection.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/spiritual/quiz-results', async (req, res) => {
+  try { res.json(await QuizResult.find().sort({ createdAt: -1 })); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/spiritual/quiz-results', async (req, res) => {
+  try { res.status(201).json(await new QuizResult(req.body).save()); }
+  catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/spiritual/quiz-results/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    await QuizResult.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 
 // --- CMS & CONFIG ---
 app.get('/api/news', async (req, res) => res.json(await News.find().sort({ date: -1 })));

@@ -80,8 +80,8 @@ const MemberDashboard: React.FC<MemberDashboardProps> = ({ announcements }) => {
   };
 
   useEffect(() => {
-    if (currentUser) loadDashboardData();
-  }, [currentUser]);
+    if (currentUser?.id) loadDashboardData();
+  }, [currentUser?.id]);
 
   const handleUpdateProfile = async (updates: Partial<typeof currentUser>) => {
     if (!currentUser) return;

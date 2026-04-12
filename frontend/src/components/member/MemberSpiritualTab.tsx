@@ -100,6 +100,42 @@ const MemberSpiritualTab: React.FC<MemberSpiritualTabProps> = ({ currentUser, qu
                             <Sparkles size={14}/> +{Math.floor((quizResult.score/quizResult.total)*100)} Spirit Points Earned
                           </div>
                         </div>
+
+                        {/* Correction Sequence */}
+                        <div className="mt-12 text-left bg-white p-8 md:p-12 rounded-[3.5rem] shadow-sm border border-gray-100 max-w-3xl mx-auto space-y-8">
+                           <h4 className="text-2xl font-black italic font-serif text-black border-b border-gray-50 pb-6">Correction Sequence</h4>
+                           <div className="space-y-8">
+                             {activeQuiz.questions.map((q, i) => {
+                                const userAnswer = quizAnswers[q.id];
+                                const isCorrect = userAnswer === q.correctAnswer;
+                                return (
+                                   <div key={q.id} className="space-y-4">
+                                       <div className="flex items-start gap-4">
+                                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-black text-white ${isCorrect ? 'bg-secondary' : 'bg-red-500'}`}>
+                                             {i + 1}
+                                          </div>
+                                          <div>
+                                             <p className="font-bold text-black text-lg leading-tight mt-1">{q.text}</p>
+                                          </div>
+                                       </div>
+                                       <div className="pl-12 space-y-2">
+                                          {!isCorrect && (
+                                             <div className="px-5 py-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100 relative">
+                                                <span className="opacity-60 uppercase text-[9px] font-black tracking-widest block mb-1">Your Selection</span>
+                                                {userAnswer || 'No Answer Provided'}
+                                             </div>
+                                          )}
+                                          <div className={`px-5 py-4 rounded-2xl text-sm font-bold border relative ${isCorrect ? 'bg-secondary/10 text-secondary border-secondary/20' : 'bg-gray-50 text-black border-gray-100'}`}>
+                                              <span className="opacity-40 uppercase text-[9px] font-black tracking-widest block mb-1">Correct Answer</span>
+                                              {q.correctAnswer}
+                                          </div>
+                                       </div>
+                                   </div>
+                                );
+                             })}
+                           </div>
+                        </div>
+
                         <button onClick={() => { setActiveQuiz(null); setQuizResult(null); setQuizAnswers({}); }} className="px-20 py-6 bg-black text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] shadow-2xl hover:bg-secondary transition-all active:scale-95">Return to Sanctuary</button>
                     </motion.div>
                   ) : (
