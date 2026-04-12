@@ -165,36 +165,36 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
       <AnimatePresence>
         {selectedMsg && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-2xl rounded-[3rem] shadow-3xl overflow-hidden border border-white flex flex-col max-h-[90vh]">
-               <div className="p-10 border-b border-gray-50 flex justify-between items-start bg-gray-50/30">
-                 <div className="flex gap-6 items-center">
-                    <div className="w-16 h-16 bg-gray-900 text-white rounded-3xl flex items-center justify-center font-black text-3xl shadow-xl">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-2xl rounded-[2rem] md:rounded-[3rem] shadow-3xl overflow-hidden border border-white flex flex-col max-h-[90vh]">
+               <div className="p-6 md:p-10 border-b border-gray-50 flex justify-between items-start bg-gray-50/30">
+                 <div className="flex gap-4 md:gap-6 items-center min-w-0">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-900 text-white rounded-2xl md:rounded-3xl flex items-center justify-center font-black text-2xl md:text-3xl shadow-xl shrink-0">
                       {selectedMsg.fullName?.charAt(0) || '?'}
                     </div>
-                    <div>
-                      <h4 className="text-2xl font-black text-gray-900 tracking-tight">{selectedMsg.fullName}</h4>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{selectedMsg.email}</p>
+                    <div className="min-w-0">
+                      <h4 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight truncate">{selectedMsg.fullName}</h4>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{selectedMsg.email}</p>
                     </div>
                  </div>
-                 <button onClick={() => setSelectedMsg(null)} className="p-3 bg-white border border-gray-100 text-gray-400 rounded-2xl hover:text-red-500 transition-all"><X size={20}/></button>
+                 <button onClick={() => setSelectedMsg(null)} className="p-2 md:p-3 bg-white border border-gray-100 text-gray-400 rounded-xl md:rounded-2xl hover:text-red-500 transition-all shrink-0 ml-2"><X size={20}/></button>
                </div>
                
-               <div className="flex-grow overflow-y-auto scroll-hide p-12">
+               <div className="flex-grow overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-6 md:p-12">
                   <AnimatePresence mode="wait">
                     {isReplying ? (
                       <motion.div key="reply" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
                          <div className="space-y-4">
                             <label className="text-[10px] font-black text-cyan-600 uppercase tracking-widest ml-2">Broadcast Channel</label>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                <button 
                                 onClick={() => setReplyMethod('email')}
-                                className={`flex items-center justify-center gap-3 p-5 rounded-3xl border-2 transition-all font-black text-xs uppercase tracking-widest ${replyMethod === 'email' ? 'bg-cyan-50 border-cyan-500 text-cyan-700 shadow-lg shadow-cyan-100' : 'bg-white border-gray-100 text-gray-400'}`}
+                                className={`flex items-center justify-center gap-3 p-4 md:p-5 rounded-2xl md:rounded-3xl border-2 transition-all font-black text-xs uppercase tracking-widest ${replyMethod === 'email' ? 'bg-cyan-50 border-cyan-500 text-cyan-700 shadow-lg shadow-cyan-100' : 'bg-white border-gray-100 text-gray-400'}`}
                                >
                                   <Mail size={18}/> Email
                                </button>
                                <button 
                                 onClick={() => setReplyMethod('phone')}
-                                className={`flex items-center justify-center gap-3 p-5 rounded-3xl border-2 transition-all font-black text-xs uppercase tracking-widest ${replyMethod === 'phone' ? 'bg-cyan-50 border-cyan-500 text-cyan-700 shadow-lg shadow-cyan-100' : 'bg-white border-gray-100 text-gray-400'}`}
+                                className={`flex items-center justify-center gap-3 p-4 md:p-5 rounded-2xl md:rounded-3xl border-2 transition-all font-black text-xs uppercase tracking-widest ${replyMethod === 'phone' ? 'bg-cyan-50 border-cyan-500 text-cyan-700 shadow-lg shadow-cyan-100' : 'bg-white border-gray-100 text-gray-400'}`}
                                >
                                   <Smartphone size={18}/> Phone (SMS/WA)
                                </button>
@@ -220,28 +220,28 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
                       </motion.div>
                     ) : (
                       activeInbox === 'Recruitment' ? (
-                        <div className="space-y-10">
-                           <div className="grid grid-cols-2 gap-6">
-                              <div className="p-6 bg-gray-50 rounded-3xl space-y-1">
+                        <div className="space-y-8 md:space-y-10">
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                              <div className="p-5 md:p-6 bg-gray-50 rounded-[1.5rem] md:rounded-3xl space-y-1">
                                  <p className="text-[9px] font-black text-gray-400 uppercase">Target Ministry</p>
                                  <p className="font-black text-cyan-600 flex items-center gap-2"><Tag size={12}/> {selectedMsg.departmentName}</p>
                               </div>
-                              <div className="p-6 bg-gray-50 rounded-3xl space-y-1">
+                              <div className="p-5 md:p-6 bg-gray-50 rounded-[1.5rem] md:rounded-3xl space-y-1">
                                  <p className="text-[9px] font-black text-gray-400 uppercase">Academic Level</p>
                                  <p className="font-black text-gray-700 flex items-center gap-2"><GraduationCap size={14}/> {selectedMsg.level}</p>
                               </div>
-                              <div className="p-6 bg-gray-50 rounded-3xl space-y-1">
+                              <div className="p-5 md:p-6 bg-gray-50 rounded-[1.5rem] md:rounded-3xl space-y-1">
                                  <p className="text-[9px] font-black text-gray-400 uppercase">Home Diocese</p>
                                  <p className="font-black text-gray-700 flex items-center gap-2"><MapPin size={12}/> {selectedMsg.diocese}</p>
                               </div>
-                              <div className="p-6 bg-gray-50 rounded-3xl space-y-1">
+                              <div className="p-5 md:p-6 bg-gray-50 rounded-[1.5rem] md:rounded-3xl space-y-1">
                                  <p className="text-[9px] font-black text-gray-400 uppercase">Contact</p>
                                  <p className="font-black text-gray-700 flex items-center gap-2"><Phone size={12}/> {selectedMsg.phone}</p>
                               </div>
                            </div>
                            <div className="space-y-4">
                               <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest">Spiritual Motivation</p>
-                              <p className="text-lg text-gray-700 leading-relaxed font-serif italic border-l-4 border-cyan-500 pl-8">"{selectedMsg.motivation}"</p>
+                              <p className="text-base md:text-lg text-gray-700 leading-relaxed font-serif italic border-l-4 border-cyan-500 pl-6 md:pl-8">"{selectedMsg.motivation}"</p>
                            </div>
                         </div>
                       ) : (
@@ -256,18 +256,18 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
                   </AnimatePresence>
                </div>
 
-               <div className="p-10 border-t border-gray-50 bg-gray-50/30 flex justify-between gap-4">
-                  <button onClick={() => { if(isReplying) setIsReplying(false); else setSelectedMsg(null); }} className="px-8 py-4 bg-white border border-gray-200 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-400 active:scale-95 transition-all">
+               <div className="p-6 md:p-10 border-t border-gray-50 bg-gray-50/30 flex flex-col-reverse sm:flex-row justify-between gap-4">
+                  <button onClick={() => { if(isReplying) setIsReplying(false); else setSelectedMsg(null); }} className="w-full sm:w-auto px-6 md:px-8 py-3.5 md:py-4 bg-white border border-gray-200 rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest text-gray-400 active:scale-95 transition-all text-center">
                     {isReplying ? 'Back to Message' : 'Discard'}
                   </button>
                   
                   {isReplying ? (
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 w-full sm:w-auto">
                        {replyMethod === 'email' ? (
                           <button 
                             onClick={() => triggerCommunication('email')}
                             disabled={!replyText.trim() || isTransmitting}
-                            className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-3 active:scale-95 disabled:opacity-50"
+                            className="flex-1 sm:flex-none px-6 md:px-10 py-3.5 md:py-4 bg-gray-900 text-white rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 md:gap-3 active:scale-95 disabled:opacity-50"
                           >
                              {isTransmitting ? <Loader2 className="animate-spin" size={16}/> : <><Mail size={16}/> Open Email App</>}
                           </button>
@@ -276,28 +276,28 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
                              <button 
                               onClick={() => triggerCommunication('sms')}
                               disabled={!replyText.trim() || isTransmitting}
-                              className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-3 active:scale-95 disabled:opacity-50"
+                              className="flex-[0.8] sm:flex-none px-4 md:px-8 py-3.5 md:py-4 bg-gray-900 text-white rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                              >
                                 {isTransmitting ? <Loader2 className="animate-spin" size={16}/> : <><Smartphone size={16}/> SMS</>}
                              </button>
                              <button 
                               onClick={() => triggerCommunication('whatsapp')}
                               disabled={!replyText.trim() || isTransmitting}
-                              className="px-10 py-4 bg-green-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-green-100 flex items-center gap-3 active:scale-95 disabled:opacity-50"
+                              className="flex-[1.2] sm:flex-none px-4 md:px-10 py-3.5 md:py-4 bg-green-500 text-white rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest shadow-xl shadow-green-100 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 truncate"
                              >
-                                {isTransmitting ? <Loader2 className="animate-spin" size={16}/> : <><MessageCircle size={18}/> WhatsApp</>}
+                                {isTransmitting ? <Loader2 className="animate-spin" size={16}/> : <><MessageCircle size={18} className="shrink-0"/> <span className="truncate">WhatsApp</span></>}
                              </button>
                           </>
                        )}
                     </div>
                   ) : (
                     activeInbox === 'Recruitment' && selectedMsg.status === 'Pending' ? (
-                      <div className="flex gap-3">
-                         <button onClick={() => handleStatusUpdate(selectedMsg.id, 'Rejected')} className="px-8 py-4 bg-red-50 text-red-500 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">Decline</button>
-                         <button onClick={() => handleStatusUpdate(selectedMsg.id, 'Approved')} className="px-10 py-4 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-cyan-100 active:scale-95 transition-all">Approve Steward</button>
+                      <div className="flex gap-3 w-full sm:w-auto">
+                         <button onClick={() => handleStatusUpdate(selectedMsg.id, 'Rejected')} className="flex-1 sm:flex-none px-4 md:px-8 py-3.5 md:py-4 bg-red-50 text-red-500 rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest active:scale-95 transition-all text-center">Decline</button>
+                         <button onClick={() => handleStatusUpdate(selectedMsg.id, 'Approved')} className="flex-[1.5] sm:flex-none px-4 md:px-10 py-3.5 md:py-4 bg-cyan-500 text-white rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest shadow-xl shadow-cyan-100 active:scale-95 transition-all text-center">Approve</button>
                       </div>
                     ) : (
-                      <button onClick={() => setIsReplying(true)} className="px-10 py-4 bg-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-cyan-100 active:scale-95 transition-all">Initialize Reply</button>
+                      <button onClick={() => setIsReplying(true)} className="w-full sm:w-auto px-6 md:px-10 py-3.5 md:py-4 bg-cyan-500 text-white rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest shadow-xl shadow-cyan-100 active:scale-95 transition-all text-center">Initialize Reply</button>
                     )
                   )}
                </div>

@@ -139,48 +139,48 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false, isIT
       </div>
 
       {/* Ledger Table */}
-      <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm">
-        <div className="p-8 md:p-10 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-gray-50/30">
+      <div className="bg-white rounded-[2rem] md:rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm">
+        <div className="p-6 md:p-10 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-gray-50/30">
           <div className="space-y-1">
-            <h3 className="text-2xl font-black font-serif italic text-gray-900 leading-none">
+            <h3 className="text-xl md:text-2xl font-black font-serif italic text-gray-900 leading-none">
               Mission Ledger
             </h3>
             <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.3em]">Global Financial Synchronization</p>
           </div>
-          <div className="flex flex-wrap gap-2 bg-white p-2 rounded-[1.5rem] border border-gray-100 shadow-inner">
+          <div className="flex flex-wrap gap-2 bg-white p-2 rounded-[1.5rem] border border-gray-100 shadow-inner w-full md:w-auto">
             {['All', 'Completed', 'Pending', 'Rejected', 'DeletionPending'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-secondary text-white shadow-xl' : 'text-gray-400 hover:text-secondary'}`}>{f === 'DeletionPending' ? 'Purge Requests' : f}</button>
+              <button key={f} onClick={() => setFilter(f)} className={`flex-1 md:flex-none px-2 md:px-6 py-2 md:py-2.5 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-secondary text-white shadow-xl' : 'text-gray-400 hover:text-secondary'}`}>{f === 'DeletionPending' ? 'Purge' : f}</button>
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-gray-50/50 text-[10px] font-black text-black/40 uppercase tracking-[0.2em] border-b border-gray-100">
-                <th className="px-10 py-6">Steward/Identity</th>
-                <th className="px-10 py-6">Magnitude</th>
-                <th className="px-10 py-6">Status</th>
-                <th className="px-10 py-6">Evidence</th>
-                {!isEXCOM && <th className="px-10 py-6 text-right whitespace-nowrap">Confirmation Sequences</th>}
+                <th className="px-6 md:px-10 py-5 md:py-6">Steward/Identity</th>
+                <th className="px-6 md:px-10 py-5 md:py-6">Magnitude</th>
+                <th className="px-6 md:px-10 py-5 md:py-6">Status</th>
+                <th className="px-6 md:px-10 py-5 md:py-6">Evidence</th>
+                {!isEXCOM && <th className="px-6 md:px-10 py-5 md:py-6 text-right whitespace-nowrap">Confirmation Sequences</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredDonations.map((d) => (
                 <tr key={d.id} className="group hover:bg-secondary/5 transition-all">
-                  <td className="px-10 py-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-secondary shadow-inner"><UserIcon size={18} /></div>
-                      <div>
-                        <p className="text-sm font-black text-gray-900 uppercase tracking-tight">{d.donorName}</p>
-                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{d.transactionId}</p>
+                  <td className="px-6 md:px-10 py-4 md:py-5">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-secondary shadow-inner shrink-0"><UserIcon size={18} /></div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate">{d.donorName}</p>
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest truncate">{d.transactionId}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-10 py-5">
+                  <td className="px-6 md:px-10 py-4 md:py-5">
                     <p className="text-sm font-black text-secondary">{d.amount.toLocaleString()} {d.currency}</p>
                     <p className="text-[9px] text-black/30 uppercase font-black tracking-tighter">{d.project || 'Global Stewardship'}</p>
                   </td>
-                  <td className="px-10 py-5">
+                  <td className="px-6 md:px-10 py-4 md:py-5">
                     <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm ${
                       d.status === 'Completed' ? 'bg-emerald-500 text-white' :
                       d.status === 'Rejected' ? 'bg-red-500 text-white' :
@@ -188,7 +188,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false, isIT
                       'bg-amber-500 text-white animate-pulse'
                     }`}>{d.status === 'DeletionPending' ? 'Pending Purge' : d.status}</span>
                   </td>
-                  <td className="px-10 py-5">
+                  <td className="px-6 md:px-10 py-4 md:py-5">
                     {d.paymentProof ? (
                       canSeeProof ? (
                         <button
@@ -206,7 +206,7 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false, isIT
                       <span className="text-[9px] font-bold text-gray-300 italic uppercase tracking-tighter">No Evidence</span>
                     )}
                   </td>
-                  {!isEXCOM && <td className="px-10 py-5 text-right space-x-2 whitespace-nowrap">
+                  {!isEXCOM && <td className="px-6 md:px-10 py-4 md:py-5 text-right space-x-2 whitespace-nowrap">
                     {/* --- Pending Purge actions: ALWAYS VISIBLE for authorized roles --- */}
                     {d.status === 'DeletionPending' && canVerify && (
                       <div className="flex justify-end gap-2">
@@ -281,11 +281,11 @@ const DonationTab: React.FC<DonationTabProps> = ({ user, canVerify = false, isIT
               initial={{ opacity: 0, scale: 0.95, y: 30 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 30 }} 
-              className="relative max-w-6xl w-full bg-white rounded-[4rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col md:flex-row h-[90vh] md:h-auto max-h-[90vh]"
+              className="relative max-w-6xl w-full bg-white rounded-[2rem] md:rounded-[4rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col md:flex-row h-[90vh] md:h-[80vh] max-h-[90vh]"
             >
               {/* Sidebar Info - Modal */}
-              <div className="w-full md:w-80 bg-gray-50/80 p-10 flex flex-col justify-between border-r border-gray-100 overflow-y-auto shrink-0">
-                <div className="space-y-10">
+              <div className="w-full md:w-80 bg-gray-50/80 p-6 md:p-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-gray-100 overflow-y-auto shrink-0">
+                <div className="space-y-6 md:space-y-10">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-secondary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-secondary/20"><FileText size={28} /></div>
                     <div>
