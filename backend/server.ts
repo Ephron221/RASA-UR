@@ -393,7 +393,30 @@ app.get('/api/departments/interests', async (req, res) => res.json(await Departm
 app.post('/api/departments/interest', async (req, res) => res.status(201).json(await new DepartmentInterest(req.body).save()));
 app.patch('/api/departments/interests/:id/status', async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
-  res.json(await DepartmentInterest.findByIdAndUpdate(req.params.id, { status: req.body.status }, { returnDocument: 'after' }));
+  
+  const interest = await DepartmentInterest.findByIdAndUpdate(
+    req.params.id, 
+    { status: req.body.status }, 
+    { returnDocument: 'after' }
+  );
+  
+  if (req.body.status === 'Approved' && interest?.userId) {
+    const member = await Member.findById(interest.userId);
+    if (member) {
+      let currentDepts = member.department ? member.department.split(',').map((d: any) => d.trim()).filter(Boolean) : [];
+      if (interest.departmentName && !currentDepts.includes(interest.departmentName)) {
+        currentDepts.push(interest.departmentName);
+        await Member.findByIdAndUpdate(interest.userId, { department: currentDepts.join(', ') });
+      }
+    }
+  }
+  
+  res.json(interest);
+});
+app.delete('/api/departments/interests/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+  await DepartmentInterest.findByIdAndDelete(req.params.id);
+  res.status(204).send();
 });
 
 // --- LEADERS ---

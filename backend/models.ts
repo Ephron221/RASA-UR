@@ -155,11 +155,20 @@ const DepartmentSchema = new Schema({
 }, schemaOptions);
 
 const DepartmentInterestSchema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: 'Member' },
+  departmentId: { type: Schema.Types.ObjectId, ref: 'Department' },
   fullName: String,
   email: String,
   phone: String,
+  diocese: String,
+  level: String,
+  program: String,
+  academicYear: String,
+  motivation: String,
+  experience: String,
   status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-  departmentName: String
+  departmentName: String,
+  date: { type: String, default: () => new Date().toISOString() }
 }, schemaOptions);
 
 const DonationSchema = new Schema({

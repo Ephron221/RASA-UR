@@ -7,7 +7,8 @@ import {
   TrendingUp, Bell, Briefcase, Database, 
   ArrowUpRight, Clock, ShieldCheck
 } from 'lucide-react';
-import { User, NewsItem, Leader, Announcement, ContactMessage, Department } from '../../types';
+import { User, NewsItem, Leader, Announcement, ContactMessage, Department, BibleQuiz, DailyVerse } from '../../types';
+import MemberSpiritualTab from '../member/MemberSpiritualTab';
 
 interface OverviewTabProps {
   members: User[];
@@ -17,10 +18,15 @@ interface OverviewTabProps {
   contactMsgs: ContactMessage[];
   depts: Department[];
   logs: any[];
+  dailyVerse?: DailyVerse | null;
+  quizzes?: BibleQuiz[];
+  currentUser?: User;
+  activeQuiz?: BibleQuiz | null;
+  setActiveQuiz?: (q: BibleQuiz | null) => void;
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ 
-  members, news, leaders, announcements, contactMsgs, depts, logs 
+  members, news, leaders, announcements, contactMsgs, depts, logs, dailyVerse, quizzes, currentUser, activeQuiz, setActiveQuiz
 }) => {
   const stats = [
     { 
@@ -145,6 +151,21 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Spiritual Integration */}
+      {currentUser && quizzes && setActiveQuiz && (
+        <div className="pt-8 border-t border-gray-100">
+           <MemberSpiritualTab 
+              currentUser={currentUser} 
+              quizzes={quizzes} 
+              updateUser={() => {}} 
+              activeQuiz={activeQuiz || null} 
+              setActiveQuiz={setActiveQuiz}
+              dailyVerse={dailyVerse}
+              showDailyVerse={true}
+           />
+        </div>
+      )}
     </motion.div>
   );
 };

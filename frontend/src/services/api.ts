@@ -122,7 +122,8 @@ export const API = {
     delete: (id: string) => hybridFetch(`departments/${id}`, 'DELETE'),
     submitInterest: (item: DepartmentInterest) => hybridFetch('departments/interest', 'POST', item),
     getInterests: () => hybridFetch('departments/interests', 'GET', null, () => db.getCollection('interests')),
-    updateInterestStatus: (id: string, status: string) => hybridFetch(`departments/interests/${id}/status`, 'PATCH', { status })
+    updateInterestStatus: (id: string, status: string) => hybridFetch(`departments/interests/${id}/status`, 'PATCH', { status }),
+    deleteInterest: (id: string) => hybridFetch(`departments/interests/${id}`, 'DELETE')
   },
   donations: {
     getAll: () => hybridFetch('donations', 'GET', null, () => db.getCollection('donations')),

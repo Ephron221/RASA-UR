@@ -50,6 +50,14 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
     setSelectedMsg(null);
   };
 
+  const handleDeleteInterest = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm("Perform hard deletion of this application from the Kernel?")) return;
+    await API.departments.deleteInterest(id);
+    setInterests(await API.departments.getInterests());
+    if (selectedMsg?.id === id) setSelectedMsg(null);
+  };
+
   const triggerCommunication = (type: 'email' | 'sms' | 'whatsapp') => {
     setIsTransmitting(true);
     // Sanitize inputs
@@ -156,6 +164,7 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
                </div>
                <div className="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all">
                   <button className="p-3 bg-white text-gray-400 border border-gray-100 rounded-xl hover:text-cyan-600 transition-all shadow-sm"><Eye size={18}/></button>
+                  <button onClick={(e) => handleDeleteInterest(i.id, e)} className="p-3 bg-red-50 text-red-500 border border-red-50 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={18}/></button>
                </div>
             </div>
           ))
@@ -176,7 +185,12 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{selectedMsg.email}</p>
                     </div>
                  </div>
-                 <button onClick={() => setSelectedMsg(null)} className="p-2 md:p-3 bg-white border border-gray-100 text-gray-400 rounded-xl md:rounded-2xl hover:text-red-500 transition-all shrink-0 ml-2"><X size={20}/></button>
+                 <div className="flex bg-white rounded-2xl md:rounded-3xl shadow-sm p-1 border border-gray-50">
+                    {activeInbox === 'Recruitment' && (
+                       <button onClick={() => handleDeleteInterest(selectedMsg.id)} className="p-2 md:p-3 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all"><Trash2 size={18}/></button>
+                    )}
+                    <button onClick={() => setSelectedMsg(null)} className="p-2 md:p-3 text-gray-400 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all"><X size={18}/></button>
+                 </div>
                </div>
                
                <div className="flex-grow overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-6 md:p-12">
@@ -242,6 +256,10 @@ const InboxTab: React.FC<InboxTabProps> = ({ contactMsgs, onMarkRead, onMarkAllR
                            <div className="space-y-4">
                               <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest">Spiritual Motivation</p>
                               <p className="text-base md:text-lg text-gray-700 leading-relaxed font-serif italic border-l-4 border-cyan-500 pl-6 md:pl-8">"{selectedMsg.motivation}"</p>
+                           </div>
+                           <div className="space-y-4">
+                              <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest">Relevant Experience & Spiritual Gifts</p>
+                              <p className="text-sm md:text-base text-gray-700 leading-relaxed font-medium bg-gray-50 p-6 rounded-3xl">{selectedMsg.experience || 'No experience detailed in legacy application.'}</p>
                            </div>
                         </div>
                       ) : (

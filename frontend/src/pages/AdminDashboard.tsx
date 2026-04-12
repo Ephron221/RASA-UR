@@ -6,11 +6,11 @@ import {
   LayoutDashboard, Home as HomeIcon, Heart,
   MessageSquare, Briefcase, Bell, HardDrive,
   History, Shield, Loader2, Database, Search, Sparkles, User as UserIcon, Settings,
-  Type, X, Save, ShieldCheck, FileText, RefreshCw
+  Type, X, Save, ShieldCheck, FileText, RefreshCw, Target
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig, AboutConfig, FooterConfig, RoleDefinition } from '../types';
+import { User, NewsItem, Leader, Announcement, Department, ContactMessage, HomeConfig, AboutConfig, FooterConfig, RoleDefinition, BibleQuiz, DailyVerse } from '../types';
 import { API } from '../services/api';
 
 // Tab Components
@@ -30,6 +30,7 @@ import ProfileEditorTab from '../components/admin/ProfileEditorTab';
 import FooterEditorTab from '../components/admin/FooterEditorTab';
 import ClearanceTab from '../components/admin/ClearanceTab';
 import MembersReportTab from '../components/admin/MembersReportTab';
+import MemberSpiritualTab from '../components/member/MemberSpiritualTab';
 
 // Modal Forms
 import NewsForm from '../components/admin/NewsForm';
@@ -68,6 +69,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [aboutSetup, setAboutSetup] = useState<AboutConfig | null>(null);
   const [footerSetup, setFooterSetup] = useState<FooterConfig | null>(null);
   const [roleDefinitions, setRoleDefinitions] = useState<RoleDefinition[]>([]);
+  const [quizzes, setQuizzes] = useState<BibleQuiz[]>([]);
+  const [activeQuiz, setActiveQuiz] = useState<BibleQuiz | null>(null);
+  const [dailyVerse, setDailyVerse] = useState<DailyVerse | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modal Control
@@ -79,13 +83,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const fetchData = useCallback(async (isManual = false) => {
     if (isManual) setIsSyncing(true);
     try {
-      const [c, h, a, health, l, f, an, de, lea, ne, me, roles] = await Promise.all([
+      const [c, h, a, health, l, f, an, de, lea, ne, me, roles, activeQz, verse] = await Promise.all([
         API.contacts.getAll(), API.home.getConfig(), API.about.getConfig(), API.system.getHealth(),
         API.system.getLogs(), API.footer.getConfig(), API.announcements.getAll(),
         API.departments.getAll(), API.leaders.getAll(), API.news.getAll(), API.members.getAll(),
-        API.roles.getAll()
+        API.roles.getAll(), API.spiritual.quizzes.getActive(), API.spiritual.verses.getDaily()
       ]);
       setContactMsgs(c || []);
+      setQuizzes(activeQz || []);
+      setDailyVerse(verse);
       setHomeSetup(h);
       setAboutSetup(a);
       setDbHealth(health || { status: 'Offline', size: '0KB' });
@@ -126,7 +132,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         return true;
       }
 
-      if (!currentRoleDef) return false;
+      if (!currentRoleDef) {
+         // Legacy fallback
+         if (currentUser?.role === 'accountant') {
+            const accAllowed = ['overview', 'profile', 'reports', 'content', 'bulletin', 'depts', 'leaders', 'donations', 'contacts'];
+            return accAllowed.includes(tabId);
+         }
+         return false;
+      }
+      
+      // If the defined role has exactly 0 permissions (accidental lock-out), let them safely see basic tabs
+      if (currentRoleDef.permissions.length === 0) {
+         const rescueAllowed = ['overview', 'profile', 'contacts'];
+         if (rescueAllowed.includes(tabId)) return true;
+      }
+
       return currentRoleDef.permissions.includes(`tab.${tabId}`);
     },
     canDo: (actionKey: string) => {
@@ -264,6 +284,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       else if (collection === 'news') await API.news.delete(id);
       else if (collection === 'leaders') await API.leaders.delete(id);
       else if (collection === 'members') await API.members.delete(id);
+      else if (collection === 'contact') await API.contacts.delete(id);
+      else if (collection === 'interest') await API.departments.deleteInterest(id);
       await fetchData();
       notify("Archive Purged", "The selected record has been successfully de-linked.", "success");
     } finally { setIsSyncing(false); }
@@ -305,7 +327,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           <main className="flex-grow min-w-0">
             <AnimatePresence mode="wait">
-              {activeTab === 'overview' && <OverviewTab members={members} news={news} leaders={leaders} announcements={announcements} contactMsgs={contactMsgs} depts={depts} logs={logs} />}
+              {activeTab === 'overview' && <OverviewTab members={members} news={news} leaders={leaders} announcements={announcements} contactMsgs={contactMsgs} depts={depts} logs={logs} dailyVerse={dailyVerse} quizzes={quizzes} currentUser={currentUser!} activeQuiz={activeQuiz} setActiveQuiz={setActiveQuiz} />}
               {activeTab === 'profile' && currentUser && <ProfileEditorTab user={currentUser} isSyncing={isSyncing} onUpdate={async (u) => { setIsSyncing(true); await API.members.update(u.id, u); updateUser(u); fetchData(); setIsSyncing(false); notify("Stewardship Updated", "Profile synchronized.", "success"); }} />}
               {activeTab === 'reports' && <MembersReportTab onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} />}
               {activeTab === 'members' && <DirectoryTab members={members} roles={roleDefinitions} searchTerm={searchTerm} onSearchChange={setSearchTerm} onNewMember={() => { setEditingItem(null); setShowModal('member'); }} onEditMember={(m) => { setEditingItem(m); setShowModal('member'); }} onDeleteMember={(id) => handleDelete('members', id)} onToggleAdmin={(m) => { setEditingItem(m); setShowModal('role'); }} currentUser={currentUser!} canManage={rolePermissions.canDo('manage_roles')} />}
