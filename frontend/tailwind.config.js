@@ -8,8 +8,8 @@ export default {
     extend: {
       colors: {
         primary: '#ffffff',
-        secondary: '#3B6B1F',
-        accent: '#87CEEB',
+        secondary: '#163C28',
+        accent: '#5F8B70',
       },
     },
   },
